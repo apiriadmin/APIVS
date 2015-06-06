@@ -1,0 +1,212 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<APIVSXML>
+<!--
+
+  This file contains an example of a sanity test case for the FPUI API library.
+
+  This test case tests to ensure that the FPUI can perform a simple open of display,
+  clear the display, write a string to the display, and close the display.  We check the VD
+  contents at all points in the test.
+
+  The steps performed are:
+	- Open the FPUI using "fpui_open()"
+	- Clear the display to ensure we are starting from a known state using "fpui_clear()"
+	- Compare the contains of the display against the expected contents of the display
+	- Write a string to the display  at a known location using "fpui_write_at()"
+	- Compare the contains of the display against the expected contents of the display
+	- Close the FPUI using "fpui_close()"
+
+-->
+
+<Define var="$returnCode" type="int" /> <!-- Return code from function calls -->
+<Define var="$errno" type="int" />	  <!-- Errno values -->
+<Define var="$fpui_handle" type="fpui_handle" /> <!-- FPUI Interface handle -->
+<Define var="$output_string" type="char []" />
+<Define var="$row" type="int" />
+<Define var="$column" type="int" />
+<Define var="$ssizet" type="ssize_t" />
+
+
+<!-- Set up subroutine to set FPUI variables -->
+<SetUp name="FPUI_Set_Variables">
+
+  <!-- Set variables to 0 -->
+  <Set var="$returnCode" value="%0"/>
+  <Set var="$errno" value="%0"/>
+
+</SetUp>
+
+
+<!-- Subroutine for calling fpui_open() function and process -->
+<Subroutine name="FPUI_Open"
+            description="Call fpui_open()"
+            >
+
+  <!-- fpui_handle is set as if error, just to make sure -->
+  <Set var="$fpui_handle" value="%-1"/>
+
+  <Function funcName="fpui_open"
+            description="Open the FPUI interface"
+            return="$fpui_handle"
+            errno="$errno"
+            p1="#O_RDWR"
+            p2="@FPUI Sanity" />
+
+  <Print >The returned fpui_handle is [$fpui_handle:hex]</Print>
+  <Print >The returned errno is [$errno:errno]</Print>
+
+  <!-- Make sure tod_get succeeded -->
+  <If expression="$fpui_handle EQ %-1">
+    <Then>
+      <Print >Function fpui_open() failed</Print>
+      <Abort status="FAIL" />
+    </Then>
+  </If>
+
+</Subroutine>
+
+
+<!-- Subroutine for calling fpui_clear() function and process -->
+<Subroutine name="FPUI_Clear"
+            description="Call fpui_clear()"
+            >
+
+  <Function funcName="fpui_clear"
+            description="Clear the display"
+            return="$returnCode"
+            errno="$errno"
+            p1="$fpui_handle" />
+
+  <Format level="summary"  />
+
+  <!-- Make sure fpui_clear succeeded -->
+  <If expression="$returnCode NE %0">
+    <Then>
+      <Print >Function fpui_clear() failed</Print>
+      <Abort status="FAIL" />
+    </Then>
+  </If>
+
+</Subroutine>
+
+
+<!-- Subroutine for calling fpui_write_at() function and process -->
+<Subroutine name="FPUI_Write_At"
+            description="Call fpui_write_at()"
+            >
+
+  <Set var="$output_string" value="@FPUI SANITY TEST"/>
+  <Set var="$row" value="%5"/>
+  <Set var="$column" value="%5"/>
+
+  <Function funcName="fpui_write_at"
+            description="Write a string"
+            
+            return="$ssizet"
+            errno="$errno"
+            p1="$fpui_handle"
+            p2="$output_string"
+            p3="!strlen($output_string)"
+            p4="$row"
+            p5="$column" />
+
+  <Format level="summary"  />
+
+  <!-- Make sure fpui_write_at succeeded -->
+  <If expression="$ssizet NE !strlen($output_string)">
+    <Then>
+      <Print >Function fpui_write_at() failed</Print>
+      <Format level="summary"  />
+      <Abort status="FAIL" />
+    </Then>
+  </If>
+
+</Subroutine>
+
+
+<!-- Subroutine for calling fpui_close() function and process -->
+<Subroutine name="FPUI_Close"
+            description="Call fpui_close()"
+            >
+
+  <Function funcName="fpui_close"
+            description="Close the FPUI interface"
+            
+            return="$returnCode"
+            errno="$errno"
+            p1="$fpui_handle" />
+
+  <Format level="summary"  />
+
+  <!-- Make sure tod_get succeeded -->
+  <If expression="$returnCode NE %0">
+    <Then>
+      <Print >Function fpui_close() failed</Print>
+      <Abort status="FAIL" />
+    </Then>
+	<Else>
+      <Print >fpui_close() succeeded</Print>
+	</Else>
+  </If>
+
+</Subroutine>
+
+
+<!-- Sanity Test Case for FPUI API Library -->
+<TestCase name="FPUI_Sanity" description="Basic write string FPUI check" >
+
+  <!-- Open the FPUI interface -->
+  <Call ref="FPUI_Open" description="fpui_open: Open FPUI interface" setUp="FPUI_Set_Variables" />
+
+  <!-- Clear the screen, to ensure known starting point -->
+  <Call ref="FPUI_Clear" setUp="FPUI_Set_Variables" description="fpui_clear: Open FPUI interface" />
+
+  <!-- Generate keypress to put this window into focus with Front Panel Manager -->
+  <FPUIInput file="@FPUI_keypress_0.input" description="keypress sequence for [0] key" />
+
+  <!-- Compare contents of screen, to ensure clear worked -->
+  <Dump dump="VD" file="@FPUI_cleared_display_EXAMPLE" />
+  <If expression="!VDCompare(@FPUI_cleared_display_EXAMPLE) EQ #FALSE">
+    <Then>
+      <Print >The clearing of the display did not work</Print>
+      <Dump force="#TRUE"  dump="VD" file="@FPUI_cleared_display_fail_EXAMPLE" description="The current contents of the display are:" />
+      <Abort status="FAIL" />
+    </Then>
+    <Else>
+       <Print >*** fpui_clear() succeeded ***</Print>
+    </Else>
+  </If>
+
+  <!-- Write a string at a known location -->
+  <Call ref="FPUI_Write_At" setUp="FPUI_Set_Variables" description="fpui_write_at: Write a known string at a known location" />
+
+  <Dump dump="VD" file="@FPUI_sanity_display_EXAMPLE" description="Save display" />
+  <!-- Compare contents of screen, to ensure write worked -->
+  <If expression="!VDCompare(@FPUI_sanity_display_EXAMPLE) EQ #FALSE">
+    <Then>
+      <Print >The writing of the string to the display did not work</Print>
+      <Dump force="#TRUE"  dump="VD" file="@FPUI_sanity_display_fail_EXAMPLE" description="The current contents of the display are:" />
+      <Abort status="FAIL" />
+    </Then>
+    <Else>
+       <Print >*** fpui_write_at() succeeded ***</Print>
+    </Else>
+  </If>
+
+  <!-- Close the FPUI interface -->
+  <Call ref="FPUI_Close" setUp="FPUI_Set_Variables" description="fpui_close: Close FPUI Interface" />
+
+</TestCase>
+
+<!-- Test Suite of sanity tests -->
+<TestSuite name="Sanity Test Suite"
+           description="Collection of Sanity Test Cases"
+            >
+
+  <TestCaseRef ref="FPUI_Sanity" />
+
+</TestSuite>
+
+</APIVSXML>
+

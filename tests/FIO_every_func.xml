@@ -1,0 +1,350 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<APIVSXML>
+<!--
+
+  This file contains an example of a call to every FIO function
+
+-->
+
+<Define var="$returnCode" type="int" /> <!-- Return code from function calls -->
+<Define var="$errno" type="int" />	  <!-- Errno values -->
+<Define var="$ver_string" type="char []" />
+<Define var="$compare_string" type="char []" />
+<Define var="$fh" type="FIO_APP_HANDLE" />
+<Define var="$fdh" type="FIO_DEV_HANDLE" />
+<Define var="$returnFlag" type="int" />
+<Define var="$channel_map" type="FIO_CHANNEL_MAP" size="%10" />
+
+
+<!-- Set up subroutine to set FIO variables -->
+<SetUp name="initialize_variables">
+
+  <!-- Set variables to 0 -->
+  <Set var="$returnCode" value="%0"/>
+  <Set var="$errno" value="%0"/>
+
+</SetUp>
+
+
+<!-- Subroutine for calling fio_register() function and process -->
+<Subroutine name="fio_register" description="Call fio_register()" >
+
+  <!-- fh is set as if error, just to make sure -->
+  <Set var="$fh" value="%-1"/>
+
+  <Function funcName="fio_register"
+            description="Open the FIO interface"
+            return="$fh"
+            errno="$errno" />
+
+  <Format  var="$fh" />
+  <Format  var="$errno" />
+
+  <!-- Make sure tod_get succeeded -->
+  <If expression="$fh LT %0">
+    <Then>
+      <Print >Function fio_register() failed</Print>
+      <Abort status="FAIL" />
+    </Then>
+  </If>
+
+</Subroutine>
+
+
+<!-- Subroutine for calling fiod_register() function and process -->
+<Subroutine name="fiod_register" description="Call fiod_register()" >
+
+  <!-- fdh is set as if error, just to make sure -->
+  <Set var="$fdh" value="%-1"/>
+
+  <Function funcName="fio_fiod_register"
+            description="Open the FIOD interface"
+            return="$fdh"
+            errno="$errno"
+			p1="$fh"
+			p2="#FIO_SP3"
+			p3="#FIO332" />
+
+  <Format  var="$fdh" />
+  <Format  var="$errno" />
+
+  <!-- Make sure tod_get succeeded -->
+  <If expression="$fdh LT %0">
+    <Then>
+      <Print>Function fiod_register() failed</Print>
+      <Abort status="FAIL" />
+    </Then>
+	<Else>
+	  <Print>Function fiod_register() succeeded</Print>
+	</Else>
+  </If>
+
+</Subroutine>
+
+<!-- Subroutine for calling fio_deregister() function and process -->
+<Subroutine name="fio_deregister" description="Call fio_deregister()" >
+
+  <Function funcName="fio_deregister"
+            description="Close the FIO interface"
+            return="$returnCode"
+            errno="$errno"
+            p1="$fh" />
+
+  <!-- Make sure tod_get succeeded -->
+  <If expression="$returnCode NE %0">
+    <Then>
+      <Print >Function fio_deregister() failed</Print>
+  	  <Format  var="$returnCode" />
+      <Format  var="$errno" />
+      <Abort status="FAIL" />
+    </Then>
+  </If>
+
+</Subroutine>
+
+<!-- Subroutine for calling fiod_deregister() function and process -->
+<Subroutine name="fiod_deregister" description="Call fiod_deregister()" >
+
+  <Function funcName="fio_fiod_deregister"
+            description="Close the FIOD interface"
+            return="$returnCode"
+            errno="$errno"
+            p1="$fh"
+			p2="$fdh" />
+
+  <!-- Make sure tod_get succeeded -->
+  <If expression="$returnCode NE %0">
+    <Then>
+      <Print >Function fiod_deregister() failed</Print>
+  	  <Format  var="$returnCode" />
+      <Format  var="$errno" />
+      <Abort status="FAIL" />
+    </Then>
+	<Else>
+	  <Print>Function fiod_deregister() succeeded</Print>
+	</Else>
+  </If>
+
+</Subroutine>
+
+
+<!-- Sanity Test Case for FIO API Library -->
+<TestCase name="FIO_Sanity" description="Basic register / deregister calls" >
+
+  <!-- Open the FIO interface -->
+  <Call ref="fio_register" description="fio_register: Open FIO interface" setUp="initialize_variables" />
+
+  <!-- Close the FIO interface -->
+  <Call ref="fio_deregister" setUp="initialize_variables" description="fio_deregister: Close FIO Interface" />
+
+</TestCase>
+
+
+<!-- Set up subroutine to open FIO for test cases -->
+<SetUp name="fio_register">
+
+  <!-- Open the FIO interface -->
+  <Call ref="fio_register"
+  		description="fio_register: Open FIO interface"
+		setUp="initialize_variables" />
+
+</SetUp>
+
+<!-- Set up subroutine to close FIO for test cases -->
+<TearDown name="fio_deregister">
+
+  <!-- Close the FIO interface -->
+  <Call ref="fio_deregister"
+  		setUp="initialize_variables"
+		description="fio_deregister: Close FIO Interface" />
+
+</TearDown>
+
+<!-- Set up subroutine to open FIO for test cases -->
+<SetUp name="fiod_register">
+
+  <!-- Open the FIO interface -->
+  <Call ref="fio_register"
+  		description="fio_register: Open FIO interface"
+		setUp="initialize_variables" />
+
+  <Call ref="fiod_register"
+  		description="fio_register: Open FIOD interface"
+		setUp="initialize_variables" />
+
+</SetUp>
+
+<!-- Set up subroutine to close FIO for test cases -->
+<TearDown name="fiod_deregister">
+
+  <!-- Close the FIO interface -->
+  <Call ref="fiod_deregister"
+  		setUp="initialize_variables"
+		description="fiod_deregister: Close FIOD Interface" />
+
+  <Call ref="fio_deregister"
+  		setUp="initialize_variables"
+		description="fio_deregister: Close FIO Interface" />
+
+</TearDown>
+
+<!-- Subroutine for calling fio_apiver() function and process -->
+<Subroutine name="fio_apiver" description="Call fio_apiver()" >
+
+  <Function funcName="fio_apiver"
+            return="$ver_string"
+            errno="$errno"
+            p1="$fh"
+			p2="#FIO_VERSION_LKM" />
+
+  <Format  var="$ver_string" />
+  <Format  var="$errno" />
+  
+  <Set var="$compare_string" value="@FIO VERSION STRING" />
+
+  <!-- Make sure fio_apiver() succeeded -->
+  <If expression="$ver_string NE $compare_string" >
+    <Then>
+      <Print >Function fio_apiver(FIO_VERSION_LKM) failed</Print>
+      <Abort status="FAIL" />
+    </Then>
+	<Else>
+	  <Print >Function fio_apiver(FIO_VERSION_LKM) succeeded</Print>
+	</Else>
+  </If>
+
+  <Function funcName="fio_apiver"
+            return="$ver_string"
+            errno="$errno"
+            p1="$fh"
+			p2="#FIO_VERSION_LIBRARY" />
+
+  <Format  var="$ver_string" />
+  <Format  var="$errno" />
+  
+  <Set var="$compare_string" value="@FIO VERSION STRING" />
+
+  <!-- Make sure fio_apiver() succeeded -->
+  <If expression="$ver_string NE $compare_string" >
+    <Then>
+      <Print >Function fio_apiver(FIO_VERSION_LIBRARY) failed</Print>
+      <Abort status="FAIL" />
+    </Then>
+	<Else>
+	  <Print >Function fio_apiver(FIO_VERSION_LIBRARY) succeeded</Print>
+	</Else>
+  </If>
+
+</Subroutine>
+
+<!-- fio_apiver Test Case -->
+<TestCase name="fio_apiver"
+		  setUp="fio_register"
+		  tearDown="fio_deregister">
+
+  <!-- Get the current TOD and print it out -->
+  <Call ref="fio_apiver" setUp="initialize_variables" />
+
+</TestCase>
+
+<!-- Subroutine for calling fio_fiod_channel_map_count() function and process -->
+<Subroutine name="fio_fiod_channel_map_count" description="Call fio_fiod_channel_map_count()" >
+
+  <Function funcName="fio_fiod_channel_map_count"
+            return="$returnCode"
+            errno="$errno"
+            p1="$fh"
+			p2="$fdh"
+			p3="#FIO_VIEW_APP" />
+
+  <Format  var="$returnCode" />
+  <Format  var="$errno" />
+  
+  <!-- Make sure fio_fiod_channel_map_count() succeeded -->
+  <If expression="$returnCode NE %0" >
+    <Then>
+      <Print >Function fio_fiod_channel_map_count() failed</Print>
+      <Abort status="FAIL" />
+    </Then>
+	<Else>
+	  <Print >Function fio_fiod_channel_map_count() succeeded</Print>
+	</Else>
+  </If>
+
+</Subroutine>
+
+<!-- fio_fiod_channel_map_count Test Case -->
+<TestCase name="fio_fiod_channel_map_count"
+		  setUp="fiod_register"
+		  tearDown="fiod_deregister">
+
+  <!-- Get the current TOD and print it out -->
+  <Call ref="fio_fiod_channel_map_count" setUp="initialize_variables" />
+
+</TestCase>
+
+<!-- Subroutine for calling fio_fiod_channel_map_get() function and process -->
+<Subroutine name="fio_fiod_channel_map_get" description="Call fio_fiod_channel_map_get()" >
+
+  <Function funcName="fio_fiod_channel_map_get"
+            return="$returnCode"
+            errno="$errno"
+            p1="$fh"
+			p2="$fdh"
+			p3="#FIO_VIEW_SYSTEM"
+			p4="$channel_map"
+			p5="!sizeof($channel_map)" />
+
+  <Format  var="$returnCode" />
+  <Format  var="$errno" />
+  <Format var="$channel_map" />
+  
+  <!-- Make sure fio_fiod_channel_map_get() succeeded -->
+  <If expression="$returnCode NE %0" >
+    <Then>
+      <Print >Function fio_fiod_channel_map_get() failed</Print>
+      <Abort status="FAIL" />
+    </Then>
+	<Else>
+	  <Print >Function fio_fiod_channel_map_get() succeeded</Print>
+	</Else>
+  </If>
+
+</Subroutine>
+
+<!-- fio_fiod_channel_map_get Test Case -->
+<TestCase name="fio_fiod_channel_map_get"
+		  setUp="fiod_register"
+		  tearDown="fiod_deregister">
+
+  <!-- Get the current TOD and print it out -->
+  <Call ref="fio_fiod_channel_map_get" setUp="initialize_variables" />
+
+</TestCase>
+
+<!-- Test Suite of FIO tests -->
+<TestSuite name="FIO Every Function Test Suite"
+           description="Collection of FIO Test Cases" >
+
+  <TestCaseRef ref="FIO_Sanity" />
+  <TestCaseRef ref="fio_apiver" />
+  <TestCaseRef ref="fio_fiod_channel_map_count" />
+  <TestCaseRef ref="fio_fiod_channel_map_get" />
+
+</TestSuite>
+
+<TestSuite name="Single" description="Test a single call" >
+
+  <TestCaseRef ref="fio_apiver" />
+
+</TestSuite>
+
+<TestSuite name="Devices" description="Test opening Devices" >
+
+  <!-- Do Nothing -->
+
+</TestSuite>
+
+</APIVSXML>
+

@@ -1,0 +1,594 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<APIVSXML>
+<!--
+
+  This file contains a test of every TOD function
+
+-->
+
+<Define type="int" var="$returnCode" />	<!-- Return code from function calls -->
+<Define type="int" var="$errno" />		<!-- Errno values -->
+<Define type="struct timeval" var="$tv" />	<!-- Time value structure -->
+<Define type="int" var="$tzsec_offset" />	<!-- Time Zone Offset -->
+<Define type="int" var="$dst_offset" />	<!-- Daylight Saving Time Offset -->
+<Define type="dst_info_t" var="$dst_info" />	<!-- Daylight Saving Time Info -->
+<Define type="int" var="$signal" />	<!-- Signal processing -->
+<Define type="int" var="$enable" />	<!-- Enable feature -->
+<Define type="int" var="$returnFlag" />
+
+<!-- Set up subroutine to set TOD variables -->
+<SetUp name="TOD_Set_Variables">
+
+  <!-- Set all variables to 0 -->
+  <Set var="$returnCode" value="%0"/>
+  <Set var="$errno" value="%0"/>
+  <Set var="$tv" member="tv_sec" value="%2000"/>
+  <Set var="$tv" member="tv_usec" value="%3000"/>
+  <Set var="$tzsec_offset" value="%0"/>
+  <Set var="$dst_offset" value="%0"/>
+  <Set var="$signal" value="%0"/>
+  <Set var="$enable" value="%0"/>
+
+</SetUp>
+
+<!-- Subroutine for calling tod_get() function and process -->
+<Subroutine name="tod_get"
+            description="Call tod_get()"
+            >
+
+  <Function funcName="tod_get"
+            description="Get the current time of day"
+            
+            return="$returnCode"
+            errno="$errno"
+            p1="$tv"
+            p2="$tzsec_offset"
+            p3="$dst_offset" />
+
+  <Format  />
+
+  <!-- Make sure tod_get succeeded -->
+  <If expression="$returnCode NE %0">
+    <Then>
+      <Print >*** Function tod_get() failed ***</Print>
+      <Abort status="FAIL"  />
+    </Then>
+  </If>
+
+</Subroutine>
+
+
+<!-- Subroutine to call tod_set() to set TOD to midnight -->
+<Subroutine name="tod_set"
+            description="Call tod_set()"
+            >
+
+  <!-- Set TOD using same TZ -->
+  <Function funcName="tod_set"
+            description="Set the current time of day to midnight January 1, 1970"
+            
+            return="$returnCode"
+            errno="$errno"
+            p1="$tv"
+            p2="$tzsec_offset" />
+
+  <Format  />
+
+  <!-- Make sure tod_set succeeded -->
+  <If expression="$returnCode NE %0">
+    <Then>
+      <Print >*** Function tod_set() failed ***</Print>
+      <Abort status="FAIL"  />
+    </Then>
+  </If>
+
+</Subroutine>
+
+
+<!-- Sanity Test Case for TOD API Library -->
+<TestCase name="TOD_Sanity"
+          description="Basic set/get TOD check"
+          >
+
+  <!-- Get the current TOD and print it out -->
+  <Call ref="tod_get"
+        setUp="TOD_Set_Variables"
+  		description="Call the tod_get() function"
+		/>
+
+  <!-- Now set the time to a known value, midnight -->
+  <Call ref="tod_set"
+        setUp="TOD_Set_Variables"
+  		description="Call the tod_set() function"
+		/>
+
+  <!-- Get the current time and see if it is what we expect -->
+  <Call ref="tod_get"
+        setUp="TOD_Set_Variables"
+  		description="Call the tod_get() function"
+		/>
+
+  <!--
+       Now check the time.
+       We have to account for the fact that the clock may have ticked slightly.
+  -->
+
+  <Set var="$returnFlag" value="%0" />
+
+  <If expression="$tv.tv_sec NE %2000">
+  	<Then>
+      <Set var="$returnFlag" value="%1" />
+	</Then>
+  </If>
+
+  <If expression="$tv.tv_usec LT %3000"> <!-- Allow increase in usecs -->
+    <Then>
+      <Set var="$returnFlag" value="%1" />
+	</Then>
+  </If>
+
+  <If expression="$returnFlag NE %0">
+    <Then>
+      <Print >*** The TOD set to midnight January 1, 1970 did not work ***</Print>
+	  <Format level="summary"  var="$tv" />
+      <Abort status="FAIL"  />
+    </Then>
+    <Else>
+       <Print >+++ TOD_SET() succeeded +++</Print>
+    </Else>
+  </If>
+
+</TestCase>
+
+<!-- Subroutine for calling tod_cancel_onchange_signal() function and process -->
+<Subroutine name="tod_cancel_onchange_signal"
+            >
+
+  <Function funcName="tod_cancel_onchange_signal"
+            
+            return="$returnCode"
+            errno="$errno" />
+
+  <Format  />
+
+  <!-- Make sure tod_cancel_onchange_signal succeeded -->
+  <If expression="$returnCode NE %0">
+    <Then>
+      <Print >*** Function tod_cancel_onchange_signal() failed ***</Print>
+	  <Format  />
+      <Abort status="FAIL"  />
+    </Then>
+	<Else>
+	  <Print >tod_cancel_onchange_signal() succeeded</Print>
+	</Else>
+  </If>
+
+</Subroutine>
+
+<!-- tod_cancel_onchange_signal Test Case -->
+<TestCase name="tod_cancel_onchange_signal"
+          >
+
+  <!-- Get the current TOD and print it out -->
+  <Call ref="tod_cancel_onchange_signal"
+        setUp="TOD_Set_Variables"
+		/>
+
+</TestCase>
+
+<!-- Subroutine for calling tod_cancel_tick_signal() function and process -->
+<Subroutine name="tod_cancel_tick_signal"
+            >
+
+  <Function funcName="tod_cancel_tick_signal"
+            
+            return="$returnCode"
+            errno="$errno" />
+
+  <!-- Make sure tod_cancel_tick_signal succeeded -->
+  <If expression="$returnCode NE %0">
+    <Then>
+      <Print >Function tod_cancel_tick_signal() failed</Print>
+      <Abort status="FAIL"  />
+    </Then>
+	<Else>
+		<Print >tod_cancel_tick_signal succeeded</Print>
+	</Else>
+  </If>
+
+</Subroutine>
+
+<!-- tod_cancel_tick_signal Test Case -->
+<TestCase name="tod_cancel_tick_signal"
+          >
+
+  <!-- Get the current TOD and print it out -->
+  <Call ref="tod_cancel_tick_signal"
+        setUp="TOD_Set_Variables"
+		/>
+
+</TestCase>
+
+<!-- tod_get Test Case -->
+<TestCase name="tod_get"
+          >
+
+  <!-- Get the current TOD and print it out -->
+  <Call ref="tod_get"
+        setUp="TOD_Set_Variables"
+		/>
+
+</TestCase>
+
+<!-- Subroutine for calling tod_get_dst_info() function and process -->
+<Subroutine name="tod_get_dst_info"
+            >
+
+  <Function funcName="tod_get_dst_info"
+            
+            return="$returnCode"
+            errno="$errno"
+            p1="$dst_info" />
+
+  <Format level="summary"  />
+
+  <!-- Make sure tod_get_dst_info succeeded -->
+  <If expression="$returnCode NE %0">
+    <Then>
+      <Print >*** Function tod_get_dst_info() failed ***</Print>
+      <Abort status="FAIL"  />
+    </Then>
+  </If>
+
+</Subroutine>
+
+<!-- tod_get_dst_info Test Case -->
+<TestCase name="tod_get_dst_info"
+          >
+
+  <!-- Get the current TOD and print it out -->
+  <Call ref="tod_get_dst_info"
+        setUp="TOD_Set_Variables"
+		/>
+
+</TestCase>
+
+<!-- Subroutine for calling tod_get_dst_state() function and process -->
+<Subroutine name="tod_get_dst_state"
+            >
+
+  <Function funcName="tod_get_dst_state"
+            
+            return="$returnCode"
+            errno="$errno" />
+
+  <Format level="summary"  />
+
+  <!-- Make sure tod_get_dst_state succeeded -->
+  <If expression="$returnCode NE #TRUE">
+    <Then>
+      <Print >Function tod_get_dst_state() failed</Print>
+      <Abort status="FAIL"  />
+    </Then>
+	<Else>
+	  <Print >tod_get_dst_state() succeeded</Print>
+	</Else>
+  </If>
+
+</Subroutine>
+
+<!-- Subroutine for calling tod_get_timesrc() function and process -->
+<Subroutine name="tod_get_timesrc"
+            >
+
+  <Function funcName="tod_get_timesrc"
+            
+            return="$returnCode"
+            errno="$errno" />
+
+  <Format level="summary"  />
+
+  <!-- Make sure tod_get_timesrc succeeded -->
+  <If expression="$returnCode NE #TOD_TIMESRC_CRYSTAL">
+    <Then>
+      <Print >Function tod_get_timesrc() failed</Print>
+      <Abort status="FAIL"  />
+    </Then>
+	<Else>
+	  <Print >tod_get_timesrc() succeeded</Print>
+	</Else>
+  </If>
+
+</Subroutine>
+
+<!-- Subroutine for calling tod_get_timesrc_freq() function and process -->
+<Subroutine name="tod_get_timesrc_freq"
+            >
+
+  <Function funcName="tod_get_timesrc_freq"
+            
+            return="$returnCode"
+            errno="$errno" />
+
+  <Format level="summary"  />
+
+  <!-- Make sure tod_get_timesrc_freq succeeded -->
+  <If expression="$returnCode NE %1234">
+    <Then>
+      <Print >Function tod_get_timesrc_freq() failed</Print>
+      <Abort status="FAIL"  />
+    </Then>
+	<Else>
+	  <Print >tod_get_timesrc_freq() succeeded</Print>
+	</Else>
+  </If>
+
+</Subroutine>
+
+<!-- tod_get_timesrc_freq Test Case -->
+<TestCase name="tod_get_timesrc_freq"
+          >
+
+  <!-- Get the current TOD and print it out -->
+  <Call ref="tod_get_timesrc_freq"
+        setUp="TOD_Set_Variables"
+		/>
+
+</TestCase>
+
+<!-- Subroutine for calling tod_request_onchange_signal() function and process -->
+<Subroutine name="tod_request_onchange_signal"
+            >
+
+  <Function funcName="tod_request_onchange_signal"
+            
+            return="$returnCode"
+            errno="$errno"
+            p1="$signal" />
+
+  <Format level="summary" />
+
+  <!-- Make sure tod_request_onchange_signal succeeded -->
+  <If expression="$returnCode NE %0">
+    <Then>
+      <Print >Function tod_request_onchange_signal() failed</Print>
+      <Abort status="FAIL"  />
+    </Then>
+	<Else>
+	  <Print >tod_request_onchange_signal() succeeded</Print>
+	</Else>
+  </If>
+
+</Subroutine>
+
+<!-- tod_request_onchange_signal Test Case -->
+<TestCase name="tod_request_onchange_signal"
+          >
+
+  <!-- Get the current TOD and print it out -->
+  <Call ref="tod_request_onchange_signal"
+        setUp="TOD_Set_Variables"
+		/>
+
+</TestCase>
+
+<!-- Subroutine for calling tod_request_tick_signal() function and process -->
+<Subroutine name="tod_request_tick_signal"
+            >
+
+  <Function funcName="tod_request_tick_signal"
+            
+            return="$returnCode"
+            errno="$errno"
+            p1="$signal" />
+
+  <Format level="summary" />
+
+  <!-- Make sure tod_request_tick_signal succeeded -->
+  <If expression="$returnCode NE %0">
+    <Then>
+      <Print >Function tod_request_tick_signal() failed</Print>
+	  <Abort status="FAIL"  />
+	</Then>
+	<Else>
+	  <Print >tod_request_tick_signal() succeeded</Print>
+	</Else>
+  </If>
+
+</Subroutine>
+
+<!-- tod_request_tick_signal Test Case -->
+<TestCase name="tod_request_tick_signal"
+          >
+
+  <!-- Get the current TOD and print it out -->
+  <Call ref="tod_request_tick_signal"
+        setUp="TOD_Set_Variables"
+		/>
+
+</TestCase>
+
+<!-- tod_set Test Case -->
+<TestCase name="tod_set"
+          >
+
+  <!-- Get the current TOD and print it out -->
+  <Call ref="tod_set"
+        setUp="TOD_Set_Variables"
+		/>
+
+</TestCase>
+
+<!-- Subroutine for calling tod_set_dst_info() function and process -->
+<Subroutine name="tod_set_dst_info"
+            >
+
+  <Function funcName="tod_set_dst_info"
+            
+            return="$returnCode"
+            errno="$errno"
+            p1="$dst_info" />
+
+  <Format level="summary"  />
+
+  <!-- Make sure tod_set_dst_info succeeded -->
+  <If expression="$returnCode NE %0">
+    <Then>
+      <Print >Function tod_set_dst_info() failed</Print>
+      <Abort status="FAIL"  />
+    </Then>
+	<Else>
+      <Print >tod_set_dst_info() succeeded</Print>
+	</Else>
+  </If>
+
+</Subroutine>
+
+<!-- tod_set_dst_info Test Case -->
+<TestCase name="tod_set_dst_info"
+          >
+
+  <!-- Get the current TOD and print it out -->
+  <Call ref="tod_set_dst_info"
+        setUp="TOD_Set_Variables"
+		/>
+
+</TestCase>
+
+<!-- Subroutine for calling tod_set_dst_state() function and process -->
+<Subroutine name="tod_set_dst_state"
+            >
+
+  <Function funcName="tod_set_dst_state"
+            
+            return="$returnCode"
+            errno="$errno"
+            p1="#TRUE" />
+
+  <Format level="summary"  />
+
+  <!-- Make sure tod_set_dst_state succeeded -->
+  <If expression="$returnCode NE %0">
+    <Then>
+      <Print >Function tod_set_dst_state() failed</Print>
+      <Abort status="FAIL"  />
+    </Then>
+	<Else>
+      <Print >tod_set_dst_state() succeeded</Print>
+	</Else>
+  </If>
+
+</Subroutine>
+
+<!-- tod_set_dst_state Test Case -->
+<TestCase name="tod_set_dst_state"
+          >
+
+  <!-- Get the current TOD and print it out -->
+  <Call ref="tod_set_dst_state"
+        setUp="TOD_Set_Variables"
+		/>
+
+</TestCase>
+
+<!-- tod_get_dst_state Test Case -->
+<TestCase name="tod_get_dst_state"
+          >
+
+  <!-- Set the DST state -->
+  <Call ref="tod_set_dst_state"
+        setUp="TOD_Set_Variables"
+		/>
+
+  <!-- Get the current TOD and print it out -->
+  <Call ref="tod_get_dst_state"
+        setUp="TOD_Set_Variables"
+		/>
+
+</TestCase>
+
+<!-- Subroutine for calling tod_set_timesrc() function and process -->
+<Subroutine name="tod_set_timesrc"
+            >
+
+  <Function funcName="tod_set_timesrc"
+            
+            return="$returnCode"
+            errno="$errno"
+            p1="#TOD_TIMESRC_CRYSTAL" />
+
+  <Format level="summary"  />
+
+  <!-- Make sure tod_set_timesrc succeeded -->
+  <If expression="$returnCode NE %0">
+    <Then>
+      <Print >Function tod_set_timesrc() failed</Print>
+      <Abort status="FAIL"  />
+    </Then>
+	<Else>
+	  <Print >tod_set_timesrc() succeeded</Print>
+	</Else>
+  </If>
+
+</Subroutine>
+
+<!-- tod_set_timesrc Test Case -->
+<TestCase name="tod_set_timesrc"
+          >
+
+  <!-- Get the current TOD and print it out -->
+  <Call ref="tod_set_timesrc"
+        setUp="TOD_Set_Variables"
+		/>
+
+</TestCase>
+
+<!-- tod_get_timesrc Test Case -->
+<TestCase name="tod_get_timesrc"
+          >
+
+  <!-- Set the TOD src first -->
+  <Call ref="tod_set_timesrc"
+        setUp="TOD_Set_Variables"
+		/>
+
+  <!-- Get the current TOD and print it out -->
+  <Call ref="tod_get_timesrc"
+        setUp="TOD_Set_Variables"
+		/>
+
+</TestCase>
+
+<!-- Test Suite of sanity tests -->
+<TestSuite name="All TOD Functions"
+           description="Collection of TOD Test Cases"
+            >
+
+  <TestCaseRef ref="TOD_Sanity" />
+  <TestCaseRef ref="tod_cancel_onchange_signal" />
+  <TestCaseRef ref="tod_cancel_tick_signal" />
+  <TestCaseRef ref="tod_get" />
+  <TestCaseRef ref="tod_get_dst_info" />
+  <TestCaseRef ref="tod_get_dst_state" />
+  <TestCaseRef ref="tod_get_timesrc" />
+  <TestCaseRef ref="tod_get_timesrc_freq" />
+  <TestCaseRef ref="tod_request_onchange_signal" />
+  <TestCaseRef ref="tod_request_tick_signal" />
+  <TestCaseRef ref="tod_set" />
+  <TestCaseRef ref="tod_set_dst_info" />
+  <TestCaseRef ref="tod_set_dst_state" />
+  <TestCaseRef ref="tod_set_timesrc" />
+
+</TestSuite>
+
+<TestSuite name="Single"
+		   description="Execute a single TOD function"
+		    >
+
+  <TestCaseRef ref="tod_get_dst_state" />
+
+</TestSuite>
+
+</APIVSXML>
+

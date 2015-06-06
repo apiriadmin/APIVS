@@ -1,0 +1,185 @@
+<?xml version="0.0" encoding="utf-8"?>
+
+<APIVSXML>
+<!--
+
+  This file contains an example of a test cases for the APIVSXML parser
+
+-->
+
+<Define type="int" var="$returnCode" />
+<Define type="int" var="$errno" />	
+<Define type="int" var="$loop" />	
+<Define type="int" var="$inner_loop" />	
+<Define type="int" var="$signal" />	
+<Define type="boolean" var="$signal_release" />
+<Define type="struct timeval" var="$tv" />
+<Define type="int" var="$tzsec_offset" />
+<Define type="int" var="$dst_offset" />
+<Define type="char" var="$char" />
+<Define type="char []" var="$char []" />
+<Define type="unsigned char" var="$unsigned char" />
+<Define type="unsigned char []" var="$unsigned char []" />
+<Define type="boolean" var="$boolean" />
+<Define type="ssize_t" var="$ssize_t" />
+<Define type="int" var="$int" />
+<Define type="unsigned int" var="$unsigned int" />
+<Define type="fpui_handle" var="$fpui_handle" />
+<Define type="O_FLAGS" var="$O_FLAGS" />
+<Define type="FIO_APP_HANDLE" var="$FIO_APP_HANDLE" />
+<Define type="FIO_DEV_HANDLE" var="$FIO_DEV_HANDLE" />
+<Define type="FIO_VERSION" var="$FIO_VERSION" />
+<Define type="FIO_VIEW" var="$FIO_VIEW" />
+<Define type="FIO_CHANNEL_MAP" var="$FIO_CHANNEL_MAP" />
+<Define type="FIO_CMU_DC_MASK" var="$FIO_CMU_DC_MASK" />
+<Define type="FIO_CMU_FSA" var="$FIO_CMU_FSA" />
+<Define type="FIO_NOTIFY" var="$FIO_NOTIFY" />
+<Define type="FIO_FRAME_SCHD" var="$FIO_FRAME_SCHD" />
+<Define type="FIO_INPUT_FILTER" var="$FIO_INPUT_FILTER" />
+<Define type="FIO_INPUTS_TYPE" var="$FIO_INPUTS_TYPE" />
+<Define type="FIO_TRANS_STATUS" var="$FIO_TRANS_STATUS" />
+<Define type="FIO_TRANS_BUFFER" var="$FIO_TRANS_BUFFER" />
+<Define type="FIO_MMU_FLASH_BIT" var="$FIO_MMU_FLASH_BIT" />
+<Define type="FIO_PORT" var="$FIO_PORT" />
+<Define type="FIO_DEVICE_TYPE" var="$FIO_DEVICE_TYPE" />
+<Define type="FIO_FIOD_STATUS" var="$FIO_FIOD_STATUS" />
+<Define type="FIO_TS_FM_STATE" var="$FIO_TS_FM_STATE" />
+<Define type="FIO_TS1_VM_STATE" var="$FIO_TS1_VM_STATE" />
+<Define type="FIO_NOTIFY_INFO" var="$FIO_NOTIFY_INFO" />
+<Define type="struct timeval" var="$struct timeval" />
+<Define type="dst_info_t" var="$dst_info_t" />
+
+<SignalHandler name="SIGUSER1" >
+	<Print>SIGUSER1 occurred</Print>
+	<Set var="$signal_release" value="#TRUE" />
+</SignalHandler>
+
+<!-- Set up subroutine to set TOD variables -->
+<SetUp name="All Variables">
+
+  <!-- Set all variables to 0 -->
+  <Set var="$returnCode" value="%100"/>
+  <Set var="$errno" value="%200"/>
+  <Set var="$tv" member="tv_sec" value="%5"/>
+  <Set var="$tv" member="tv_usec" value="%1234567"/>
+  <Set var="$tzsec_offset" value="%23"/>
+  <Set var="$dst_offset" value="%-103"/>
+  <Set var="$char" value="@A"/>
+  <Set var="$char []" value="@ABC"/>
+  <Set var="$unsigned char" value="@ABC"/>
+  <Set var="$unsigned char []" file="@fio_ls_plus.input"/>
+  <Set var="$boolean" value="#FALSE"/>
+  <Set var="$ssize_t" value="%123"/>
+  <Set var="$int" value="%123"/>
+  <Set var="$unsigned int" value="%123"/>
+  <Set var="$fpui_handle" value="%123"/>
+  <Set var="$O_FLAGS" value="#O_RDWR"/>
+  <Set var="$FIO_APP_HANDLE" value="%123"/>
+  <Set var="$FIO_DEV_HANDLE" value="%123"/>
+  <Set var="$FIO_VERSION" value="#FIO_VERSION_LKM"/>
+  <Set var="$FIO_VIEW" value="#FIO_VIEW_APP"/>
+  <Set var="$FIO_CHANNEL_MAP" file="@fio_ls_plus.input"/>
+  <Set var="$FIO_CMU_DC_MASK" value="#FIO_CMU_DC_MASK3"/>
+  <Set var="$FIO_CMU_FSA" value="#FIO_CMU_FSA_NON_LATCHING"/>
+  <Set var="$FIO_NOTIFY" value="#FIO_NOTIFY_ALWAYS"/>
+  <Set var="$FIO_FRAME_SCHD" file="@fio_ls_plus.input"/>
+  <Set var="$FIO_INPUT_FILTER" file="@fio_ls_plus.input"/>
+  <Set var="$FIO_INPUTS_TYPE" value="#FIO_INPUTS_RAW"/>
+  <Set var="$FIO_TRANS_STATUS" value="#FIO_TRANS_APP_OVERRUN"/>
+  <Set var="$FIO_TRANS_BUFFER" file="@fio_ls_plus.input"/>
+  <Set var="$FIO_MMU_FLASH_BIT" value="#FIO_MMU_FLASH_BIT_ON"/>
+  <Set var="$FIO_PORT" value="#FIO_SP3"/>
+  <Set var="$FIO_DEVICE_TYPE" value="#FIOOUT6SIU2"/>
+  <Set var="$FIO_FIOD_STATUS" file="@fio_ls_plus.input"/>
+  <Set var="$FIO_TS_FM_STATE" value="#FIO_TS_FM_ON"/>
+  <Set var="$FIO_TS1_VM_STATE" value="#FIO_TS1_VM_OFF"/>
+  <Set var="$FIO_NOTIFY_INFO" file="@fio_ls_plus.input"/>
+  <Set var="$struct timeval" file="@fio_ls_plus.input"/>
+  <Set var="$struct timeval" value="%0" member="tv_sec" />
+  <Set var="$struct timeval" value="%0" member="tv_usec" />
+  <Set var="$dst_info_t" file="@fio_ls_plus.input"/>
+
+  <Format />
+
+</SetUp>
+
+
+<Subroutine name="Nesting" >
+
+  <Print>Nesting subroutine start</Print>
+
+  <If expression="%0 EQ %0">
+    <Then>
+      <Print >THEN</Print>
+	  <If expression="%0 EQ %0">
+	    <Then>
+		  <Print>Nested Then</Print>
+		</Then>
+		<Else>
+		  <Print>Nested Else</Print>
+		</Else>
+      </If>
+    </Then>
+	<Else>
+	  <Print >ELSE</Print>
+	</Else>
+  </If>
+
+  <Set var="$loop" value="%10" />
+  <While expression="$loop GT %0" >
+    <Set var="$loop" value="%1" operation="subtract" />
+	<Format var="$loop" />
+	<Set var="$inner_loop" value="%0" />
+	<While expression="$inner_loop LE %2" >
+	  <Set var="$inner_loop" value="%2" operation="add" />
+	  <Format var="$inner_loop" />
+	</While>
+  </While>
+
+  <Set var="$signal" value="%10" description="SIGUSR1 signal" />
+  <Set var="$signal_release" value="#FALSE" />
+  <Signal ref="SIGUSER1" signal="$signal" action="enable" />
+  <While expression="$signal_release EQ #FALSE" />
+  <Print>Signal loop exited</Print>
+  <Signal signal="$signal" action="disable" />
+  <While expression="$signal_release EQ #FALSE" />
+  <Print>Signal disabled</Print>
+
+  <Print>Nesting subroutine exit</Print>
+
+</Subroutine>
+
+<TestCase name="Nesting" description="Nesting parse test case" >
+
+  <Print>Executing Nesting TC</Print>
+  <Call ref="Nesting" setUp="All Variables" />
+  <Print>Finish Nesting TC</Print>
+
+</TestCase>
+
+<TestCase name="Aux" description="Test Aux Switch Processing" >
+
+  <Print>Executing Aux TC</Print>
+  <Aux flip="#ON" />
+  <Dump force="#TRUE" dump="VD" file="@AuxSwitchOn" />
+  <Aux flip="#OFF" />
+  <Dump force="#TRUE" dump="VD" file="@AuxSwitchOff" />
+  <Print>Finish Aux TC</Print>
+
+</TestCase>
+
+<TestSuite name="Nesting" description="Test case for testing nesting" >
+
+  <TestCaseRef ref="Nesting" />
+
+</TestSuite>
+
+<TestSuite name="Aux" description="Test of Aux Switch processing" >
+
+  <TestCaseRef ref="Aux" />
+
+</TestSuite>
+
+
+</APIVSXML>
+
