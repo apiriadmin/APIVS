@@ -1,0 +1,174 @@
+<?xml version="0.0" encoding="utf-8"?>
+
+<APIVSXML>
+<!--
+
+  This file contains an example of a test cases for the APIVSXML parser
+
+-->
+
+<Define type="int" var="$left" />
+<Define type="int" var="$right" />
+<Define type="char []" var="$file" />
+
+<!-- Set up subroutine to set TOD variables -->
+<SetUp name="Set_Variables">
+
+  <!-- Set all variables to 0 -->
+  <Set var="$left" value="%100"/>
+  <Set var="$right" value="%200"/>
+  <Set var="$file" value="@FPUI_if_test_display"/>
+
+</SetUp>
+
+
+<!-- Subroutine for calling tod_get() function and process -->
+<Subroutine name="Nesting" description="If expression evaluation" >
+
+  <If expression="%0 EQ %0">
+    <Then>
+      <Print >THEN</Print>
+    </Then>
+	<Else>
+	  <Print >ELSE</Print>
+	</Else>
+  </If>
+
+  <If expression="%0 NE %0">
+    <Then>
+      <Print >THEN</Print>
+    </Then>
+	<Else>
+	  <Print >ELSE</Print>
+	</Else>
+  </If>
+
+  <If expression="$left EQ $right">
+    <Then>
+      <Print >THEN</Print>
+    </Then>
+	<Else>
+	  <Print >ELSE</Print>
+	</Else>
+  </If>
+
+  <If expression="$left NE $right">
+    <Then>
+      <Print >THEN</Print>
+    </Then>
+	<Else>
+	  <Print >ELSE</Print>
+	</Else>
+  </If>
+
+  <If expression="$left LT $right">
+    <Then>
+      <Print >THEN</Print>
+    </Then>
+	<Else>
+	  <Print >ELSE</Print>
+	</Else>
+  </If>
+
+  <If expression="$left LE $right">
+    <Then>
+      <Print >THEN</Print>
+    </Then>
+	<Else>
+	  <Print >ELSE</Print>
+	</Else>
+  </If>
+
+  <If expression="$left GT $right">
+    <Then>
+      <Print >THEN</Print>
+    </Then>
+	<Else>
+	  <Print >ELSE</Print>
+	</Else>
+  </If>
+
+  <If expression="$left GE $right">
+    <Then>
+      <Print >THEN</Print>
+    </Then>
+	<Else>
+	  <Print >ELSE</Print>
+	</Else>
+  </If>
+
+  <If expression="$left EQ %100">
+    <Then>
+      <Print >THEN</Print>
+    </Then>
+	<Else>
+	  <Print >ELSE</Print>
+	</Else>
+  </If>
+
+  <If expression="$left NE %100">
+    <Then>
+      <Print >THEN</Print>
+    </Then>
+	<Else>
+	  <Print >ELSE</Print>
+	</Else>
+  </If>
+
+  <If expression="%200 EQ $right">
+    <Then>
+      <Print >THEN</Print>
+    </Then>
+	<Else>
+	  <Print >ELSE</Print>
+	</Else>
+  </If>
+
+  <If expression="%200 NE $right">
+    <Then>
+      <Print >THEN</Print>
+    </Then>
+	<Else>
+	  <Print >ELSE</Print>
+	</Else>
+  </If>
+
+  <Dump dump="VD" file="@FPUI_if_test_display" />
+  <If expression="!VDCompare(@FPUI_if_test_display) EQ #FALSE">
+    <Then>
+      <Print >THEN</Print>
+    </Then>
+	<Else>
+	  <Print >ELSE</Print>
+	</Else>
+  </If>
+
+  <If expression="!VDCompare($file) EQ #FALSE">
+    <Then>
+      <Print >THEN</Print>
+    </Then>
+	<Else>
+	  <Print >ELSE</Print>
+	</Else>
+  </If>
+
+</Subroutine>
+
+<!-- Print Hello World test case -->
+<TestCase name="Nesting" description="Nesting If test case" >
+
+  <Call ref="Nesting" setUp="Set_Variables" />
+
+</TestCase>
+
+<TestSuite name="Nesting"
+		   description="Test case for testing nesting"
+		    >
+
+  <TestCaseRef ref="Nesting" />
+
+</TestSuite>
+
+
+</APIVSXML>
+

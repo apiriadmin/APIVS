@@ -1,0 +1,60 @@
+#
+# -- Virtual Display and Global Variable Dump --
+# Date: 20101226 16:08:47 - fromDumpToVD   
+#
+# Display Rows: 
+#0       1         2         3         4         
+#234567890123456789012345678901234567890123456789
+          FRONT PANEL MANAGER           
+SELECT WINDOW: 0-F   SET DEFAULT: *,0-F 
+0*applicationname0  1 applicationname1  
+2*applicationname2  3 applicationname3  
+4*applicationname4  5 applicationname5  
+6*applicationname6  7 applicationname7  
+8*applicationname8  9 applicationname9  
+[UP/DOWN ARROW]      [CONFIG INFO- NEXT]
+#----------------------------------------
+#
+# Attribute Rows: 
+#0       1         2         3         4         
+#234567890123456789012345678901234567890123456789
+0000000000444444444444444444400000000000
+2222222222222222222222222222222222222222
+0000000000000000000000000000000000000000
+0000000000000000000000000000000000000000
+0000000000000000000000000000000000000000
+0000000000000000000000000000000000000000
+0000000000000000000000000000000000000000
+0777777777700000000000666666666660055550
+#----------------------------------------
+#
+# Tab Stops: 
+#0       1         2         3         4         
+#234567890123456789012345678901234567890123456789
+        T       T       T       T       
+#
+#
+#
+#===========================================================
+#
+# Global Variables:
+# autoWrap: 
+0
+# autoRepeat: 
+0
+# autoScroll: 
+0
+# backLight: 
+0
+# backLightTimeout: 
+6
+# cursorState: 
+1
+# cursorBlink: 
+1
+# reverseVideo: 
+0
+# cursorPos: 
+8,40
+# saved_cursorPos: 
+1,1
