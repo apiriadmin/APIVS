@@ -1,13 +1,13 @@
 #
 # -- Virtual Display and Global Variable Dump --
-# Date: 20101231 19:57:26 -     
+# Date: 20151026 11:48:30 -     
 #
 # Display Rows: 
 #0       1         2         3         4         
 #234567890123456789012345678901234567890123456789
                                         
                                         
-                                        
+    Demonstration of FPUI API           
                                         
                                         
                                         
@@ -59,7 +59,7 @@
 # auxSwitch: 
 0
 #_cursorPos: 
-1,1
+3,30
 # saved_cursorPos: 
 1,1
 #

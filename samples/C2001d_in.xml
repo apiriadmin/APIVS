@@ -1,0 +1,229 @@
+<?xml version="1.0" encoding="utf-8"?>
+<APIVSXML>
+<!--
+ ATC 5401 API Reference Implementation Project 
+ 
+     Filename: C2001d_in.xml
+    File Type: APIVSXML test script (XML format)
+    Test Case: APIRI.TCS.2001d
+  Description: Demonstrate FPUI API function testing
+ 
+ Date      Revision    Description
+ 10/28/15  1.0         initial release
+-->
+
+<Define var="$fpui_handle"  type="fpui_handle" />
+<Define var="$errno"        type="int" />
+<Define var="$returnCode"   type="int" />
+<Define var="$flags"        type="int" />
+<Define var="$regname"      type="char []" size="%16" />
+<Define var="$write_buf"    type="char []" size="%64" />
+<Define var="$write_cnt"    type="ssize_t" />
+<Define var="$row"          type="int" />
+<Define var="$column"       type="int" />
+<Define var="$abort_mode"   type="boolean" />
+<Define var="$failed"       type="boolean" />
+
+<!--
+ subroutines for setup, teardown, error logging
+-->
+<SetUp name="FPUI_Init_Variables">
+   <Set var="$returnCode"  value="%-1"/>
+   <Set var="$errno"       value="%0"/>
+</SetUp>
+
+<Subroutine name="Error_Handler">
+   <If expression="$errno EQ %1" >
+      <Then> <Print>EPERM: Operation not permitted</Print> </Then> </If>
+   <If expression="$errno EQ %2" >
+      <Then> <Print>ENOENT: No such file or directory</Print> </Then> </If>
+   <If expression="$errno EQ %3" >
+      <Then> <Print>ESRCH: No such process</Print> </Then> </If>
+   <If expression="$errno EQ %4" >
+      <Then> <Print>EINTR: Interrupted system call</Print> </Then> </If>
+   <If expression="$errno EQ %5" >
+      <Then> <Print>EIO: I/O error</Print> </Then> </If>
+   <If expression="$errno EQ %6" >
+      <Then> <Print>ENXIO: No such device or address</Print> </Then> </If>
+   <If expression="$errno EQ %7" >
+      <Then> <Print>E2BIG: Argument list too long</Print> </Then> </If>
+   <If expression="$errno EQ %8" >
+      <Then> <Print>ENOEXEC: Exec format error</Print> </Then> </If>
+   <If expression="$errno EQ %9" >
+      <Then> <Print>EBADF: Bad file number</Print> </Then> </If>
+   <If expression="$errno EQ %10" >
+      <Then> <Print>ECHILD: No child processes</Print> </Then> </If>
+   <If expression="$errno EQ %11" >
+      <Then> <Print>EAGAIN: Try again</Print> </Then> </If>
+   <If expression="$errno EQ %12" >
+      <Then> <Print>ENOMEM: Out of memory</Print> </Then> </If>
+   <If expression="$errno EQ %13" >
+      <Then> <Print>EACCES: Permission denied</Print> </Then> </If>
+   <If expression="$errno EQ %14" >
+      <Then> <Print>EFAULT: Bad address</Print> </Then> </If>
+   <If expression="$errno EQ %15" >
+      <Then> <Print>ENOTBLK: Block device required</Print> </Then> </If>
+   <If expression="$errno EQ %16" >
+      <Then> <Print>EBUSY: Device or resource busy</Print> </Then> </If>
+   <If expression="$errno EQ %17" >
+      <Then> <Print>EEXIST: File exists</Print> </Then> </If>
+   <If expression="$errno EQ %18" >
+      <Then> <Print>EXDEV: Cross-device link</Print> </Then> </If>
+   <If expression="$errno EQ %19" >
+      <Then> <Print>ENODEV: No such device</Print> </Then> </If>
+   <If expression="$errno EQ %20" >
+      <Then> <Print>ENOTDIR: Not a directory</Print> </Then> </If>
+   <If expression="$errno EQ %21" >
+      <Then> <Print>EISDIR: Is a directory</Print> </Then> </If>
+   <If expression="$errno EQ %22" >
+      <Then> <Print>EINVAL: Invalid argument</Print> </Then> </If>
+   <If expression="$errno EQ %23" >
+      <Then> <Print>ENFILE: File table overflow</Print> </Then> </If>
+   <If expression="$errno EQ %24" >
+      <Then> <Print>EMFILE: Too many open files</Print> </Then> </If>
+   <If expression="$errno EQ %25" >
+      <Then> <Print>ENOTTY: Not a typewriter</Print> </Then> </If>
+   <If expression="$errno EQ %26" >
+      <Then> <Print>ETXTBSY: Text file busy</Print> </Then> </If>
+   <If expression="$errno EQ %27" >
+      <Then> <Print>EFBIG: File too large</Print> </Then> </If>
+   <If expression="$errno EQ %28" >
+      <Then> <Print>ENOSPC: No space left on device</Print> </Then> </If>
+   <If expression="$errno EQ %29" >
+      <Then> <Print>ESPIPE: Illegal seek</Print> </Then> </If>
+   <If expression="$errno EQ %30" >
+      <Then> <Print>EROFS: Read-only file system</Print> </Then> </If>
+   <If expression="$errno EQ %31" >
+      <Then> <Print>EMLINK: Too many links</Print> </Then> </If>
+   <If expression="$errno EQ %32" >
+      <Then> <Print>EPIPE: Broken pipe</Print> </Then> </If>
+   <If expression="$errno EQ %33" >
+      <Then> <Print>EDOM: Math argument out of domain of func</Print> </Then> </If>
+   <If expression="$errno EQ %34" >
+      <Then> <Print>ERANGE: Math result not representable</Print> </Then> </If>
+      
+   <Format var="$errno" />
+   <Set var="$failed" value="#TRUE"/>
+   <If expression="$abort_mode EQ #TRUE" >
+      <Then> <Abort status="FAIL" /> </Then> </If>
+</Subroutine>
+
+<!--
+ subroutines to call API functions and verify return status
+-->
+<Subroutine name="fpui_clear" description="Call fpui_clear()" >
+   <Function funcName="fpui_clear"
+             return="$returnCode"
+             errno="$errno"
+             p1="$fpui_handle" />
+   <If expression="$returnCode EQ %-1">
+      <Then>
+      <Print>Function fpui_clear() failed</Print>
+      <Call ref="Error_Handler" />
+      </Then>
+   </If>
+</Subroutine>
+
+<Subroutine name="fpui_close" description="Call fpui_close()" >
+   <Function funcName="fpui_close"
+             return="$returnCode"
+             errno="$errno"
+             p1="$fpui_handle" />
+   <If expression="$returnCode EQ %-1">
+      <Then>
+      <Print>Function fpui_close() failed</Print>
+      <Call ref="Error_Handler" />
+      </Then>
+   </If>
+</Subroutine>
+
+<Subroutine name="fpui_open" description="Call fpui_open()" >
+   <Function funcName="fpui_open"
+             return="$fpui_handle"
+             errno="$errno"
+             p1="$flags"
+             p2="$regname" />  <!-- $regname -->
+   <If expression="$fpui_handle EQ %-1">
+      <Then>
+      <Print>Function fpui_open() failed</Print>
+      <Call ref="Error_Handler" />
+      </Then>
+   </If>
+</Subroutine>
+
+<Subroutine name="fpui_write_string_at" description="Call fpui_write_string_at()" >
+   <Function funcName="fpui_write_string_at"
+             return="$write_cnt"
+             errno="$errno"
+             p1="$fpui_handle"
+             p2="$write_buf"
+             p3="$row"
+             p4="$column" />
+   <If expression="$write_cnt EQ %-1">
+      <Then>
+      <Print>Function fpui_write_string_at() failed</Print>
+      <Call ref="Error_Handler" />
+      </Then>
+   <Else>
+      <Format var="$write_buf" />
+      <Format var="$write_cnt" />
+   </Else>
+   </If>
+</Subroutine>
+
+<!--
+ test case(s)
+-->
+<TestCase name="Case_C2001d" description="C2001d: Demonstrate FPUI API function testing" >
+   <Set var="$abort_mode"  value="#TRUE"/>
+   <Set var="$failed"      value="#FALSE"/>
+
+   <!-- open a connection to the Front Panel API -->
+   <Set var="$flags"   value="#O_RDWR"/>
+   <Set var="$flags"   value="#O_NONBLOCK" operation="add" />
+   <Set var="$regname" value="@C2001d"/>
+   <Call ref="fpui_open" setUp="FPUI_Init_Variables" />
+
+   <!-- select our test application for display by FPM -->
+   <FPUIInput file="@Cxxxx_key0.txt" description="Provide keypress [0] input" />
+
+   <!-- clear our screen and confirm that it is clear -->
+   <Call ref="fpui_clear" setUp="FPUI_Init_Variables" />
+   <Dump dump="VD" file="@C2001d_vd_clr" /> <!-- (this dump only occurs in 'capture' mode) -->
+   <If expression="!VDCompare(@C2001d_vd_clr) EQ #FALSE">
+      <Then>
+      <Print >The display is NOT clear</Print>
+      <Dump dump="VD" force="#TRUE" file="@C2001d_vd_clrfail" />
+      <Abort status="FAIL" />
+      </Then>
+   </If>
+   
+   <!-- write a text string to the display at Row 3, Column 5 -->
+   <Set var="$row"       value="%3"/>
+   <Set var="$column"    value="%5"/>
+   <Set var="$write_buf" value="@Demonstration of FPUI API"/>
+   <Call ref="fpui_write_string_at" setUp="FPUI_Init_Variables" />
+   
+<!-- grab our screen and confirm the write -->
+   <Dump dump="VD" file="@C2001d_vd_00" /> <!-- (this dump only occurs in 'capture' mode) -->
+   <If expression="!VDCompare(@C2001d_vd_00) EQ #FALSE">
+      <Then>
+      <Print >The display is NOT correct</Print>
+      <Dump dump="VD" force="#TRUE" file="@C2001d_vd_00_fail" />
+      <Abort status="FAIL" />
+      </Then>
+   </If>
+
+   <!-- close our connection to the Front Panel API -->
+   <Call ref="fpui_close" setUp="FPUI_Init_Variables" />
+</TestCase>
+
+<!--
+ test suite(s)
+-->
+<TestSuite name="All_Test_Cases" description="Run All Test Cases" >
+  <TestCaseRef ref="Case_C2001d" />
+</TestSuite>
+
+</APIVSXML>
+
