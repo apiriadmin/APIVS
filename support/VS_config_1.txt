@@ -1,0 +1,28 @@
+
+# ATC 5401 API Reference Implementation Project
+# 
+#     Filename: VS_config_1.txt
+#    File Type: VSE configuration file
+#    Test Case: many
+#  Description: 
+#               
+# Date      Revision    Description
+# 10/21/15   1.0         initial release
+
+XMLInputFilePath        = ./
+XMLOutputFilePath       = ./
+SetFilePath             = ./
+
+ScreenHeight            = 8
+ScreenWidth             = 40
+
+FPUICompareFilePath     = ./
+FPUIInputFilePath       = ./
+FPUIDumpFilePath        = ./
+FPUILoopbackDevice      = /dev/sp6_loopback_b
+
+FIOCompareFilePath      = ./
+FIOResponseFilePath     = ./
+FIODumpFilePath         = ./
+FIOLoopbackDevice       = /dev/sp5s_loopback_b
+

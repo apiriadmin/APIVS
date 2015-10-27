@@ -1,0 +1,78 @@
+#!/bin/sh
+
+# ATC 5401 API Reference Implementation Project 
+# 
+#     Filename: startup
+#    File Type: Linux shell script
+#    Test Case: n/a
+#  Description: 
+#               
+# Date      Revision    Description
+# 10/21/15   1.0         initial release
+
+wait_forever() {
+	while :
+	do
+		sleep 10
+	done
+}
+
+# set port speed to 38400
+stty -F /dev/sp6 speed 38400 -echo -icanon -icrnl
+
+# due to a very odd bug we need to keep /dev/sp6 open
+sleep 10000 >/dev/sp6 &
+
+# reset display
+printf "\033c" >/dev/sp6
+sleep 1
+
+# set backlight timeout to ten minutes
+printf "\033[<60S" >/dev/sp6
+
+# turn on backlight
+printf "\033[<5h" >/dev/sp6
+
+# flush sp6 input buffer
+read -s -t 1 -n 100 keypress </dev/sp6 1>/dev/sp6 2>&1
+
+# home cursor, clear screen, write header
+printf "\x1B[H\x1B[2J" >/dev/sp6
+printf "ATC 5401 API Validation Suite v1.0" >/dev/sp6
+
+# cursor to 2,1; prompt to start
+printf "\x1B[2;1f" >/dev/sp6
+printf "Begin Test [YES]/[NO]?" >/dev/sp6
+
+# read keypress
+read -s -n 3 keypress </dev/sp6 1>/dev/sp6 2>&1
+if [ $keypress == $'\x1bOQ' ]; then RunSession=YES; fi
+if [ $keypress == $'\x1bOR' ]; then RunSession=NO; fi
+if [ "$RunSession" != "YES" ]
+then
+   # cancel session
+	printf "\x07" >/dev/sp6
+   printf "\x1B[2;1f" >/dev/sp6
+   printf "Session Canceled.             " >/dev/sp6
+	wait_forever
+fi
+
+# start VSE
+export PATH=$PATH:/media/sda1/APIVS/bin
+export LD_LIBRARY_PATH=/usr/lib:/media/sda1/APIVS/lib
+printf "\x1B[2;1f" >/dev/sp6
+printf "Running test session.         " >/dev/sp6
+cd /media/sda1/run
+source /media/sda1/runAPIVS
+sleep 2
+
+# finish
+printf "\007" >/dev/sp6
+sleep 1
+printf "\007" >/dev/sp6
+sleep 1
+printf "\007" >/dev/sp6
+printf "\x1B[3;1f" >/dev/sp6
+printf "Session complete.                \n" >/dev/sp6
+printf "Please remove USB drive and reboot.\n" >/dev/sp6
+wait_forever

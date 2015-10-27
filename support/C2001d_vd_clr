@@ -1,6 +1,6 @@
 #
 # -- Virtual Display and Global Variable Dump --
-# Date: 20101229 17:19:22 - The current contents of the display are:   
+# Date: 20151026 11:48:30 -     
 #
 # Display Rows: 
 #0       1         2         3         4         
@@ -56,7 +56,26 @@
 1
 # reverseVideo: 
 0
+# auxSwitch: 
+0
 #_cursorPos: 
 1,1
 # saved_cursorPos: 
 1,1
+#
+#
+#
+#==================================================
+#
+# Special Character Definitions:
+#  # of column bytes for the 8 special characters:
+#  1  2  3  4  5  6  7  8  
+#  -  -  -  -  -  -  -  -  
+   0, 0, 0, 0, 0, 0, 0, 0 
+# 
+# SCh  numb  Data Column bytes
+#  #   cols  (min 5, max 8)
+# ---  ----  --------------------------------------
+#
+# No Special Characters defined 
+#
