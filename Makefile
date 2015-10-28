@@ -6,7 +6,6 @@ BINDIR=bin
 DOCDIR=doc
 #LINUXINCDIR=/usr/include/linux
 LOCALINCDIR=/usr/local/include
-BSPDIR=/opt/intelight/toolchain/sdk-eb8248-1.02
 FIOINCDIR=$(BSPDIR)/usr/include
 FPUIINCDIR=$(BSPDIR)/usr/include
 TODINCDIR=$(BSPDIR)/usr/include
