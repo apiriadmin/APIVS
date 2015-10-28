@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<ApiVsRun date="2015-10-27 10:19 AM PDT" configuration="./VS_config_1.txt" input="./C2001d_in.xml" output="./C2001d_log.xml" testSuite="ALL_TESTS" level="trace" >
+
+    <Define lineNumber="15" date="2015-10-27 10:19 AM PDT" var="$fpui_handle" type="fpui_handle" />
+    <Define lineNumber="16" date="2015-10-27 10:19 AM PDT" var="$errno" type="int" />
+    <Define lineNumber="17" date="2015-10-27 10:19 AM PDT" var="$returnCode" type="int" />
+    <Define lineNumber="18" date="2015-10-27 10:19 AM PDT" var="$flags" type="int" />
+    <Define lineNumber="19" date="2015-10-27 10:19 AM PDT" var="$regname" type="char []" size="%16" />
+    <Define lineNumber="20" date="2015-10-27 10:19 AM PDT" var="$write_buf" type="char []" size="%64" />
+    <Define lineNumber="21" date="2015-10-27 10:19 AM PDT" var="$write_cnt" type="ssize_t" />
+    <Define lineNumber="22" date="2015-10-27 10:19 AM PDT" var="$row" type="int" />
+    <Define lineNumber="23" date="2015-10-27 10:19 AM PDT" var="$column" type="int" />
+    <Define lineNumber="24" date="2015-10-27 10:19 AM PDT" var="$abort_mode" type="boolean" />
+    <Define lineNumber="25" date="2015-10-27 10:19 AM PDT" var="$failed" type="boolean" />
+
+    <TestSuite lineNumber="224" date="2015-10-27 10:19 AM PDT" name="All_Test_Cases" description="Run All Test Cases" >
+
+        <TestCase lineNumber="177" date="2015-10-27 10:19 AM PDT" name="Case_C2001d" description="C2001d: Demonstrate FPUI API function testing" >
+            <Set lineNumber="178" date="2015-10-27 10:19 AM PDT" var="$abort_mode" operation="equal" value="#TRUE" />
+            <Set lineNumber="179" date="2015-10-27 10:19 AM PDT" var="$failed" operation="equal" value="#FALSE" />
+            <Set lineNumber="182" date="2015-10-27 10:19 AM PDT" var="$flags" operation="equal" value="#O_RDWR" />
+            <Set lineNumber="183" date="2015-10-27 10:19 AM PDT" var="$flags" operation="add" value="#O_NONBLOCK" />
+            <Set lineNumber="184" date="2015-10-27 10:19 AM PDT" var="$regname" operation="equal" value="@C2001d" />
+            <Call lineNumber="185" date="2015-10-27 10:19 AM PDT" ref="fpui_open" >
+                <SetUp lineNumber="30" date="2015-10-27 10:19 AM PDT" name="FPUI_Init_Variables" >
+                    <Set lineNumber="31" date="2015-10-27 10:19 AM PDT" var="$returnCode" operation="equal" value="%-1" />
+                    <Set lineNumber="32" date="2015-10-27 10:19 AM PDT" var="$errno" operation="equal" value="%0" />
+                </SetUp>
+                <Subroutine lineNumber="140" date="2015-10-27 10:19 AM PDT" name="fpui_open" description="Call fpui_open()" >
+                    <Function lineNumber="141" date="2015-10-27 10:19 AM PDT" funcName="fpui_open" return="$fpui_handle" errno="$errno" p1="$flags" p2="$regname" />
+                    <If lineNumber="146" date="2015-10-27 10:19 AM PDT" expression="$fpui_handle EQ %-1" evaluatesTo="FALSE/ELSE" >
+                    </If>
+                </Subroutine>
+            </Call>
+            <FPUIInput lineNumber="188" date="2015-10-27 10:19 AM PDT" var="@Cxxxx_key0.txt" description="Provide keypress [0] input" file="./Cxxxx_key0.txt" />
+            <Call lineNumber="191" date="2015-10-27 10:19 AM PDT" ref="fpui_clear" >
+                <SetUp lineNumber="30" date="2015-10-27 10:19 AM PDT" name="FPUI_Init_Variables" >
+                    <Set lineNumber="31" date="2015-10-27 10:19 AM PDT" var="$returnCode" operation="equal" value="%-1" />
+                    <Set lineNumber="32" date="2015-10-27 10:19 AM PDT" var="$errno" operation="equal" value="%0" />
+                </SetUp>
+                <Subroutine lineNumber="114" date="2015-10-27 10:19 AM PDT" name="fpui_clear" description="Call fpui_clear()" >
+                    <Function lineNumber="115" date="2015-10-27 10:19 AM PDT" funcName="fpui_clear" return="$returnCode" errno="$errno" p1="$fpui_handle" />
+                    <If lineNumber="119" date="2015-10-27 10:19 AM PDT" expression="$returnCode EQ %-1" evaluatesTo="FALSE/ELSE" >
+                    </If>
+                </Subroutine>
+            </Call>
+            <If lineNumber="193" date="2015-10-27 10:19 AM PDT" expression="!VDCompare(@C2001d_vd_clr) EQ #FALSE" evaluatesTo="FALSE/ELSE" >
+            </If>
+            <Set lineNumber="202" date="2015-10-27 10:19 AM PDT" var="$row" operation="equal" value="%3" />
+            <Set lineNumber="203" date="2015-10-27 10:19 AM PDT" var="$column" operation="equal" value="%5" />
+            <Set lineNumber="204" date="2015-10-27 10:19 AM PDT" var="$write_buf" operation="equal" value="@Demonstration of FPUI API" />
+            <Call lineNumber="205" date="2015-10-27 10:19 AM PDT" ref="fpui_write_string_at" >
+                <SetUp lineNumber="30" date="2015-10-27 10:19 AM PDT" name="FPUI_Init_Variables" >
+                    <Set lineNumber="31" date="2015-10-27 10:19 AM PDT" var="$returnCode" operation="equal" value="%-1" />
+                    <Set lineNumber="32" date="2015-10-27 10:19 AM PDT" var="$errno" operation="equal" value="%0" />
+                </SetUp>
+                <Subroutine lineNumber="154" date="2015-10-27 10:19 AM PDT" name="fpui_write_string_at" description="Call fpui_write_string_at()" >
+                    <Function lineNumber="155" date="2015-10-27 10:19 AM PDT" funcName="fpui_write_string_at" return="$write_cnt" errno="$errno" p1="$fpui_handle" p2="$write_buf" p3="$row" p4="$column" />
+                    <If lineNumber="162" date="2015-10-27 10:19 AM PDT" expression="$write_cnt EQ %-1" evaluatesTo="FALSE/ELSE" >
+                        <Else lineNumber="167" date="2015-10-27 10:19 AM PDT" >
+                            <Format lineNumber="168" date="2015-10-27 10:19 AM PDT" var="$write_buf" >
+                                $write_buf = [Demonstration of FPUI API]
+                            </Format>
+                            <Format lineNumber="169" date="2015-10-27 10:19 AM PDT" var="$write_cnt" >
+                                $write_cnt = [25]
+                            </Format>
+                        </Else>
+                    </If>
+                </Subroutine>
+            </Call>
+            <If lineNumber="209" date="2015-10-27 10:19 AM PDT" expression="!VDCompare(@C2001d_vd_00) EQ #FALSE" evaluatesTo="FALSE/ELSE" >
+            </If>
+            <Call lineNumber="218" date="2015-10-27 10:19 AM PDT" ref="fpui_close" >
+                <SetUp lineNumber="30" date="2015-10-27 10:19 AM PDT" name="FPUI_Init_Variables" >
+                    <Set lineNumber="31" date="2015-10-27 10:19 AM PDT" var="$returnCode" operation="equal" value="%-1" />
+                    <Set lineNumber="32" date="2015-10-27 10:19 AM PDT" var="$errno" operation="equal" value="%0" />
+                </SetUp>
+                <Subroutine lineNumber="127" date="2015-10-27 10:19 AM PDT" name="fpui_close" description="Call fpui_close()" >
+                    <Function lineNumber="128" date="2015-10-27 10:19 AM PDT" funcName="fpui_close" return="$returnCode" errno="$errno" p1="$fpui_handle" />
+                    <If lineNumber="132" date="2015-10-27 10:19 AM PDT" expression="$returnCode EQ %-1" evaluatesTo="FALSE/ELSE" >
+                    </If>
+                </Subroutine>
+            </Call>
+        </TestCase>
+
+    </TestSuite>
+
+    <RunResult date="2015-10-27 10:19 AM PDT" status="PASS" />
+
+</ApiVsRun>

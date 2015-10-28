@@ -1,0 +1,95 @@
+#!/bin/sh
+
+# ATC 5401 API Reference Implementation Project 
+# 
+#     Filename: runAPIVS
+#    File Type: Linux shell script
+#    Test Case: n/a
+#  Description: run VSE on specific test cases
+#               
+# Date      Revision    Description
+# 10/21/15   1.0         initial release
+
+# start async loopback driver; add symbolic links
+insmod /media/sda1/APIVS/bin/tty0tty.ko
+ln -s /dev/tnt0 /dev/sp6_loopback_a
+ln -s /dev/tnt1 /dev/sp6_loopback_b
+
+# start the API Front Panel Manager (loopback mode)
+modprobe front_panel
+FrontPanelManager /dev/sp6_loopback_a 1>/dev/null 2>&1 &
+MasterSelection 1>/dev/null 2>&1 &
+
+# start sync loopback driver; fio driver; add symbolic links
+insmod /media/sda1/APIVS/bin/virtual-loopback-sync.ko
+insmod /media/sda1/APIVS/bin/fiodriver.ko apivs=1
+ln -s /dev/vlsync0 /dev/sp3s_loopback_a
+ln -s /dev/vlsync1 /dev/sp3s_loopback_b
+ln -s /dev/vlsync2 /dev/sp5s_loopback_a
+ln -s /dev/vlsync3 /dev/sp5s_loopback_b
+ln -s /dev/vlsync4 /dev/sp8s_loopback_a
+ln -s /dev/vlsync5 /dev/sp8s_loopback_b
+
+# initialize test counters
+pass_count=0
+fail_count=0
+
+# a couple of useful subroutines
+clear_test_line() {
+   printf "\x1B[3;1f" >/dev/sp6
+   printf "                                        " >/dev/sp6
+   printf "\x1B[3;1f" >/dev/sp6
+   }
+print_test_result() {
+   if [ "$?" == "0" ]; then
+      printf "PASS" >/dev/sp6
+      pass_count=$((pass_count + 1))
+      else
+      printf "FAIL" >/dev/sp6
+      fail_count=$((fail_count + 1)); fi
+   printf "\x1B[8;1f" >/dev/sp6
+   printf "Test cases passed:%d failed:%d" "$pass_count" "$fail_count" >/dev/sp6
+#  keep backlight on
+   printf "\033[<5h" >/dev/sp6
+   sleep 1
+   }
+
+# set the conformance level this run (1,2,3)
+LEVEL=3
+
+# delete old log files? (FALSE will append if exists)
+DELETE_LOGS=TRUE
+
+# how many times to run?
+loop_count=1
+
+# loop through all specified test cases
+while [ $loop_count -ge 1 ]
+do
+#   if [ "$DELETE_LOGS" == TRUE ]; then rm C1001_log.xml; fi
+#   clear_test_line; printf "Testing APIVS.TCS.1001... " >/dev/sp6
+#   vse -L $LEVEL -c ./VS_config_1.txt -i C1001_in.xml -o C1001_log.xml
+#   print_test_result
+   
+   if [ "$DELETE_LOGS" == TRUE ]; then rm C2001d_log.xml; fi
+   clear_test_line; printf "Testing APIRI.TCS.2001d... " >/dev/sp6
+   vse -L $LEVEL -c ./VS_config_1.txt -i C2001d_in.xml -o C2001d_log.xml
+   print_test_result
+   
+#   if [ "$DELETE_LOGS" == TRUE ]; then rm C1009_log.xml; fi
+#   clear_test_line; printf "Testing APIVS.TCS.1009... " >/dev/sp6
+#   vse -L $LEVEL -c ./VS_config_1.txt -i C1009_in.xml -o C1009_log.xml
+#   print_test_result
+   
+#   if [ "$DELETE_LOGS" == TRUE ]; then rm C1015_log.xml; fi
+#   clear_test_line; printf "Testing APIVS.TCS.1015... " >/dev/sp6
+#   vse -L $LEVEL -c ./VS_config_1.txt -i C1015_in.xml -o C1015_log.xml
+#   print_test_result
+   
+#   if [ "$DELETE_LOGS" == TRUE ]; then rm C2010_log.xml; fi
+#   clear_test_line; printf "Testing APIRI.TCS.2010... " >/dev/sp6
+#   vse -L $LEVEL -c ./VS_config_1.txt -i C2010_in.xml -o C2010_log.xml
+#   print_test_result
+   
+   loop_count=$((loop_count - 1))
+done
