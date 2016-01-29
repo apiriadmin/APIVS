@@ -115,6 +115,7 @@ emfio_thread(EMFIO_THREAD_ARGS * args)
 	int fd = args[0].fd;						// file descriptor for Serial Port open, read, write
 	int16_t counter = 0;
 	unsigned char sdlcBuffer[MAX_SDLC_BUFFER_SIZE];
+	uint32_t responseSize = 0;
 
 #if 0/*DEBUG_ON*/
 	printf("\n\nemfio_thread %d is STARTING", args[0].thr_threadId);
@@ -148,7 +149,7 @@ emfio_thread(EMFIO_THREAD_ARGS * args)
 			} else {
 				retVal = read(fd, sdlcBuffer, MAX_SDLC_BUFFER_SIZE);
 			}
-#if 1
+#if 0
 			if (retVal > 0) {
 				printf("Received DATA:\n");
 				for (j = 0; j < retVal; j++) {
@@ -182,13 +183,22 @@ emfio_thread(EMFIO_THREAD_ARGS * args)
 								memcpy(pCommand->lastCommandBuffer, &sdlcBuffer[2], (bytesRead-2));
 								pCommand->commandReceived = 1;
 								pCommand->lastCommandSize = bytesRead-2;
-								printf("\nemfio_thread: command %d received\n", index);
+								//printf("emfio_thread: command %d received\n", index);
 							}
 						}
 						pthread_mutex_unlock(&pCommand->mutex);
 						// Send corresponding response frame if available
-						//
-						//
+						if (emfio_getResponse(index+EMFIO_SDLC_RESPONSE_OFFSET, &sdlcBuffer[2], MAX_SDLC_BUFFER_SIZE-2, &responseSize) == 0) {
+							retVal = write(fd, sdlcBuffer, responseSize+2);
+							//printf("emfio_thread: response %d sent\n", index+EMFIO_SDLC_RESPONSE_OFFSET);
+#if 0
+							printf("Sent DATA:\n");
+							for (j = 0; j < responseSize+2; j++) {
+								printf("%.2x ", sdlcBuffer[j]);
+							}
+							printf("\n");							
+#endif
+						}
 					}
 				}
 			}
@@ -258,7 +268,7 @@ emfio_start(const char * portName)
 	// If we have a port, open it.
 	if (portName != 0)
 	{
-		fd = open(portName, O_RDONLY|O_NONBLOCK, 0);
+		fd = open(portName, O_RDWR|O_NONBLOCK, 0);
 		if (fd < 0)
 		{
 			emfio_setErrorCode(EMFIO_OPEN_FAILED);

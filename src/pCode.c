@@ -1710,6 +1710,22 @@ pCode_parseFunctionOpen(XML_Parser pParser, const char **pAttr)
 				return(STATUS_FAIL);
 			}
 		}
+		else if (!strcmp(pAttr_name, A_P7))
+		{
+			// ATTR: p7
+			if (STATUS_FAIL == argValidateArgSyntax(pCode->common.lineNumber,
+													pAttr_value))
+			{
+				return(STATUS_FAIL);
+			}
+
+			if (STATUS_FAIL == argDereferenceArg(pCode->common.lineNumber,
+												 pAttr_value,
+												 &pCode->code.cFunc.arg[6]))
+			{
+				return(STATUS_FAIL);
+			}
+		}
 		else
 		{
 			// The parse failed

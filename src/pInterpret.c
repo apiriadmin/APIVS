@@ -50,6 +50,8 @@
 #include	<string.h>		// STD String Definitions
 #include	<errno.h>		// STD errno Definitions
 #include	<signal.h>		// Signal Definitions
+#include	<sys/time.h>
+#include	<sys/resource.h>
 #include	<vt100.h>		// VT100 Definitions
 #include	"vse_stnd.h"	// STD VSE Definitions
 #include	"configFile.h"	// Configuration File Definitions
@@ -975,6 +977,10 @@ interpretFunction(P_CODE *pCode)
 	{
 		outputXmlAttrAdd(A_P6, pCode->code.cFunc.arg[5]->pName);
 	}
+	if (NULL != pCode->code.cFunc.arg[6])
+	{
+		outputXmlAttrAdd(A_P7, pCode->code.cFunc.arg[6]->pName);
+	}
 	outputXmlTagCurrent(LEVEL_SUMMARY, P_FUNCTION, outputXmlAttrGet());
 
 	// See if there is a function defined
@@ -1151,7 +1157,7 @@ interpretPcode(P_CODE *pCode)
 			break;
 		}
 
-		if ((STATUS_FAIL == status) || done)
+		if ( done || (/*(pCode->type == PC_E_ABORT) &&*/ (STATUS_FAIL == status)) )
 		{
 			break;		// We failed or we are done
 		}
@@ -1206,6 +1212,7 @@ interpretTC(P_TC *pTC)
 int16_t
 interpretTS(P_TS *pTS)
 {
+	char msg[OUTPUT_STRING_MAX];
 	int16_t	status;
 	
 	P_TC	*pTC;
@@ -1216,36 +1223,43 @@ interpretTS(P_TS *pTS)
 	outputXmlAttrAddCommon(LEVEL_SUMMARY, &pTS->common, A_NAME);
 	outputXmlTagOpen(LEVEL_SUMMARY, P_TESTSUITE, outputXmlAttrGet());
 
-	if (0 != vt100_start(configFileGetFPUILBDEV(),
-						 configFileGetSH(),
-						 configFileGetSW()))
+	if (strcmp(configFileGetFPUILBDEV(), "NULL")
+		&& (0 != vt100_start(configFileGetFPUILBDEV(),
+					configFileGetSH(),
+					configFileGetSW())))
 	{
 		// vt100_start failed
-		char	string[OUTPUT_STRING_MAX];
-		sprintf(string,
+		sprintf(msg,
 				"interpretTS(): VT100 Virtual Display error starting device [%s]",
 				configFileGetFPUILBDEV());
 		OUTPUT_ERR(pTS->common.lineNumber,
-				   string,
+				   msg,
 				   vt100_get_errorText(),
 				   NULL);
 		return(STATUS_FAIL);
 	}
 
-	if (EMFIO_OK != emfio_start(configFileGetFIOLBDEV()))
+	if (strcmp(configFileGetFIOLBDEV(), "NULL")
+		&& (EMFIO_OK != emfio_start(configFileGetFIOLBDEV())))
 	{
 		// emfio_start failed
-		char	string[OUTPUT_STRING_MAX];
-		sprintf(string,
+		sprintf(msg,
 				"interpretTS(): FIO Emulator start error starting device [%s]",
 				configFileGetFIOLBDEV());
 		OUTPUT_ERR(pTS->common.lineNumber,
-				   string,
+				   msg,
 				   emfio_getErrorText(),
 				   NULL);
 		return(STATUS_FAIL);
 	}
 
+	// Lower relative priority after thread startup
+	errno = 0;
+	int prio = getpriority(PRIO_PROCESS, 0);
+	if (errno == 0) {
+		setpriority(PRIO_PROCESS, 0, prio+1);
+	}
+	
 	if (STATUS_PASS == (status = interpretSetUp(pTS->pSU)))
 	{
 		pTC = pTS->pTC;			// First TC
@@ -1271,12 +1285,12 @@ interpretTS(P_TS *pTS)
 		}
 	}
 
-	if (configFileGetFPUILBDEV())
+	if (strcmp(configFileGetFPUILBDEV(), "NULL") && configFileGetFPUILBDEV())
 	{
 		vt100_end();
 	}
 
-	if (configFileGetFIOLBDEV())
+	if (strcmp(configFileGetFIOLBDEV(), "NULL") && configFileGetFIOLBDEV())
 	{
 		emfio_end();
 	}

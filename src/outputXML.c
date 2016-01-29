@@ -103,7 +103,7 @@ static	char	*s_level_string[LEVEL_MAX] =
 static	const char		*s_attrArray[(ATTR_ARRAY_MAX * 2) + 1] = { NULL };
 /** \brief Where to add next name / value pair */
 static	const char		**s_attrNext = &s_attrArray[0];	// next element
-
+static struct timeval	start_tv;
 //=============================================================================
 /**
  * \brief This function reports the current status
@@ -168,6 +168,8 @@ outputXmlStart(RUN_LEVEL level, const char *outputXml)
 		s_outputXml = outputXml;
 	}
 
+	gettimeofday(&start_tv, NULL);
+	
 	return(STATUS_PASS);
 }
 
@@ -260,7 +262,7 @@ outputXmlErr(const int16_t lineNo,
 			 const char *desc)
 {
 	// Construct the error element to output
-	outputXmlAttrAddDate();		// Date ATTR is first
+	outputXmlAttrAddTimeStamp();		// Date ATTR is first
 
 	if (lineNo)
 	{
@@ -306,7 +308,7 @@ outputXmlInfo(const int16_t lineNo,
 			  const char 	*pDesc)
 {
 	// Construct the information element to output
-	outputXmlAttrAddDate();		// Time ATTR is first
+	outputXmlAttrAddTimeStamp();		// Time ATTR is first
 
 	if (lineNo)
 	{
@@ -599,7 +601,7 @@ outputXmlAttrAdd(const char *name, const char *value)
 
 //=============================================================================
 /**
- * \brief This function adds the time attribute to the attribute array
+ * \brief This function adds the date attribute to the attribute array
  *
  * \return		void
  */
@@ -612,9 +614,29 @@ outputXmlAttrAddDate()
 
 	// Add the time to the attribute list
 	tm = time(NULL);
-	tms = localtime(&tm);
+	tms = gmtime(&tm);
 	strftime(timeString, sizeof(timeString), DATE_FORMAT, tms);
+	
 	outputXmlAttrAdd(ATTR_DATE, timeString);
+}
+
+//=============================================================================
+/**
+ * \brief This function adds the time attribute to the attribute array
+ *
+ * \return		void
+ */
+void
+outputXmlAttrAddTimeStamp()
+{
+	struct timeval tv, current_tv;
+	static char timeString[OUTPUT_STRING_MAX];
+
+	// Add the timestamp to the attribute list
+	gettimeofday(&current_tv, NULL);
+	timersub(&current_tv, &start_tv, &tv);
+	sprintf(timeString, "%+ld.%06ld", tv.tv_sec, tv.tv_usec);
+	outputXmlAttrAdd(ATTR_TIME, timeString);
 }
 
 //=============================================================================
@@ -650,7 +672,7 @@ outputXmlAttrAddCommon(const RUN_LEVEL level, P_COMMON *pCommon, char *pName)
 		outputXmlAttrAdd(ATTR_LINE, string);
 
 		// Add the time stamp
-		outputXmlAttrAddDate();
+		outputXmlAttrAddTimeStamp();
 
 		// Add the name if it is there
 		outputXmlAttrAdd(pName, pCommon->pName);

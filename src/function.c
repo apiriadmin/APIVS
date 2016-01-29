@@ -171,6 +171,10 @@ static	int16_t	funcFpuiOpen(uint16_t		ln,
 static	int16_t	funcFpuiOpenAuxSwitch(uint16_t		ln,
 						      		  C_FUNC		*pCF);
 
+/** \brief fpui_panel_present handler */
+static	int16_t	funcFpuiPanelPresent(uint16_t		ln,
+						      		  C_FUNC		*pCF);
+
 /** \brief fpui_poll handler */
 static	int16_t	funcFpuiPoll(uint16_t		ln,
 						     C_FUNC			*pCF);
@@ -343,6 +347,10 @@ static	int16_t	funcTodSetDstState(uint16_t		ln,
 static	int16_t	funcTodSetTimesrc(uint16_t		ln,
 						   		  C_FUNC		*pCF);
 
+/** \brief tod_apiver handler */
+static	int16_t	funcTodApiver(uint16_t	ln,
+							  C_FUNC	*pCF);
+
 /** \brief fio_apiver handler */
 static	int16_t	funcFioApiver(uint16_t	ln,
 							  C_FUNC	*pCF);
@@ -387,6 +395,10 @@ static	int16_t	funcFioFiodCmuFaultGet(uint16_t	ln,
 static	int16_t	funcFioFiodCmuFaultSet(uint16_t	ln,
 								  	   C_FUNC	*pCF);
 
+/** \brief fio_fiod_cmu_config_change_count handler */
+static	int16_t	funcFioFiodCmuConfigChangeCount(uint16_t	ln,
+								  	   C_FUNC	*pCF);
+
 /** \brief fio_fiod_deregister handler */
 static	int16_t	funcFioFiodDeregister(uint16_t	ln,
 								  	  C_FUNC	*pCF);
@@ -409,6 +421,10 @@ static	int16_t	funcFioFiodFrameNotifyRegister(uint16_t	ln,
 
 /** \brief fio_fiod_frame_read handler */
 static	int16_t	funcFioFiodFrameRead(uint16_t	ln,
+								  	 C_FUNC		*pCF);
+
+/** \brief fio_fiod_frame_write handler */
+static	int16_t	funcFioFiodFrameWrite(uint16_t	ln,
 								  	 C_FUNC		*pCF);
 
 /** \brief fio_fiod_frame_schedule_get handler */
@@ -466,6 +482,14 @@ static	int16_t	funcFioFiodOutputsReservationGet(uint16_t	ln,
 /** \brief fio_fiod_outputs_reservation_set handler */
 static	int16_t	funcFioFiodOutputsReservationSet(uint16_t	ln,
 								  				 C_FUNC		*pCF);
+
+/** \brief fio_fiod_begin_outputs_set handler */
+static	int16_t	funcFioFiodBeginOutputsSet(uint16_t	ln,
+								  	  C_FUNC	*pCF);
+
+/** \brief fio_fiod_commit_outputs_set handler */
+static	int16_t	funcFioFiodCommitOutputsSet(uint16_t	ln,
+								  	  C_FUNC	*pCF);
 
 /** \brief fio_fiod_outputs_set handler */
 static	int16_t	funcFioFiodOutputsSet(uint16_t	ln,
@@ -547,6 +571,11 @@ static	int16_t	funcFioQueryFrameNotifyStatus(uint16_t	ln,
 static	int16_t	funcFioRegister(uint16_t	ln,
 								C_FUNC		*pCF);
 
+/** \brief fio_set_local_time_offset handler */
+static	int16_t	funcFioSetLocalTimeOffset(uint16_t	ln,
+								C_FUNC		*pCF);
+
+
 /** \brief Table of function pointers and arguments */
 static	FUNC_P	s_funcTable[] =
 {
@@ -564,8 +593,8 @@ static	FUNC_P	s_funcTable[] =
 		1, { VAR_FPUIH, VAR_VOID, VAR_VOID, VAR_VOID, VAR_VOID, VAR_VOID },
 		   { FUNC_IN,   0,        0,        0,        0,        0 } },
 	{ "fpui_close_aux_switch", funcFpuiCloseAuxSwitch, VAR_INT,
-		0, { VAR_VOID, VAR_VOID, VAR_VOID, VAR_VOID, VAR_VOID, VAR_VOID },
-		   { 0,        0,        0,        0,        0,        0 } },
+		1, { VAR_FPUIAUXH, VAR_VOID, VAR_VOID, VAR_VOID, VAR_VOID, VAR_VOID },
+		   { FUNC_IN,        0,        0,        0,        0,        0 } },
 	{ "fpui_compose_special_char", funcFpuiComposeSpecialChar, VAR_INT,
 		3, { VAR_FPUIH, VAR_INT, VAR_PUCHAR, VAR_VOID, VAR_VOID, VAR_VOID },
 		   { FUNC_IN,   FUNC_IN, FUNC_IN,    0,        0,        0 } },
@@ -599,7 +628,7 @@ static	FUNC_P	s_funcTable[] =
 	{ "fpui_get_cursor_pos", funcFpuiGetCursorPos, VAR_INT,
 		3, { VAR_FPUIH, VAR_INT,  VAR_INT,  VAR_VOID, VAR_VOID, VAR_VOID },
 		   { FUNC_IN,   FUNC_OUT, FUNC_OUT, 0,        0,        0 } },
-	{ "fpui_get_focus", funcFpuiGetFocus, VAR_BOOL,
+	{ "fpui_get_focus", funcFpuiGetFocus, VAR_INT,
 		1, { VAR_FPUIH, VAR_VOID, VAR_VOID, VAR_VOID, VAR_VOID, VAR_VOID },
 		   { FUNC_IN,   0,        0,        0,        0,        0 } },
 	{ "fpui_get_keymap", funcFpuiGetKeymap, VAR_INT,
@@ -626,18 +655,21 @@ static	FUNC_P	s_funcTable[] =
 	{ "fpui_open", funcFpuiOpen, VAR_FPUIH,
 		2, { VAR_INT, VAR_PCHAR, VAR_VOID, VAR_VOID, VAR_VOID, VAR_VOID },
 		   { FUNC_IN, FUNC_IN, 0,        0,        0,        0 } },
-	{ "fpui_open_aux_switch", funcFpuiOpenAuxSwitch, VAR_INT,
+	{ "fpui_open_aux_switch", funcFpuiOpenAuxSwitch, VAR_FPUIAUXH,
 		0, { VAR_VOID, VAR_VOID, VAR_VOID, VAR_VOID, VAR_VOID, VAR_VOID },
 		   { 0,        0,        0,        0,        0,        0 } },
-	{ "fpui_poll", funcFpuiPoll, VAR_BOOL,
+	{ "fpui_panel_present", funcFpuiPanelPresent, VAR_INT,
+		1, { VAR_FPUIH, VAR_VOID, VAR_VOID, VAR_VOID, VAR_VOID, VAR_VOID },
+		   { FUNC_IN,   0,        0,        0,        0,        0 } },
+	{ "fpui_poll", funcFpuiPoll, VAR_INT,
 		2, { VAR_FPUIH, VAR_INT, VAR_VOID, VAR_VOID, VAR_VOID, VAR_VOID },
 		   { FUNC_IN,   FUNC_IN, 0,        0,        0,        0 } },
 	{ "fpui_read", funcFpuiRead, VAR_SSIZET,
 		3, { VAR_FPUIH, VAR_PCHAR, VAR_INT, VAR_VOID, VAR_VOID, VAR_VOID },
 		   { FUNC_IN,   FUNC_OUT,  FUNC_IN, 0,        0,        0 } },
-	{ "fpui_read_aux_switch", funcFpuiReadAuxSwitch, VAR_BOOL,
-		0, { VAR_VOID, VAR_VOID, VAR_VOID, VAR_VOID, VAR_VOID, VAR_VOID },
-		   { 0,        0,        0,        0,        0,        0 } },
+	{ "fpui_read_aux_switch", funcFpuiReadAuxSwitch, VAR_INT,
+		1, { VAR_FPUIAUXH, VAR_VOID, VAR_VOID, VAR_VOID, VAR_VOID, VAR_VOID },
+		   { FUNC_IN,      0,        0,        0,        0,        0 } },
 	{ "fpui_read_char", funcFpuiReadChar, VAR_CHAR,
 		1, { VAR_FPUIH, VAR_VOID, VAR_VOID, VAR_VOID, VAR_VOID, VAR_VOID },
 		   { FUNC_IN,   0,        0,        0,        0,        0 } },
@@ -737,11 +769,11 @@ static	FUNC_P	s_funcTable[] =
 		4, { VAR_FAPPH, VAR_FDEVH, VAR_FCMAP, VAR_UINT, VAR_VOID, VAR_VOID },
 		   { FUNC_IN,   FUNC_IN,   FUNC_IN,   FUNC_IN,  0,        0 } },
 	{ "fio_fiod_channel_reservation_get", funcFioFiodChannelReservationGet, VAR_INT,
-		4, { VAR_FAPPH, VAR_FDEVH, VAR_FVIEW, VAR_PUCHAR, VAR_VOID, VAR_VOID },
-		   { FUNC_IN,   FUNC_IN,   FUNC_IN,   FUNC_OUT,   0,        0 } },
+		5, { VAR_FAPPH, VAR_FDEVH, VAR_FVIEW, VAR_PUCHAR, VAR_INT, VAR_VOID },
+		   { FUNC_IN,   FUNC_IN,   FUNC_IN,   FUNC_OUT,   FUNC_IN,        0 } },
 	{ "fio_fiod_channel_reservation_set", funcFioFiodChannelReservationSet, VAR_INT,
-		3, { VAR_FAPPH, VAR_FDEVH, VAR_PUCHAR, VAR_VOID, VAR_VOID, VAR_VOID },
-		   { FUNC_IN,   FUNC_IN,   FUNC_IN,    0,        0,        0 } },
+		4, { VAR_FAPPH, VAR_FDEVH, VAR_PUCHAR, VAR_INT, VAR_VOID, VAR_VOID },
+		   { FUNC_IN,   FUNC_IN,   FUNC_IN,    FUNC_IN,        0,        0 } },
 	{ "fio_fiod_cmu_dark_channel_get", funcFioFiodCmuDarkChannelGet, VAR_INT,
 		4, { VAR_FAPPH, VAR_FDEVH, VAR_FVIEW, VAR_FCMASK, VAR_VOID, VAR_VOID },
 		   { FUNC_IN,   FUNC_IN,   FUNC_IN,   FUNC_OUT,   0,        0 } },
@@ -754,6 +786,9 @@ static	FUNC_P	s_funcTable[] =
 	{ "fio_fiod_cmu_fault_set", funcFioFiodCmuFaultSet, VAR_INT,
 		3, { VAR_FAPPH, VAR_FDEVH, VAR_FCFSA, VAR_VOID, VAR_VOID, VAR_VOID },
 		   { FUNC_IN,   FUNC_IN,   FUNC_IN,   0,        0,        0 } },
+	{ "fio_fiod_cmu_config_change_count", funcFioFiodCmuConfigChangeCount, VAR_INT,
+		2, { VAR_FAPPH, VAR_FDEVH, VAR_VOID, VAR_VOID, VAR_VOID, VAR_VOID },
+		   { FUNC_IN,   FUNC_IN,   0,        0,        0,        0 } },
 	{ "fio_fiod_deregister", funcFioFiodDeregister, VAR_INT,
 		2, { VAR_FAPPH, VAR_FDEVH, VAR_VOID, VAR_VOID, VAR_VOID, VAR_VOID },
 		   { FUNC_IN,   FUNC_IN,   0,        0,        0,        0 } },
@@ -770,8 +805,8 @@ static	FUNC_P	s_funcTable[] =
 		4, { VAR_FAPPH, VAR_FDEVH, VAR_UINT, VAR_FNOTF, VAR_VOID, VAR_VOID },
 		   { FUNC_IN,   FUNC_IN,   FUNC_IN,  FUNC_IN,   0,        0 } },
 	{ "fio_fiod_frame_read", funcFioFiodFrameRead, VAR_INT,
-		6, { VAR_FAPPH, VAR_FDEVH, VAR_UINT, VAR_UINT, VAR_PUCHAR, VAR_UINT },
-		   { FUNC_IN,   FUNC_IN,   FUNC_IN,  FUNC_OUT, FUNC_OUT,   FUNC_IN } },
+		7, { VAR_FAPPH, VAR_FDEVH, VAR_UINT, VAR_UINT, VAR_PUCHAR, VAR_UINT, VAR_UINT },
+		   { FUNC_IN,   FUNC_IN,   FUNC_IN,  FUNC_OUT,  FUNC_OUT,   FUNC_IN,  FUNC_IN } },
 	{ "fio_fiod_frame_schedule_get", funcFioFiodFrameScheduleGet, VAR_INT,
 		5, { VAR_FAPPH, VAR_FDEVH, VAR_FVIEW, VAR_FFSCHD, VAR_UINT, VAR_VOID },
 		   { FUNC_IN,   FUNC_IN,   FUNC_IN,   FUNC_OUT,   FUNC_IN,  0 } },
@@ -781,6 +816,9 @@ static	FUNC_P	s_funcTable[] =
 	{ "fio_fiod_frame_size", funcFioFiodFrameSize, VAR_INT,
 		4, { VAR_FAPPH, VAR_FDEVH, VAR_UINT, VAR_UINT, VAR_VOID, VAR_VOID },
 		   { FUNC_IN,   FUNC_IN,   FUNC_IN,  FUNC_OUT, 0,        0 } },
+	{ "fio_fiod_frame_write", funcFioFiodFrameWrite, VAR_INT,
+		5, { VAR_FAPPH, VAR_FDEVH, VAR_UINT, VAR_PUCHAR, VAR_UINT, VAR_VOID },
+		   { FUNC_IN,   FUNC_IN,   FUNC_IN,  FUNC_IN,    FUNC_IN,  0 } },
 	{ "fio_fiod_inputs_filter_get", funcFioFiodInputsFilterGet, VAR_INT,
 		5, { VAR_FAPPH, VAR_FDEVH, VAR_FVIEW, VAR_FINF, VAR_UINT, VAR_VOID },
 		   { FUNC_IN,   FUNC_IN,   FUNC_IN,   FUNC_OUT, FUNC_IN,  0 } },
@@ -788,17 +826,17 @@ static	FUNC_P	s_funcTable[] =
 		4, { VAR_FAPPH, VAR_FDEVH, VAR_FINF, VAR_UINT, VAR_VOID, VAR_VOID },
 		   { FUNC_IN,   FUNC_IN,   FUNC_IN,  FUNC_IN,  0,        0 } },
 	{ "fio_fiod_inputs_get", funcFioFiodInputsGet, VAR_INT,
-		4, { VAR_FAPPH, VAR_FDEVH, VAR_FINT, VAR_PUCHAR, VAR_VOID, VAR_VOID },
-		   { FUNC_IN,   FUNC_IN,   FUNC_IN,  FUNC_OUT,   0,        0 } },
+		5, { VAR_FAPPH, VAR_FDEVH, VAR_FINT, VAR_PUCHAR, VAR_INT, VAR_VOID },
+		   { FUNC_IN,   FUNC_IN,   FUNC_IN,  FUNC_OUT,   FUNC_IN,        0 } },
 	{ "fio_fiod_inputs_trans_get", funcFioFiodInputsTransGet, VAR_INT,
-		4, { VAR_FAPPH, VAR_FDEVH, VAR_FVIEW, VAR_PUCHAR, VAR_VOID, VAR_VOID },
-		   { FUNC_IN,   FUNC_IN,   FUNC_IN,   FUNC_OUT,   0,        0 } },
+		5, { VAR_FAPPH, VAR_FDEVH, VAR_FVIEW, VAR_PUCHAR, VAR_INT, VAR_VOID },
+		   { FUNC_IN,   FUNC_IN,   FUNC_IN,   FUNC_OUT,   FUNC_IN,        0 } },
 	{ "fio_fiod_inputs_trans_read", funcFioFiodInputsTransRead, VAR_INT,
 		5, { VAR_FAPPH, VAR_FDEVH, VAR_FTST, VAR_FTBUF, VAR_UINT, VAR_VOID },
 		   { FUNC_IN,   FUNC_IN,   FUNC_OUT, FUNC_OUT,  FUNC_IN,  0 } },
 	{ "fio_fiod_inputs_trans_set", funcFioFiodInputsTransSet, VAR_INT,
-		3, { VAR_FAPPH, VAR_FDEVH, VAR_UINT, VAR_VOID, VAR_VOID, VAR_VOID },
-		   { FUNC_IN,   FUNC_IN,   FUNC_IN,  0,        0,        0 } },
+		4, { VAR_FAPPH, VAR_FDEVH, VAR_PUCHAR, VAR_INT, VAR_VOID, VAR_VOID },
+		   { FUNC_IN,   FUNC_IN,   FUNC_IN,  FUNC_IN,        0,        0 } },
 	{ "fio_fiod_mmu_flash_bit_get", funcFioFiodMmuFlashBitGet, VAR_INT,
 		4, { VAR_FAPPH, VAR_FDEVH, VAR_FVIEW, VAR_FMFB, VAR_VOID, VAR_VOID },
 		   { FUNC_IN,   FUNC_IN,   FUNC_IN,   FUNC_OUT, 0,        0 } },
@@ -809,14 +847,20 @@ static	FUNC_P	s_funcTable[] =
 		6, { VAR_FAPPH, VAR_FDEVH, VAR_FVIEW, VAR_PUCHAR, VAR_PUCHAR, VAR_UINT },
 		   { FUNC_IN,   FUNC_IN,   FUNC_IN,   FUNC_OUT,   FUNC_OUT,   FUNC_IN } },
 	{ "fio_fiod_outputs_reservation_get", funcFioFiodOutputsReservationGet, VAR_INT,
-		4, { VAR_FAPPH, VAR_FDEVH, VAR_FVIEW, VAR_PUCHAR, VAR_VOID, VAR_VOID },
-		   { FUNC_IN,   FUNC_IN,   FUNC_IN,   FUNC_OUT,   0,        0 } },
+		5, { VAR_FAPPH, VAR_FDEVH, VAR_FVIEW, VAR_PUCHAR, VAR_INT, VAR_VOID },
+		   { FUNC_IN,   FUNC_IN,   FUNC_IN,   FUNC_OUT,   FUNC_IN,        0 } },
 	{ "fio_fiod_outputs_reservation_set", funcFioFiodOutputsReservationSet, VAR_INT,
-		3, { VAR_FAPPH, VAR_FDEVH, VAR_PUCHAR, VAR_VOID, VAR_VOID, VAR_VOID },
-		   { FUNC_IN,   FUNC_IN,   FUNC_IN,    0,        0,        0 } },
+		4, { VAR_FAPPH, VAR_FDEVH, VAR_PUCHAR, VAR_INT, VAR_VOID, VAR_VOID },
+		   { FUNC_IN,   FUNC_IN,   FUNC_IN,    FUNC_IN,        0,        0 } },
+	{ "fio_fiod_begin_outputs_set", funcFioFiodBeginOutputsSet, VAR_INT,
+		1, { VAR_FAPPH, VAR_VOID, VAR_VOID, VAR_VOID, VAR_VOID, VAR_VOID },
+		   { FUNC_IN,   0,        0,        0,        0,        0 } },
+	{ "fio_fiod_commit_outputs_set", funcFioFiodCommitOutputsSet, VAR_INT,
+		1, { VAR_FAPPH, VAR_VOID, VAR_VOID, VAR_VOID, VAR_VOID, VAR_VOID },
+		   { FUNC_IN,   0,        0,        0,        0,        0 } },
 	{ "fio_fiod_outputs_set", funcFioFiodOutputsSet, VAR_INT,
-		4, { VAR_FAPPH, VAR_FDEVH, VAR_PUCHAR, VAR_PUCHAR, VAR_VOID, VAR_VOID },
-		   { FUNC_IN,   FUNC_IN,   FUNC_IN,    FUNC_IN,    0,        0 } },
+		5, { VAR_FAPPH, VAR_FDEVH, VAR_PUCHAR, VAR_PUCHAR, VAR_INT, VAR_VOID },
+		   { FUNC_IN,   FUNC_IN,   FUNC_IN,    FUNC_IN,    FUNC_IN,        0 } },
 	{ "fio_fiod_register", funcFioFiodRegister, VAR_FDEVH,
 		3, { VAR_FAPPH, VAR_FPORT, VAR_FDEVT, VAR_VOID, VAR_VOID, VAR_VOID },
 		   { FUNC_IN,   FUNC_IN,   FUNC_IN,   0,        0,        0 } },
@@ -874,13 +918,16 @@ static	FUNC_P	s_funcTable[] =
 	{ "fio_register", funcFioRegister, VAR_FAPPH,
 		0, { VAR_VOID, VAR_VOID, VAR_VOID, VAR_VOID, VAR_VOID, VAR_VOID },
 		   { 0,        0,        0,        0,        0,        0 } },
+	{ "fio_set_local_time_offset", funcFioSetLocalTimeOffset, VAR_INT,
+		2, { VAR_FAPPH, VAR_INT, VAR_VOID, VAR_VOID, VAR_VOID, VAR_VOID },
+		   { FUNC_IN,   FUNC_IN, 0,        0,        0,        0 } },
 
 	// TOD Library
 	{ "tod_cancel_onchange_signal", funcTodCancelOnchangeSignal, VAR_INT,
-		0, { VAR_VOID, VAR_VOID, VAR_VOID, VAR_VOID, VAR_VOID, VAR_VOID },
+		1, { VAR_INT, VAR_VOID, VAR_VOID, VAR_VOID, VAR_VOID, VAR_VOID },
 		   { 0,        0,        0,        0,        0,        0 } },
 	{ "tod_cancel_tick_signal", funcTodCancelTickSignal, VAR_INT,
-		0, { VAR_VOID, VAR_VOID, VAR_VOID, VAR_VOID, VAR_VOID, VAR_VOID },
+		1, { VAR_INT, VAR_VOID, VAR_VOID, VAR_VOID, VAR_VOID, VAR_VOID },
 		   { 0,        0,        0,        0,        0,        0 } },
 	{ "tod_get", funcTodGet, VAR_INT, 
 		3, { VAR_TVAL, VAR_INT,  VAR_INT,  VAR_VOID, VAR_VOID, VAR_VOID },
@@ -915,6 +962,9 @@ static	FUNC_P	s_funcTable[] =
 	{ "tod_set_timesrc", funcTodSetTimesrc, VAR_INT,
 		1, { VAR_INT, VAR_VOID, VAR_VOID, VAR_VOID, VAR_VOID, VAR_VOID },
 		   { FUNC_IN, 0,        0,        0,        0,        0 } },
+	{ "tod_apiver", funcTodApiver, VAR_PCHAR,
+		0, { VAR_VOID, VAR_VOID, VAR_VOID, VAR_VOID, VAR_VOID, VAR_VOID },
+		   { 0,		0, 	 0,        0,        0,        0 } },
 
 	// LAST ENTRY
 	{ NULL, NULL, VAR_VOID,
@@ -1143,9 +1193,12 @@ funcFpuiApiver(uint16_t	lineNumber,
 
 	if (pCF->returnValue)
 	{
-		strncpy(pCF->returnValue->arg.data.value.pCharValue,
+		if (argReturn != NULL)
+			strncpy(pCF->returnValue->arg.data.value.pCharValue,
 				argReturn,
 				pCF->returnValue->arg.data.size);
+		else //may need to free value array?
+			pCF->returnValue->arg.data.value.pCharValue = NULL;
 	}
 
 	if (pCF->errnoValue)
@@ -1313,11 +1366,11 @@ funcFpuiCloseAuxSwitch(uint16_t	lineNumber,
 	// Call fpui_close_aux_switch()
 	int				argReturn;
 	int				argErrno;
-	fpui_handle		argHandle = 0;
+	fpui_aux_handle		argHandle = 0;
 
 	if (pCF->arg[0])
 	{
-		if (STATUS_FAIL == argCastFpuiHandle(lineNumber,
+		if (STATUS_FAIL == argCastFpuiAuxHandle(lineNumber,
 											 pCF->arg[0],
 											 &argHandle))
 		{
@@ -1910,8 +1963,8 @@ funcFpuiGetFocus(uint16_t	lineNumber,
 		   	  	 C_FUNC		*pCF)
 {
 	// Call fpui_get_focus()
-	boolean			argReturn;
-	int				argErrno;
+	int			argReturn;
+	int			argErrno;
 	fpui_handle		argHandle = 0;
 
 	if (pCF->arg[0])
@@ -2381,10 +2434,54 @@ funcFpuiOpenAuxSwitch(uint16_t	lineNumber,
 		   	  		  C_FUNC	*pCF)
 {
 	// Call fpui_open_aux_switch()
-	int				argReturn;
+	fpui_aux_handle			argHandle;
 	int				argErrno;
 
-	argReturn = fpui_open_aux_switch();
+	argHandle = fpui_open_aux_switch();
+	argErrno = errno;
+
+	if (pCF->returnValue)
+	{
+		pCF->returnValue->arg.data.value.fpuiAuxHandle = argHandle;
+	}
+
+	if (pCF->errnoValue)
+	{
+		pCF->errnoValue->arg.data.value.intValue = argErrno;
+	}
+
+	return(STATUS_PASS);
+}
+
+//=============================================================================
+/**
+ * \brief This function handles call fpui_panel_present()
+ *
+ * \param[in]	lineNumber - Line number in XML file
+ * \param[in]	pCF - Pointer to function calling info
+ * \return		STATUS_PASS - Test conformance (PASS)
+ * 				STATUS_FAIL - Test nonconformance (FAIL)
+ */
+static int16_t
+funcFpuiPanelPresent(uint16_t	lineNumber,
+		   	 C_FUNC		*pCF)
+{
+	// Call fpui_panel_present()
+	int			argReturn;
+	int			argErrno;
+	fpui_handle		argHandle = 0;
+
+	if (pCF->arg[0])
+	{
+		if (STATUS_FAIL == argCastFpuiHandle(lineNumber,
+							pCF->arg[0], 
+							&argHandle))
+		{
+			return(STATUS_FAIL);
+		}
+	}
+
+	argReturn = fpui_panel_present(argHandle);
 	argErrno = errno;
 
 	if (pCF->returnValue)
@@ -2414,16 +2511,16 @@ funcFpuiPoll(uint16_t	lineNumber,
 		   	 C_FUNC		*pCF)
 {
 	// Call fpui_poll()
-	boolean			argReturn;
-	int				argErrno;
+	int			argReturn;
+	int			argErrno;
 	fpui_handle		argHandle = 0;
-	int				argFlags = 0;
+	int			argFlags = 0;
 
 	if (pCF->arg[0])
 	{
 		if (STATUS_FAIL == argCastFpuiHandle(lineNumber,
-											 pCF->arg[0],
-											 &argHandle))
+							pCF->arg[0],
+							&argHandle))
 		{
 			return(STATUS_FAIL);
 		}
@@ -2559,11 +2656,11 @@ funcFpuiReadAuxSwitch(uint16_t	lineNumber,
 	// Call fpui_read_aux_switch()
 	boolean			argReturn;
 	int				argErrno;
-	fpui_handle		argHandle = 0;
+	fpui_aux_handle		argHandle = 0;
 
 	if (pCF->arg[0])
 	{
-		if (STATUS_FAIL == argCastFpuiHandle(lineNumber,
+		if (STATUS_FAIL == argCastFpuiAuxHandle(lineNumber,
 											 pCF->arg[0],
 											 &argHandle))
 		{
@@ -4273,10 +4370,18 @@ funcTodCancelOnchangeSignal(uint16_t	lineNumber,
 		   					C_FUNC		*pCF)
 {
 	// Call tod_cancel_onchange_signal()
+	int				argHandle = 0;
 	int				argReturn;
 	int				argErrno;
 
-	argReturn = tod_cancel_onchange_signal();
+	if (pCF->arg[0])
+	{
+		if (STATUS_FAIL == argCastInt(lineNumber, pCF->arg[0], &argHandle))
+		{
+			return(STATUS_FAIL);
+		}
+	}
+	argReturn = tod_cancel_onchange_signal(argHandle);
 	argErrno = errno;
 
 	if (pCF->returnValue)
@@ -4306,15 +4411,13 @@ funcTodCancelTickSignal(uint16_t	lineNumber,
 		   				C_FUNC		*pCF)
 {
 	// Call tod_cancel_tick_signal()
-	int				argReturn;
 	int				argHandle = 0;
+	int				argReturn;
 	int				argErrno;
 
 	if (pCF->arg[0])
 	{
-		if (STATUS_FAIL == argCastInt(lineNumber,
-											 pCF->arg[0],
-											 &argHandle))
+		if (STATUS_FAIL == argCastInt(lineNumber, pCF->arg[0], &argHandle))
 		{
 			return(STATUS_FAIL);
 		}
@@ -4785,6 +4888,44 @@ funcTodSetTimesrc(uint16_t	lineNumber,
 
 //=============================================================================
 /**
+ * \brief This function handles call tod_apiver()
+ *
+ * \param[in]	lineNumber - Line number in XML file
+ * \param[in]	pCF - Pointer to function calling info
+ * \return		STATUS_PASS - Test conformance (PASS)
+ * 				STATUS_FAIL - Test nonconformance (FAIL)
+ */
+static int16_t
+funcTodApiver(uint16_t	lineNumber,
+		   	   C_FUNC	*pCF)
+{
+	// Call tod_apiver()
+	char			*argReturn;
+	int			argErrno;
+
+	argReturn = tod_apiver();
+	argErrno = errno;
+
+	if (pCF->returnValue)
+	{
+		if (argReturn != NULL)
+			strncpy(pCF->returnValue->arg.data.value.pCharValue,
+				argReturn,
+				pCF->returnValue->arg.data.size);
+		else // may need to free value array?
+			pCF->returnValue->arg.data.value.pCharValue = NULL;
+	}
+
+	if (pCF->errnoValue)
+	{
+		pCF->errnoValue->arg.data.value.intValue = argErrno;
+	}
+
+	return(STATUS_PASS);
+}
+
+//=============================================================================
+/**
  * \brief This function handles call fio_apiver()
  *
  * \param[in]	lineNumber - Line number in XML file
@@ -4823,9 +4964,13 @@ funcFioApiver(uint16_t	lineNumber,
 
 	if (pCF->returnValue)
 	{
-		strncpy(pCF->returnValue->arg.data.value.pCharValue,
+		if (argReturn != NULL)
+			strncpy(pCF->returnValue->arg.data.value.pCharValue,
 				argReturn,
 				pCF->returnValue->arg.data.size);
+		else // may need to free value array?
+			pCF->returnValue->arg.data.value.pCharValue = NULL;
+			
 	}
 
 	if (pCF->errnoValue)
@@ -5542,6 +5687,57 @@ funcFioFiodCmuFaultSet(uint16_t	lineNumber,
 
 //=============================================================================
 /**
+ * \brief This function handles call fio_fiod_cmu_config_change_count()
+ *
+ * \param[in]	lineNumber - Line number in XML file
+ * \param[in]	pCF - Pointer to function calling info
+ * \return		STATUS_PASS - Test conformance (PASS)
+ * 				STATUS_FAIL - Test nonconformance (FAIL)
+ */
+static int16_t
+funcFioFiodCmuConfigChangeCount(uint16_t	lineNumber,
+					   C_FUNC		*pCF)
+{
+	// Call fio_fiod_cmu_config_change_count()
+	int				argErrno;
+	int				argChangeCount;
+	FIO_APP_HANDLE	argHandle = -1;
+	FIO_DEV_HANDLE	argDh = -1;
+
+	if (pCF->arg[0])
+	{
+		if (STATUS_FAIL == argCastFapph(lineNumber, pCF->arg[0], &argHandle))
+		{
+			return(STATUS_FAIL);
+		}
+	}
+
+	if (pCF->arg[1])
+	{
+		if (STATUS_FAIL == argCastFdevh(lineNumber, pCF->arg[1], &argDh))
+		{
+			return(STATUS_FAIL);
+		}
+	}
+
+	argChangeCount = fio_fiod_cmu_config_change_count(argHandle, argDh);
+	argErrno = errno;
+
+	if (pCF->returnValue)
+	{
+		pCF->returnValue->arg.data.value.intValue = argChangeCount;
+	}
+
+	if (pCF->errnoValue)
+	{
+		pCF->errnoValue->arg.data.value.intValue = argErrno;
+	}
+
+	return(STATUS_PASS);
+}
+
+//=============================================================================
+/**
  * \brief This function handles call fio_fiod_deregister()
  *
  * \param[in]	lineNumber - Line number in XML file
@@ -5676,7 +5872,7 @@ funcFioFiodEnable(uint16_t	lineNumber,
 			return(STATUS_FAIL);
 		}
 	}
-printf("\nfio_fiod_enable\n");
+
 	argReturn = fio_fiod_enable(argHandle, argDh);
 	argErrno = errno;
 
@@ -5847,6 +6043,7 @@ funcFioFiodFrameRead(uint16_t	lineNumber,
 	unsigned int	seq = -1;
 	unsigned char	*argBuf = NULL;
 	unsigned int	count = 0;
+	unsigned int	timeout = 0;
 
 	if (pCF->arg[0])
 	{
@@ -5880,6 +6077,14 @@ funcFioFiodFrameRead(uint16_t	lineNumber,
 		}
 	}
 
+	if (pCF->arg[6])
+	{
+		if (STATUS_FAIL == argCastUint(lineNumber, pCF->arg[6], &timeout))
+		{
+			return(STATUS_FAIL);
+		}
+	}
+
 	if (count > 0)
 	{
 		if (NULL == (argBuf = malloc(count * sizeof(unsigned char))))
@@ -5887,7 +6092,7 @@ funcFioFiodFrameRead(uint16_t	lineNumber,
 			// malloc failed
 			char	string[OUTPUT_STRING_MAX];
 			sprintf(string,
-					"funcFioFiodFrameScheduleGet(): Failed to malloc [%d] bytes for unsigned char, count [%d]",
+					"funcFioFiodFrameRead(): Failed to malloc [%d] bytes for unsigned char, count [%d]",
 					count * sizeof(unsigned char),
 					count);
 			OUTPUT_ERR(lineNumber, string, strerror(errno), NULL);
@@ -5897,12 +6102,8 @@ funcFioFiodFrameRead(uint16_t	lineNumber,
 		memset(argBuf, 0, count * sizeof(unsigned char));
 	}
 
-	argReturn = fio_fiod_frame_read(argHandle,
-									argDh,
-									rx_frame,
-									&seq,
-									argBuf,
-									count);
+	argReturn = fio_fiod_frame_read(argHandle, argDh, rx_frame, &seq,
+					argBuf,	count, timeout);
 	argErrno = errno;
 
 	if (pCF->arg[3])
@@ -6110,8 +6311,8 @@ funcFioFiodFrameScheduleSet(uint16_t	lineNumber,
 		{
 			memcpy(argSchd,
 				   pCF->arg[2]->arg.data.value.fioFschd,
-				   MIN(sizeof(FIO_INPUT_FILTER) * pCF->arg[2]->arg.data.size,
-				   	   sizeof(FIO_INPUT_FILTER) * count));
+				   MIN(sizeof(FIO_FRAME_SCHD) * pCF->arg[2]->arg.data.size,
+				   	   sizeof(FIO_FRAME_SCHD) * count));
 		}
 	}
 
@@ -6197,6 +6398,104 @@ funcFioFiodFrameSize(uint16_t	lineNumber,
 	if (pCF->errnoValue)
 	{
 		pCF->errnoValue->arg.data.value.intValue = argErrno;
+	}
+
+	return(STATUS_PASS);
+}
+
+//=============================================================================
+/**
+ * \brief This function handles call fio_fiod_frame_write()
+ *
+ * \param[in]	lineNumber - Line number in XML file
+ * \param[in]	pCF - Pointer to function calling info
+ * \return		STATUS_PASS - Test conformance (PASS)
+ * 				STATUS_FAIL - Test nonconformance (FAIL)
+ */
+static int16_t
+funcFioFiodFrameWrite(uint16_t	lineNumber,
+							C_FUNC		*pCF)
+{
+	// Call fio_fiod_frame_write()
+	int				argErrno;
+	int				argReturn;
+	FIO_APP_HANDLE	argHandle = -1;
+	FIO_DEV_HANDLE	argDh = -1;
+	unsigned int	argFrameNumber;
+	unsigned char	*argPayload = NULL;
+	unsigned int	count = 0;
+
+	if (pCF->arg[0])
+	{
+		if (STATUS_FAIL == argCastFapph(lineNumber, pCF->arg[0], &argHandle))
+		{
+			return(STATUS_FAIL);
+		}
+	}
+
+	if (pCF->arg[1])
+	{
+		if (STATUS_FAIL == argCastFdevh(lineNumber, pCF->arg[1], &argDh))
+		{
+			return(STATUS_FAIL);
+		}
+	}
+
+	if (pCF->arg[2])
+	{
+		if (STATUS_FAIL == argCastUint(lineNumber, pCF->arg[2], &argFrameNumber))
+		{
+			return(STATUS_FAIL);
+		}
+	}
+
+	if (pCF->arg[4])
+	{
+		if (STATUS_FAIL == argCastUint(lineNumber, pCF->arg[4], &count))
+		{
+			return(STATUS_FAIL);
+		}
+	}
+
+	if (count > 0)
+	{
+		if (NULL == (argPayload = malloc(count)))
+		{
+			// malloc failed
+			char	string[OUTPUT_STRING_MAX];
+			sprintf(string,
+					"funcFioFiodFrameWrite(): Failed to malloc [%d] bytes for payload, count [%d]",
+					count,
+					count);
+			OUTPUT_ERR(lineNumber, string, strerror(errno), NULL);
+			return(STATUS_FAIL);
+		}
+
+		memset(argPayload, 0, count);
+		if (pCF->arg[3])
+		{
+			memcpy(argPayload,
+				   pCF->arg[3]->arg.data.value.pUcharValue,
+				   MIN(pCF->arg[3]->arg.data.size, count));
+		}
+	}
+
+	argReturn = fio_fiod_frame_write(argHandle, argDh, argFrameNumber, argPayload, count);
+	argErrno = errno;
+
+	if (pCF->returnValue)
+	{
+		pCF->returnValue->arg.data.value.intValue = argReturn;
+	}
+
+	if (pCF->errnoValue)
+	{
+		pCF->errnoValue->arg.data.value.intValue = argErrno;
+	}
+
+	if (argPayload)
+	{
+		free(argPayload);
 	}
 
 	return(STATUS_PASS);
@@ -6497,7 +6796,7 @@ funcFioFiodInputsTransGet(uint16_t	lineNumber,
 	int				argReturn;
 	FIO_APP_HANDLE	argHandle = -1;
 	FIO_DEV_HANDLE	argDh = -1;
-	FIO_VIEW		argView = -1;
+	FIO_VIEW	argView = -1;
 	unsigned char	data[FIO_INPUT_POINTS_BYTES];
 	unsigned int	count = 0;
 
@@ -6681,7 +6980,7 @@ funcFioFiodInputsTransSet(uint16_t	lineNumber,
 	int				argReturn;
 	FIO_APP_HANDLE	argHandle = -1;
 	FIO_DEV_HANDLE	argDh = -1;
-	ARG_P			argTo;
+	ARG_P		argTo;
 	unsigned char	data[FIO_INPUT_POINTS_BYTES];
 	unsigned int	count = 0;
 
@@ -6930,7 +7229,6 @@ funcFioFiodOutputsGet(uint16_t	lineNumber,
 									 count);
 	argErrno = errno;
 
-printf("\ncall to fio_fiod_outputs_get: count=%d\n", count);
 	if (pCF->arg[3])
 	{
 		memset(pCF->arg[3]->arg.data.value.pUcharValue, 0, pCF->arg[3]->arg.data.size);
@@ -7103,6 +7401,90 @@ funcFioFiodOutputsReservationSet(uint16_t	lineNumber,
 	}
 
 	argReturn = fio_fiod_outputs_reservation_set(argHandle, argDh, data, count);
+	argErrno = errno;
+
+	if (pCF->returnValue)
+	{
+		pCF->returnValue->arg.data.value.intValue = argReturn;
+	}
+
+	if (pCF->errnoValue)
+	{
+		pCF->errnoValue->arg.data.value.intValue = argErrno;
+	}
+
+	return(STATUS_PASS);
+}
+
+//=============================================================================
+/**
+ * \brief This function handles call fio_fiod_begin_outputs_set()
+ *
+ * \param[in]	lineNumber - Line number in XML file
+ * \param[in]	pCF - Pointer to function calling info
+ * \return		STATUS_PASS - Test conformance (PASS)
+ * 				STATUS_FAIL - Test nonconformance (FAIL)
+ */
+static int16_t
+funcFioFiodBeginOutputsSet(uint16_t	lineNumber,
+					  C_FUNC		*pCF)
+{
+	// Call fio_fiod_begin_outputs_set()
+	int				argErrno;
+	int				argReturn;
+	FIO_APP_HANDLE	argHandle = -1;
+
+	if (pCF->arg[0])
+	{
+		if (STATUS_FAIL == argCastFapph(lineNumber, pCF->arg[0], &argHandle))
+		{
+			return(STATUS_FAIL);
+		}
+	}
+
+	argReturn = fio_fiod_begin_outputs_set(argHandle);
+	argErrno = errno;
+
+	if (pCF->returnValue)
+	{
+		pCF->returnValue->arg.data.value.intValue = argReturn;
+	}
+
+	if (pCF->errnoValue)
+	{
+		pCF->errnoValue->arg.data.value.intValue = argErrno;
+	}
+
+	return(STATUS_PASS);
+}
+
+//=============================================================================
+/**
+ * \brief This function handles call fio_fiod_commit_oututs_set()
+ *
+ * \param[in]	lineNumber - Line number in XML file
+ * \param[in]	pCF - Pointer to function calling info
+ * \return		STATUS_PASS - Test conformance (PASS)
+ * 				STATUS_FAIL - Test nonconformance (FAIL)
+ */
+static int16_t
+funcFioFiodCommitOutputsSet(uint16_t	lineNumber,
+					  C_FUNC		*pCF)
+{
+	// Call fio_fiod_deregister()
+	int				argErrno;
+	int				argReturn;
+	FIO_APP_HANDLE	argHandle = -1;
+
+	if (pCF->arg[0])
+	{
+		if (STATUS_FAIL == argCastFapph(lineNumber, pCF->arg[0], &argHandle))
+		{
+			return(STATUS_FAIL);
+		}
+	}
+
+	argReturn = fio_fiod_commit_outputs_set(argHandle);
 	argErrno = errno;
 
 	if (pCF->returnValue)
@@ -8201,6 +8583,57 @@ funcFioRegister(uint16_t	lineNumber,
 	if (pCF->returnValue)
 	{
 		pCF->returnValue->arg.data.value.fioAppHandle = argHandle;
+	}
+
+	if (pCF->errnoValue)
+	{
+		pCF->errnoValue->arg.data.value.intValue = argErrno;
+	}
+
+	return(STATUS_PASS);
+}
+//=============================================================================
+/**
+ * \brief This function handles call fio_set_local_time_offset()
+ *
+ * \param[in]	lineNumber - Line number in XML file
+ * \param[in]	pCF - Pointer to function calling info
+ * \return		STATUS_PASS - Test conformance (PASS)
+ * 				STATUS_FAIL - Test nonconformance (FAIL)
+ */
+static int16_t
+funcFioSetLocalTimeOffset(uint16_t	lineNumber,
+				C_FUNC		*pCF)
+{
+	// Call fio_set_local_time_offset()
+	int				argErrno;
+	int				argReturn;
+	FIO_APP_HANDLE			argHandle = -1;
+	int				argTzsec_offset = 0;
+
+	if (pCF->arg[0])
+	{
+		if (STATUS_FAIL == argCastFapph(lineNumber, pCF->arg[0], &argHandle))
+		{
+			return(STATUS_FAIL);
+		}
+	}
+
+	if (pCF->arg[1])
+	{
+		if (STATUS_FAIL ==
+				argCastInt(lineNumber, pCF->arg[1], &argTzsec_offset))
+		{
+			return(STATUS_FAIL);
+		}
+	}
+
+	argReturn = fio_set_local_time_offset(argHandle, &argTzsec_offset);
+	argErrno = errno;
+
+	if (pCF->returnValue)
+	{
+		pCF->returnValue->arg.data.value.intValue = argReturn;
 	}
 
 	if (pCF->errnoValue)

@@ -135,10 +135,10 @@ char *outPtr = outBuf;
 						inPtr+= 4;
 					}
 			} 
-			else 
-			{       // ordinary character 
-				*outPtr++ = nextChar;
-			}
+			//else 
+			//{       // ordinary character 
+			//	*outPtr++ = nextChar;
+			//}
 		}
 			
 	}     //   end while 

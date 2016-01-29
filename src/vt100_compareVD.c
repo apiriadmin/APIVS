@@ -44,6 +44,7 @@
 /**
  * Includes
  */
+#include <unistd.h>
 #include "vt100.h"
 
 //=============================================================================
@@ -124,7 +125,8 @@ char errorBuffer[100] = {
 	//     7.  Compare the Special Character Bitmaps per each SC
 	//     8.  Compare Completed OKAY!
 	//
-	
+	//pthread_mutex_lock(&vDisplay.mutex);
+	usleep(100000);
 	while ( compareStage < COMPARE_COMPLETE  )
 	{
 		    // read a line at a time to compare with the VD
@@ -453,7 +455,8 @@ char errorBuffer[100] = {
 		}   // endif - compareStage > COMPARE_CURSOR  
 	
 	}   // end - while ( 1) 
-
+	//pthread_mutex_unlock(&vDisplay.mutex);
+	
 	if( compareStage != COMPARE_COMPLETE)   // check for incomplete "compare file" without all the "stages"
 	{
 		if( errorBuffer[0] == '\0')         // not here because of a break on a prior error 

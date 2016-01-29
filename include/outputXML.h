@@ -86,9 +86,10 @@
 #define	TAG_INFO			"Info"
 #define	ATTR_INFO			"information"
 
-#define	DATE_FORMAT			"%F %I:%M %P %Z"
+#define	DATE_FORMAT			"%F %r %Z"
 #define	ATTR_DATE			"date"
 
+#define ATTR_TIME			"time"
 //=============================================================================
 /**
  * Macro Defines
@@ -181,10 +182,12 @@ extern	void	outputXmlAttrAdd(const char *name, const char *value);
 /** \brief Definition for adding a date attribute to array */
 extern	void	outputXmlAttrAddDate();
 
+/** \brief Definition for adding a timestamp attribute to array */
+extern	void	outputXmlAttrAddTimeStamp();
+
 /** \brief Function for adding common attributes to tag */
 extern	void	outputXmlAttrAddCommon(const RUN_LEVEL level,
-									   P_COMMON *pCommon,
-									   char *pName);
+					P_COMMON *pCommon, char *pName);
 
 /** \brief Show the VD in the output file */
 extern	void	outputXmlShowVD(const char	*desc);

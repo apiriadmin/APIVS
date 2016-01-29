@@ -170,6 +170,7 @@ typedef struct pCode P_CODE;
 #define	A_P4		"p4"
 #define	A_P5		"p5"
 #define	A_P6		"p6"
+#define A_P7		"p7"
 #define	A_TIME		"time"
 #define	A_FORCE		"force"
 #define	A_FRAME		"frame"

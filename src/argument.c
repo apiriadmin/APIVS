@@ -91,6 +91,7 @@ static char		*s_varType_string[] =
 	V_INT,
 	V_UINT,
 	V_FPUIH,
+	V_FPUIAUXH,
 	V_OFLAGS,
 	V_FAPPH,
 	V_FDEVH,
@@ -135,6 +136,7 @@ static	VAR_TYPE	s_varType[] =
 	VAR_INT,		// VAR_INT
 	VAR_INT,		// VAR_UINT
 	VAR_INT,		// VAR_FPUIH
+	VAR_FPUIAUXH,		// VAR_FPUIAUXH
 	VAR_INT,		// VAR_OFLAGS
 	VAR_INT,		// VAR_FAPPH
 	VAR_INT,		// VAR_FDEVH
@@ -386,6 +388,10 @@ argParseType(const char *pValue, VAR_TYPE *pType)
 	else if (!strcmp(pValue, V_FPUIH))
 	{
 		*pType = VAR_FPUIH;
+	}
+	else if (!strcmp(pValue, V_FPUIAUXH))
+	{
+		*pType = VAR_FPUIAUXH;
 	}
 	else if (!strcmp(pValue, V_OFLAGS))
 	{
@@ -2331,6 +2337,35 @@ argSetVar(uint16_t		ln,
 			}
 			break;
 
+		case VAR_FPUIAUXH:
+			{
+				if (pValue == NULL)
+				{
+					char	string[OUTPUT_STRING_MAX];
+					sprintf(string,
+							"argSetVar(): Must set data type [%s] from a value",
+							argVarStringGet(pVar->varType));
+					OUTPUT_ERR(ln, string, NULL, NULL);
+					break;
+				}
+
+				if (   (operation == OP_ADD)
+					|| (operation == OP_SUB))
+				{
+					OUTPUT_ERR(ln, 
+							   "argSetVar(): Operation add/subtract not allowed on this variable type",
+							   NULL,
+							   NULL);
+				}
+				else
+				{
+					status = argCastFpuiAuxHandle(ln,
+											   pValue,
+											   &pVar->arg.data.value.fpuiAuxHandle);
+				}
+			}
+			break;
+
 		case VAR_OFLAGS:
 			{
 				int		value;
@@ -3301,6 +3336,12 @@ argCastNumCompare(uint16_t		lineNumber,
 				}
 				break;
 
+				case VAR_FPUIAUXH:
+				{
+					*pLong = (long)pArg->arg.data.value.fpuiAuxHandle;
+				}
+				break;
+
 				case VAR_FAPPH:
 				{
 					*pLong = (long)pArg->arg.data.value.fioAppHandle;
@@ -3542,6 +3583,12 @@ argCastInt(uint16_t		lineNumber,
 				}
 				break;
 
+				case VAR_FPUIAUXH:
+				{
+					*pInt = (int)pArg->arg.data.value.fpuiAuxHandle;
+				}
+				break;
+
 				case VAR_SSIZET:
 				{
 					*pInt = (int)pArg->arg.data.value.ssizetValue;
@@ -3766,6 +3813,90 @@ argCastFpuiHandle(uint16_t		lineNumber,
 					"argCastFpuiHandle(): Cannot assign argument [%s] to a [%s]",
 					argArgStringGet(pArg->argType),
 					argVarStringGet(VAR_FPUIH));
+			OUTPUT_ERR(lineNumber, string, NULL, NULL);
+			status = STATUS_FAIL;
+		}
+		break;
+
+	}
+
+	return(status);
+}
+
+//=============================================================================
+/**
+ * \brief This function casts an argument to a fpui_aux_handle
+ *
+ * \param[in]	lineNumber - Line number in APIVSXML file
+ * \param[in]	pArg - Pointer from argument
+ * \param[in]	pFH - Point to fpui_handle to return
+ * \return		STATUS_PASS - Parse occurred correctly
+ * 				STATUS_FAIL - Parse failed
+ */
+int16_t
+argCastFpuiAuxHandle(uint16_t		lineNumber,
+		   		  ARG_P			*pArg,
+		   		  fpui_aux_handle	*pFAuxH)
+{
+	char	string[OUTPUT_STRING_MAX];
+	int16_t	status = STATUS_PASS;
+
+	switch (pArg->argType)
+	{
+		case ARG_VAR:
+		{
+			switch (pArg->varType)
+			{
+				case VAR_INT:
+				{
+					*pFAuxH = (fpui_aux_handle)pArg->arg.data.value.intValue;
+				}
+				break;
+
+				case VAR_FPUIAUXH:
+				{
+					*pFAuxH = pArg->arg.data.value.fpuiAuxHandle;
+				}
+				break;
+
+				default:
+				{
+					OUTPUT_ERR(lineNumber,
+								"argCastFpuiAuxHandle(): Cast not allowed from this data type",
+								NULL,
+								NULL);
+					status = STATUS_FAIL;
+				}
+				break;
+			}
+		}
+		break;
+
+		case ARG_NAMED_CONST:
+		case ARG_NUMERIC_CONST:
+		{
+			// Named constant is always a VAR_INT
+			*pFAuxH = pArg->arg.data.value.intValue;
+		}
+		break;
+
+		case ARG_MACRO:
+		{
+			OUTPUT_ERR(lineNumber,
+						"argCastFpuiAuxHandle(): ARG_MACRO NOT Implemented",
+						NULL,
+						NULL);
+			status = STATUS_FAIL;
+		}
+		break;
+
+		case ARG_STRING_CONST:
+		default:
+		{
+			sprintf(string,
+					"argCastFpuiAuxHandle(): Cannot assign argument [%s] to a [%s]",
+					argArgStringGet(pArg->argType),
+					argVarStringGet(VAR_FPUIAUXH));
 			OUTPUT_ERR(lineNumber, string, NULL, NULL);
 			status = STATUS_FAIL;
 		}
@@ -5206,6 +5337,10 @@ argCastPchar(uint16_t		lineNumber,
 		
 		case ARG_NAMED_CONST:
 		case ARG_NUMERIC_CONST:
+			if (!strcmp(pFrom->pName, NC_NULL)) {
+				pTo->arg.data.value.pCharValue = NULL;
+			}
+			break;	
 		default:
 		{
 			sprintf(string,
@@ -5492,6 +5627,12 @@ argCastBoolean(uint16_t		lineNumber,
 				}
 				break;
 
+				case VAR_FPUIAUXH:
+				{
+					*pBoolean = (boolean)pArg->arg.data.value.fpuiAuxHandle;
+				}
+				break;
+
 				case VAR_SSIZET:
 				{
 					*pBoolean = (boolean)pArg->arg.data.value.ssizetValue;
@@ -5582,6 +5723,12 @@ argCastUint(uint16_t		lineNumber,
 				case VAR_FPUIH:
 				{
 					*pUint = (unsigned int)pArg->arg.data.value.fpuiHandle;
+				}
+				break;
+
+				case VAR_FPUIAUXH:
+				{
+					*pUint = (unsigned int)pArg->arg.data.value.fpuiAuxHandle;
 				}
 				break;
 
@@ -5865,6 +6012,7 @@ argCompareType(uint16_t		ln,
 		case VAR_INT:
 		case VAR_UINT:
 		case VAR_FPUIH:
+		case VAR_FPUIAUXH:
 		case VAR_OFLAGS:
 		case VAR_FAPPH:
 		case VAR_FDEVH:

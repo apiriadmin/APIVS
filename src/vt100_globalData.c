@@ -127,7 +127,7 @@ VIRTUAL_DISPLAY vDisplay = {
 		NULL,        //   *pTextBuf[]
 		NULL,        //   *pAttribsBuf[]
 		0, 	         //    ptrsBufSize;    
-		0            //    charsBufSize;  
+		0,            //    charsBufSize;
 };
 
 VIRTUAL_DISPLAY *pVD = &vDisplay;       // intialize with default display - will be replaced by malloc'd array 

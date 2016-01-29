@@ -62,7 +62,7 @@
 #define	ARG_SPECIAL_CHAR_BUF_SIZE_MIN	(8)
 
 /** \brief Maxiumu number of functions arguments, of all functions */
-#define	ARG_MAX		(6)		// Maximum arguments
+#define	ARG_MAX		(7)		// Maximum arguments
 
 /** \brief Variable definition prefix */
 #define	ARG_VAR_PREFIX				'$'
@@ -95,6 +95,7 @@ typedef enum
 	VAR_INT,				// int
 	VAR_UINT,				// unsigned int
 	VAR_FPUIH,				// fpui_handle
+	VAR_FPUIAUXH,				// fpui_aux_handle
 	VAR_OFLAGS,				// O_FLAGS
 	VAR_FAPPH,				// FIO_APP_HANDLE
 	VAR_FDEVH,				// FIO_DEV_HANDLE
@@ -131,6 +132,7 @@ typedef enum
 #define	V_INT		"int"
 #define	V_UINT		"unsigned int"
 #define	V_FPUIH		"fpui_handle"
+#define V_FPUIAUXH	"fpui_aux_handle"
 #define	V_OFLAGS	"O_FLAGS"
 #define	V_FAPPH		"FIO_APP_HANDLE"
 #define	V_FDEVH		"FIO_DEV_HANDLE"
@@ -365,6 +367,8 @@ typedef union argValue
 
 	fpui_handle		fpuiHandle;			// FPUI Handle
 
+	fpui_aux_handle		fpuiAuxHandle;			// FPUI AUX Handle
+
 	ssize_t			ssizetValue;		// Ssize_t value
 
 	FIO_APP_HANDLE	fioAppHandle;		// FIO handle
@@ -553,6 +557,11 @@ extern	int16_t	argCastInt(uint16_t	ln,
 extern	int16_t	argCastFpuiHandle(uint16_t		ln,
 						   		  ARG_P			*pArg,
 						   		  fpui_handle	*pFH);
+
+/** \brief Cast argument to fpui_aux_handle */
+extern	int16_t	argCastFpuiAuxHandle(uint16_t		ln,
+						   		  ARG_P			*pArg,
+						   		  fpui_aux_handle	*pFAuxH);
 
 /** \brief Cast argument to FIO_APP_HANDLE */
 extern	int16_t	argCastFapph(uint16_t		ln,

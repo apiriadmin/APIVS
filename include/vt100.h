@@ -134,6 +134,7 @@
 #define GET_CURSOR_POS      16
 #define SAVE_CURSOR_POS     17
 #define REST_CURSOR_POS     18
+#define HOME_CURSOR         19
 
 
 // Special Characters Constants 
@@ -195,6 +196,7 @@ typedef struct vtdisplay {
 	char *pAttribsBuf;       // char buffer for attribs that row pointers point into
 	int   ptrsBufSize;       // size of the malloc'd pointer lists - for later free() calls
 	int   charsBufSize;      // size of the malloc'd character buffers (text & attribs)  
+	pthread_mutex_t mutex;
 } VIRTUAL_DISPLAY;
 
 typedef struct cursor {
