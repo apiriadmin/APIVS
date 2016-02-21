@@ -426,45 +426,47 @@ static
 int16_t
 interpretFIOR(P_CODE *pCode)
 {
-	char			file[OUTPUT_STRING_MAX];
-	char			frame[OUTPUT_STRING_MAX];
-	unsigned char	*pBuf;
-	unsigned int	size;
+	char            file[OUTPUT_STRING_MAX];
+	char            frame[OUTPUT_STRING_MAX];
+	char            delaystr[OUTPUT_STRING_MAX];
+	unsigned char   *pBuf;
+	unsigned int    size;
+	int		delay = 0;
 
-	sprintf(file,
-			"%s%s",
-			configFileGetFIORFP(),
-			pCode->code.cFIOR.pFile->arg.data.value.pCharValue);
+	sprintf(file, "%s%s", configFileGetFIORFP(),
+		pCode->code.cFIOR.pFile->arg.data.value.pCharValue);
 	sprintf(frame, "%d", pCode->code.cFIOR.pFrame->arg.data.value.intValue);
+	if (pCode->code.cFIOR.pDelay) {
+		delay = pCode->code.cFIOR.pDelay->arg.data.value.intValue;
+		sprintf(delaystr, "%d", delay);
+	}
 
 	// Complete FIOR format processing
-	outputXmlAttrAddCommon(LEVEL_TRACE,  &pCode->common, A_VAR);
+	outputXmlAttrAddCommon(LEVEL_TRACE, &pCode->common, A_VAR);
 	outputXmlAttrAdd(A_FILE, file);
 	outputXmlAttrAdd(A_FRAME, frame);
+	if (pCode->code.cFIOR.pDelay) {
+		outputXmlAttrAdd(A_DELAY, delaystr);	
+	}
 	outputXmlTagCurrent(LEVEL_TRACE, P_FIOR, outputXmlAttrGet());
 
 	if (STATUS_FAIL == argSet(pCode->common.lineNumber,
-							  configFileGetFIORFP(),
-							  pCode->code.cFIOR.pFile->arg.data.value.pCharValue,
-							  &pBuf,
-							  &size))
+					configFileGetFIORFP(),
+					pCode->code.cFIOR.pFile->arg.data.value.pCharValue,
+					&pBuf,
+					&size))
 	{
 		return(STATUS_FAIL);
 	}
 
 	if (emfio_setResponse(pCode->code.cFIOR.pFrame->arg.data.value.intValue,
-						  pBuf,
-						  (uint32_t)size))
+				pBuf, (uint32_t)size, (uint32_t)delay) != 0)
 	{
 		// Could not load response
-		char	string[OUTPUT_STRING_MAX];
-		sprintf(string,
-				"interpretFIOR(): Could not load response frame [%s]",
-				frame);
-		OUTPUT_ERR(pCode->common.lineNumber,
-				   string,
-				   emfio_getErrorText(),
-				   NULL);
+		char string[OUTPUT_STRING_MAX];
+		sprintf(string, "interpretFIOR(): Could not load response frame [%s]",
+			frame);
+		OUTPUT_ERR(pCode->common.lineNumber, string, emfio_getErrorText(), NULL);
 		free(pBuf);
 		return(STATUS_FAIL);
 	}

@@ -41,6 +41,7 @@
 /**
  * Includes
  */
+#include <unistd.h>
 #include <string.h>		// memcmp, memcpy
 #include <stdlib.h>		// malloc, free
 #include "emfio.h"
@@ -408,7 +409,7 @@ emfio_getLastCommandSize(int command, uint32_t * commandSize)
 
 //=============================================================================
 int16_t
-emfio_setResponse(int response, const unsigned char * buffer, uint32_t bufSize)
+emfio_setResponse(int response, const unsigned char *buffer, uint32_t bufSize, uint32_t delay)
 {
 	int16_t localErrorCode = EMFIO_OK;
 
@@ -417,12 +418,12 @@ emfio_setResponse(int response, const unsigned char * buffer, uint32_t bufSize)
 
 	int16_t index = (int16_t)response;
 	if ((index < EMFIO_SDLC_RESPONSE_OFFSET) ||
-        (index > (EMFIO_SDLC_RESPONSE_OFFSET + EMFIO_MAX_NUM_COMMANDS)))
+		(index > (EMFIO_SDLC_RESPONSE_OFFSET + EMFIO_MAX_NUM_COMMANDS)))
 	{
 		emfio_setErrorCode(EMFIO_BAD_RESPONSE);
 		return -1;
 	}
-	SDLCResponseInfo * pResponse = &emfio_responses[index - EMFIO_SDLC_RESPONSE_OFFSET];
+	SDLCResponseInfo *pResponse = &emfio_responses[index - EMFIO_SDLC_RESPONSE_OFFSET];
 	if (pResponse->initialized == 0)
 	{
 		emfio_setErrorCode(EMFIO_BAD_RESPONSE);
@@ -451,6 +452,7 @@ emfio_setResponse(int response, const unsigned char * buffer, uint32_t bufSize)
 			memcpy(pResponse->responseBuffer, buffer, bufSize);
 			pResponse->responseSize = bufSize;
 			pResponse->responsePreloaded = 1;
+			pResponse->responseDelay = delay;
 		}
 	}
 	pthread_mutex_unlock(&pResponse->mutex);
@@ -467,7 +469,7 @@ emfio_setResponse(int response, const unsigned char * buffer, uint32_t bufSize)
 
 //=============================================================================
 int16_t
-emfio_getResponse(int response, unsigned char * buffer, uint32_t bufSize, uint32_t * responseSize)
+emfio_getResponse(int response, unsigned char *buffer, uint32_t bufSize, uint32_t *responseSize)
 {
 	int16_t localErrorCode = EMFIO_OK;
 
@@ -475,7 +477,7 @@ emfio_getResponse(int response, unsigned char * buffer, uint32_t bufSize, uint32
 
 	int16_t index = (int16_t)response;
 	if ((index < EMFIO_SDLC_RESPONSE_OFFSET) ||
-        (index > (EMFIO_SDLC_RESPONSE_OFFSET + EMFIO_MAX_NUM_COMMANDS)))
+		(index > (EMFIO_SDLC_RESPONSE_OFFSET + EMFIO_MAX_NUM_COMMANDS)))
 	{
 		emfio_setErrorCode(EMFIO_BAD_RESPONSE);
 		return -1;
@@ -490,6 +492,9 @@ emfio_getResponse(int response, unsigned char * buffer, uint32_t bufSize, uint32
 	{
 		emfio_setErrorCode(EMFIO_NO_RESPONSE_EXPECTED);
 		return -1;
+	}
+	if (pResponse->responseDelay) {
+		usleep(pResponse->responseDelay);
 	}
 	pthread_mutex_lock(&pResponse->mutex);
 	{
@@ -526,7 +531,7 @@ emfio_getResponse(int response, unsigned char * buffer, uint32_t bufSize, uint32
 
 //=============================================================================
 int16_t
-emfio_getResponseSize(int response, uint32_t * responseSize)
+emfio_getResponseSize(int response, uint32_t *responseSize)
 {
 	int16_t localErrorCode = EMFIO_OK;
 

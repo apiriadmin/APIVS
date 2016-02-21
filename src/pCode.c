@@ -5535,15 +5535,13 @@ pCode_parseFIOROpen(XML_Parser pParser, const char **pAttr)
 		{
 			// ATTR: Sequence Number
 			frameFound = TRUE;
-			if (STATUS_FAIL == argValidateArgSyntax(pCode->common.lineNumber,
-													pAttr_value))
+			if (STATUS_FAIL == argValidateArgSyntax(pCode->common.lineNumber, pAttr_value))
 			{
 				return(STATUS_FAIL);
 			}
 
-			if (STATUS_FAIL == argDereferenceArg(pCode->common.lineNumber,
-												 pAttr_value,
-												 &pCode->code.cFIOR.pFrame))
+			if (STATUS_FAIL == argDereferenceArg(pCode->common.lineNumber, pAttr_value,
+								&pCode->code.cFIOR.pFrame))
 			{
 				return(STATUS_FAIL);
 			}
@@ -5557,6 +5555,54 @@ pCode_parseFIOROpen(XML_Parser pParser, const char **pAttr)
 						argVarStringGet(VAR_INT),
 						argVarStringGet(pCode->code.cFIOR.pFrame->varType),
 						A_FRAME);
+				OUTPUT_ERR(pCode->common.lineNumber,
+						   string,
+						   NULL,
+						   NULL);
+				return(STATUS_FAIL);
+			}
+		}
+		else if (!strcmp(pAttr_name, A_DELAY))
+		{
+			// ATTR: delay
+			if (!(ptr = malloc(strlen(pAttr_value) + 1)))
+			{
+				// Malloc failed
+				char	string[OUTPUT_STRING_MAX];
+
+				sprintf(string,
+						"pCode_parseSleepOpen(): Failed to malloc space for attribute [%s] size [%d]",
+						pAttr_name,
+						strlen(pAttr_value) + 1);
+				OUTPUT_ERR(pCode->common.lineNumber,
+						   string,
+						   strerror(errno),
+						   NULL);
+				return(STATUS_FAIL);
+			}
+
+			strncpy(ptr, pAttr_value, strlen(pAttr_value) + 1);
+			pCode->common.pName = ptr;
+
+			if (STATUS_FAIL == argValidateArgSyntax(pCode->common.lineNumber, pAttr_value))
+			{
+				return(STATUS_FAIL);
+			}
+
+			if (STATUS_FAIL == argDereferenceArg(pCode->common.lineNumber, pAttr_value,
+								&pCode->code.cFIOR.pDelay))
+			{
+				return(STATUS_FAIL);
+			}
+
+			if (pCode->code.cFIOR.pDelay->varType != VAR_INT)
+			{
+				// Illegal variable type specified
+				char	string[OUTPUT_STRING_MAX];
+				sprintf(string,
+						"pCode_parseFIOROpen(): Invalid variable specified, [%s] required [%s] passed",
+						argVarStringGet(VAR_INT),
+						argVarStringGet(pCode->code.cFIOR.pDelay->varType));
 				OUTPUT_ERR(pCode->common.lineNumber,
 						   string,
 						   NULL,

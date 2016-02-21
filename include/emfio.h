@@ -265,37 +265,38 @@
 
 typedef struct SDLCCommandInfoTag
 {
-	pthread_mutex_t 	mutex;
-	int8_t				initialized;
-	int 				commandType;
+	pthread_mutex_t mutex;
+	int8_t          initialized;
+	int             commandType;
 
 	// For keeping track of received commands.
-	uint8_t				commandReceived;
-	uint8_t				commandVariableLength;
-	int16_t				possibleResponses;
-	uint32_t			maxCommandSize;
-	uint32_t			lastCommandSize;
-	unsigned char * 	lastCommandBuffer;
-	uint32_t			commandReceivedCounter;
+	uint8_t         commandReceived;
+	uint8_t         commandVariableLength;
+	int16_t         possibleResponses;
+	uint32_t        maxCommandSize;
+	uint32_t        lastCommandSize;
+	unsigned char   *lastCommandBuffer;
+	uint32_t        commandReceivedCounter;
 
 	// The next three are for statistics.
-	uint32_t			commandCount;
-	time_t				startCountEpoch;
-	time_t				endCountEpoch;
+	uint32_t        commandCount;
+	time_t          startCountEpoch;
+	time_t          endCountEpoch;
 } SDLCCommandInfo;
 
 typedef struct SDLCResponseInfoTag
 {
-	pthread_mutex_t 	mutex;
-	int8_t				initialized;
-	int					responseType;
+	pthread_mutex_t mutex;
+	int8_t          initialized;
+	int             responseType;
 
 	// For pre-loading responses
-	uint8_t				responsePreloaded;
-	uint8_t				responseVariableLength;
-	uint32_t			responseSize;
-	uint32_t			responseAllocSize;
-	unsigned char * 	responseBuffer;
+	uint8_t         responsePreloaded;
+	uint8_t         responseVariableLength;
+	uint32_t        responseSize;
+	uint32_t        responseAllocSize;
+	unsigned char   *responseBuffer;
+	uint32_t        responseDelay;
 } SDLCResponseInfo;
 
 //=============================================================================
@@ -318,7 +319,7 @@ extern int16_t  	emfio_compareCommand(int command, const unsigned char * buffer,
 extern int16_t  	emfio_getLastCommandSize(int command, uint32_t * commandSize);
 extern int16_t  	emfio_loadCommand(int command, const unsigned char * buffer, uint32_t bufSize);
 
-extern int16_t  	emfio_setResponse(int response, const unsigned char * buffer, uint32_t bufSize);
+extern int16_t  	emfio_setResponse(int response, const unsigned char * buffer, uint32_t bufSize, uint32_t delay);
 extern int16_t  	emfio_getResponse(int response, unsigned char * buffer, uint32_t bufSize, uint32_t * responseSize);
 extern int16_t  	emfio_getResponseSize(int command, uint32_t * responseSize);
 

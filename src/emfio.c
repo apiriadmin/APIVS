@@ -113,7 +113,6 @@ int16_t
 emfio_thread(EMFIO_THREAD_ARGS * args)
 {
 	int fd = args[0].fd;						// file descriptor for Serial Port open, read, write
-	int16_t counter = 0;
 	unsigned char sdlcBuffer[MAX_SDLC_BUFFER_SIZE];
 	uint32_t responseSize = 0;
 
@@ -133,14 +132,10 @@ emfio_thread(EMFIO_THREAD_ARGS * args)
 	}
 	else     
 	{        
-		// Open the file.
-		fd_set rfds;
-		struct timeval tv;
-		
 		// Loop until we are told to stop.
 		while (!emfio_allDone)
 		{
-			int retVal = 0, j = 0;
+			int retVal = 0;
 			struct pollfd fdinfo;
 			fdinfo.fd = fd;
 			fdinfo.events = POLLIN|POLLPRI;
@@ -152,12 +147,11 @@ emfio_thread(EMFIO_THREAD_ARGS * args)
 #if 0
 			if (retVal > 0) {
 				printf("Received DATA:\n");
-				for (j = 0; j < retVal; j++) {
+				for (int j = 0; j < retVal; j++) {
 					printf("%.2x ", sdlcBuffer[j]);
 				}
 				printf("\n");
 			}
-			printf("return value is %d\n", retVal);
 #endif
 			int bytesRead = retVal;
 			if (bytesRead > 0)
@@ -192,8 +186,8 @@ emfio_thread(EMFIO_THREAD_ARGS * args)
 							retVal = write(fd, sdlcBuffer, responseSize+2);
 							//printf("emfio_thread: response %d sent\n", index+EMFIO_SDLC_RESPONSE_OFFSET);
 #if 0
-							printf("Sent DATA:\n");
-							for (j = 0; j < responseSize+2; j++) {
+							printf("Sent DATA (delay=%d):\n", emfio_responses[index].responseDelay);
+							for (int j = 0; j < responseSize+2; j++) {
 								printf("%.2x ", sdlcBuffer[j]);
 							}
 							printf("\n");							
