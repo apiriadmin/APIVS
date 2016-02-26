@@ -710,9 +710,10 @@ outputXmlShowCMD(int frame)
 
 //=============================================================================
 /**
- * \brief Dump a buffer in a hex dump fashion
+ * \brief Dump a buffer in SHF format (RFC4194)
  *
  * \param[in]	pFile - FILE * to dump to
+ * \param[in]	pName - Name attribute
  * \param[in]	pBuf - Buffer to hexdump
  * \param[in]	size - Number of bytes to dump
  * 
@@ -720,32 +721,29 @@ outputXmlShowCMD(int frame)
  *              STATUS_SUCCESS = Operation succeeded
  */
 void
-outputXmlHex(const RUN_LEVEL level, void *pBuf, unsigned int size)
+outputXmlHex(const RUN_LEVEL level, const char *pName, void *pBuf, unsigned int size)
 {
 	unsigned int	ii;
 	void			*end;
 	void			*tmpptr;
 	void			*tmpend;
-	void			*addr = NULL;
 
 	if (level > s_level)
 	{
 		return;
 	}
 
-	fprintf(s_outputFile, "0x???????? ");
-	for (ii = 0; ii < 16; ii++)
-	{
-		fprintf(s_outputFile, "%02x ", ii);
+	fprintf(s_outputFile, "<dump name=\"%s\" blocks=\"%lx\">\n", "RFC4194 Format Hexdump", 1L);
+	fprintf(s_outputFile, "<block name=\"%s\" ", pName);
+	fprintf(s_outputFile, "address=\"%016lx\" ", 0L);
+	fprintf(s_outputFile, "word_size=\"%lx\" ", 1L);
+	fprintf(s_outputFile, "length=\"%lx\"\n", (unsigned long)size);
+	fprintf(s_outputFile, "checksum=\"");
+	for (ii = 0; ii < 20; ii++) {
+		fprintf(s_outputFile, "%02x", ii);
 	}
-	fprintf(s_outputFile, "\n");
-	fprintf(s_outputFile, "---------- ");
-	for (ii = 0; ii < 16; ii++)
-	{
-		fprintf(s_outputFile, "-- ");
-	}
-	fprintf(s_outputFile, "\n");
-
+	fprintf(s_outputFile, "\">\n");
+	// The bytes
 	end = pBuf + size;
 	while (pBuf < end)
 	{
@@ -757,8 +755,6 @@ outputXmlHex(const RUN_LEVEL level, void *pBuf, unsigned int size)
 		}
 
 		// Output the hex codes
-		fprintf(s_outputFile, "%10p ", addr);
-		addr += 16;
 		ii = 0;
 		while (tmpptr < tmpend)
 		{
@@ -771,22 +767,10 @@ outputXmlHex(const RUN_LEVEL level, void *pBuf, unsigned int size)
 			fprintf(s_outputFile, "   ");
 		}
 
-		// Output the ASCII codes
-		tmpptr = pBuf;
-		while (tmpptr < tmpend)
-		{
-			if ((' ' > *(uint8_t *)tmpptr) || (0x7f < *(uint8_t *)tmpptr))
-			{
-				fprintf(s_outputFile, ".");
-			}
-			else
-			{
-				fprintf(s_outputFile, "%c", *(uint8_t *)tmpptr);
-			}
-			tmpptr++;
-		}
 		fprintf(s_outputFile, "\n");
 
 		pBuf = tmpend;
 	}
+	fprintf(s_outputFile, "</block>\n");
+	fprintf(s_outputFile, "</dump>\n");
 }

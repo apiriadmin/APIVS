@@ -45,8 +45,8 @@
  * Includes
  */
 
-#include	"vse.h"			// VSE Definitions
-#include	"pCode.h"		// P_CODE Definitions
+#include "vse.h"        // VSE Definitions
+#include "pCode.h"      // P_CODE Definitions
 
 //=============================================================================
 /**
@@ -54,42 +54,42 @@
  */
 
 /** \brief Test Run PASS */
-#define	STATUS_PASS	(0)		// Status of a PASS run
+#define	STATUS_PASS (0)        // Status of a PASS run
 /** \brief Test Run FAIL */
-#define	STATUS_FAIL	(-1)	// Status of a FAIL run
+#define	STATUS_FAIL (-1)       // Status of a FAIL run
 
 /** \brief Output string buffer */
-#define	OUTPUT_STRING_MAX	(256)
+#define	OUTPUT_STRING_MAX (256)
 
 /** \brief Output Element Tags */
-#define	XML_TAG				"xml version=\"1.0\" encoding=\"utf-8\""
-#define	XML_QUESTION_MARK	'?'
-#define	XML_CLOSE			'/'
-#define	TAG_APIVSRUN		"ApiVsRun"
-#define	ATTR_CONFIG			"configuration"
-#define	ATTR_INPUT			"input"
-#define	ATTR_OUTPUT			"output"
-#define	ATTR_TESTSUITE		"testSuite"
-#define	ATTR_LEVEL			"level"
+#define	XML_TAG                "xml version=\"1.0\" encoding=\"utf-8\""
+#define	XML_QUESTION_MARK      '?'
+#define	XML_CLOSE              '/'
+#define	TAG_APIVSRUN           "ApiVsRun"
+#define	ATTR_CONFIG            "configuration"
+#define	ATTR_INPUT             "input"
+#define	ATTR_OUTPUT            "output"
+#define	ATTR_TESTSUITE         "testSuite"
+#define	ATTR_LEVEL             "level"
 
-#define	TAG_RUNRESULT		"RunResult"
-#define	ATTR_STATUS			"status"
-#define	VALUE_PASS			"PASS"
-#define	VALUE_FAIL			"FAIL"
+#define	TAG_RUNRESULT          "RunResult"
+#define	ATTR_STATUS            "status"
+#define	VALUE_PASS             "PASS"
+#define	VALUE_FAIL             "FAIL"
 
-#define	TAG_ERROR			"Error"
-#define	ATTR_ERROR			"error"
-#define	ATTR_ERRNO			"errno"
-#define	ATTR_DESC			"description"
-#define	ATTR_LINE			"lineNumber"
+#define	TAG_ERROR              "Error"
+#define	ATTR_ERROR             "error"
+#define	ATTR_ERRNO             "errno"
+#define	ATTR_DESC              "description"
+#define	ATTR_LINE              "line"
 
-#define	TAG_INFO			"Info"
-#define	ATTR_INFO			"information"
+#define	TAG_INFO               "Info"
+#define	ATTR_INFO              "information"
 
-#define	DATE_FORMAT			"%F %r %Z"
-#define	ATTR_DATE			"date"
+#define	DATE_FORMAT            "%F %r %Z"
+#define	ATTR_DATE              "date"
 
-#define ATTR_TIME			"time"
+#define ATTR_TIME              "timestamp"
 //=============================================================================
 /**
  * Macro Defines
@@ -115,93 +115,84 @@
  */
 
 /** \brief Get the current run atatus */
-extern	int		outputXmlStatusGet();
+extern int outputXmlStatusGet();
 
 /** \brief Should a print / dump occur? */
-extern	int		outputXmlShouldPrint(const RUN_LEVEL level);
+extern int outputXmlShouldPrint(const RUN_LEVEL level);
 
 /** \brief Definition for Output XML constructor */
-extern	int16_t	outputXmlStart(const RUN_LEVEL level,
-							   const char *outputXml);
+extern int16_t	outputXmlStart(const RUN_LEVEL level, const char *outputXml);
 
 /** \brief Definition for Output XML destructor */
-extern	void	outputXmlEnd();
+extern void outputXmlEnd();
 
 /** \brief Defintion for Output XML trace to STDERR */
-extern	void	outputXmlTrace(const char *string,
-							   const char *file,
-							   int16_t line);
+extern void outputXmlTrace(const char *string, const char *file,
+						int16_t line);
 
 /** \brief Definition for Output XML Error to APIOUTXML File */
-extern	void	outputXmlErr(const int16_t lineNo,
-							 const char *errStr,
-							 const char *errnoStr,
-							 const char *desc);
+extern void outputXmlErr(const int16_t lineNo, const char *errStr,
+						const char *errnoStr,
+						const char *desc);
 
 /** \brief Definition for Output XML Info to APIOUTXML File */
-extern	void	outputXmlInfo(const int16_t lineNo,
-							  const char *pInfo,
-							  const char *pDesc);
+extern void outputXmlInfo(const int16_t lineNo, const char *pInfo,
+						const char *pDesc);
 
 /** \brief Function for outputting an opening tag <tag attr-list> */
-extern	void	outputXmlTagOpen(const RUN_LEVEL level,
-								 const char *tag,
-								 const char **attr);
+extern void outputXmlTagOpen(const RUN_LEVEL level, const char *tag,
+						const char **attr);
 
 /** \brief Function for outputting <tag attr-list /> */
-extern	void	outputXmlTagCurrent(const RUN_LEVEL level,
-									const char *tag,
-									const char **attr);
+extern void outputXmlTagCurrent(const RUN_LEVEL level, const char *tag,
+						const char **attr);
 
 /** \brief Function for outputting <? string ?>*/
-extern	void	outputXmlTagCurrentString(const RUN_LEVEL level,
-										  const char *string,
-										  const char open,
-										  const char close);
+extern void outputXmlTagCurrentString(const RUN_LEVEL level,
+						const char *string,
+						const char open,
+						const char close);
 
 /** \brief Function for outputting a closing tag </tag> */
-extern	void	outputXmlTagClose(const RUN_LEVEL level,
-								  const char *tag);
+extern void outputXmlTagClose(const RUN_LEVEL level, const char *tag);
 
 /** \brief Function for outputting text <tag>text</tag> */
-extern	void	outputXmlText(const RUN_LEVEL level,
-							  const char *pText);
+extern void outputXmlText(const RUN_LEVEL level, const char *pText);
 
 /** \brief Function for outputting a newline <tag>[newline]</tag> */
-extern	void	outputXmlNewLine(const RUN_LEVEL level);
+extern void outputXmlNewLine(const RUN_LEVEL level);
 
 /** \brief Definition for getting output file name */
-extern	const char	*outputXmlGetOutput();
+extern const char *outputXmlGetOutput();
 
 /** \brief Definition for getting output level */
-extern	const char	*outputXmlGetLevel();
+extern const char *outputXmlGetLevel();
 
 /** \brief Definition for adding an attribute to array */
-extern	void	outputXmlAttrAdd(const char *name, const char *value);
+extern void outputXmlAttrAdd(const char *name, const char *value);
 
 /** \brief Definition for adding a date attribute to array */
-extern	void	outputXmlAttrAddDate();
+extern void outputXmlAttrAddDate();
 
 /** \brief Definition for adding a timestamp attribute to array */
-extern	void	outputXmlAttrAddTimeStamp();
+extern void outputXmlAttrAddTimeStamp();
 
 /** \brief Function for adding common attributes to tag */
-extern	void	outputXmlAttrAddCommon(const RUN_LEVEL level,
+extern void outputXmlAttrAddCommon(const RUN_LEVEL level,
 					P_COMMON *pCommon, char *pName);
 
 /** \brief Show the VD in the output file */
-extern	void	outputXmlShowVD(const char	*desc);
+extern void outputXmlShowVD(const char	*desc);
 
 /** \brief Show the CMD in the output file */
-extern	void	outputXmlShowCMD(int frame);
+extern void outputXmlShowCMD(int frame);
 
 /** \brief Function for getting attribute list */
-extern	const char **outputXmlAttrGet();
+extern const char **outputXmlAttrGet();
 
 /** \brief Function to perform a hexdump of a buffer */
-extern	void	outputXmlHex(const RUN_LEVEL level,
-							 void *pBuf,
-							 unsigned int size);
+extern void outputXmlHex(const RUN_LEVEL level, const char *pName,
+				void *pBuf, unsigned int size);
 
 //=============================================================================
 /**

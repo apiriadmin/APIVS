@@ -54,6 +54,7 @@
 #include	<stdint.h>		// STD IEEE Type Definitions
 #include	<stdlib.h>		// STD Library Definitions
 #include	<string.h>		// STD String Definitions
+#include	<ctype.h>
 #include	<sys/types.h>
 #include	<sys/stat.h>
 #include	<fcntl.h>
@@ -1824,11 +1825,22 @@ argFormat(uint16_t ln, const RUN_LEVEL level, ARG_P *pArg)
 
 		case VAR_PCHAR:
 		{
-			char	buf[OUTPUT_STRING_MAX];
+			char buf[OUTPUT_STRING_MAX];
+			int i=0;
 			strncpy(buf, pArg->arg.data.value.pCharValue, pArg->arg.data.size);
 			buf[pArg->arg.data.size] = '\0';
-			sprintf(string, "%s = [%s]", pArg->pName, buf);
-			outputXmlText(level, string);
+			for(i=0;i<pArg->arg.data.size;i++) {
+				if (!isprint(buf[i]))
+					break;
+			}
+			if (i < pArg->arg.data.size) {
+				outputXmlHex(level, pArg->pName,
+					pArg->arg.data.value.pCharValue,
+					pArg->arg.data.size);
+			} else {
+				sprintf(string, "%s = [%s]", pArg->pName, buf);
+				outputXmlText(level, string);
+			}
 		}
 		break;
 
@@ -1843,12 +1855,9 @@ argFormat(uint16_t ln, const RUN_LEVEL level, ARG_P *pArg)
 
 		case VAR_PUCHAR:
 		{
-			sprintf(string, "%s = ...", pArg->pName);
-			outputXmlText(level, string);
-			outputXmlNewLine(level);
-			outputXmlHex(level,
-						 pArg->arg.data.value.pUcharValue,
-						 pArg->arg.data.size);
+			outputXmlHex(level, pArg->pName,
+					pArg->arg.data.value.pUcharValue,
+					pArg->arg.data.size);
 		}
 		break;
 
@@ -1890,67 +1899,49 @@ argFormat(uint16_t ln, const RUN_LEVEL level, ARG_P *pArg)
 
 		case VAR_FFDSTAT:
 		{
-			sprintf(string, "%s = ...", pArg->pName);
-			outputXmlText(level, string);
-			outputXmlNewLine(level);
-			outputXmlHex(level,
-						 &pArg->arg.data.value.fioFiodStatus,
-						 sizeof(FIO_FIOD_STATUS));
+			outputXmlHex(level, pArg->pName,
+					&pArg->arg.data.value.fioFiodStatus,
+					sizeof(FIO_FIOD_STATUS));
 		}
 		break;
 
 		case VAR_FCMAP:
 		{
-			sprintf(string, "%s = ...", pArg->pName);
-			outputXmlText(level, string);
-			outputXmlNewLine(level);
-			outputXmlHex(level,
-						 pArg->arg.data.value.fioFcmap,
-						 pArg->arg.data.size * sizeof(FIO_CHANNEL_MAP));
+			outputXmlHex(level, pArg->pName,
+					pArg->arg.data.value.fioFcmap,
+					pArg->arg.data.size * sizeof(FIO_CHANNEL_MAP));
 		}
 		break;
 
 		case VAR_FFSCHD:
 		{
-			sprintf(string, "%s = ...", pArg->pName);
-			outputXmlText(level, string);
-			outputXmlNewLine(level);
-			outputXmlHex(level,
-						 pArg->arg.data.value.fioFschd,
-						 pArg->arg.data.size * sizeof(FIO_FRAME_SCHD));
+			outputXmlHex(level, pArg->pName,
+					pArg->arg.data.value.fioFschd,
+					pArg->arg.data.size * sizeof(FIO_FRAME_SCHD));
 		}
 		break;
 
 		case VAR_FINF:
 		{
-			sprintf(string, "%s = ...", pArg->pName);
-			outputXmlText(level, string);
-			outputXmlNewLine(level);
-			outputXmlHex(level,
-						 pArg->arg.data.value.fioFinf,
-						 pArg->arg.data.size * sizeof(FIO_INPUT_FILTER));
+			outputXmlHex(level, pArg->pName,
+					pArg->arg.data.value.fioFinf,
+					pArg->arg.data.size * sizeof(FIO_INPUT_FILTER));
 		}
 		break;
 
 		case VAR_FTBUF:
 		{
-			sprintf(string, "%s = ...", pArg->pName);
-			outputXmlText(level, string);
-			outputXmlNewLine(level);
-			outputXmlHex(level,
-						 pArg->arg.data.value.fioTbuffer,
-						 pArg->arg.data.size * sizeof(FIO_TRANS_BUFFER));
+			outputXmlHex(level, pArg->pName,
+					pArg->arg.data.value.fioTbuffer,
+					pArg->arg.data.size * sizeof(FIO_TRANS_BUFFER));
 		}
 		break;
 
 		case VAR_FNOTI:
 		{
-			sprintf(string, "%s = ...", pArg->pName);
-			outputXmlText(level, string);
-			outputXmlNewLine(level);
-			outputXmlHex(level,
-						 &pArg->arg.data.value.fioInfo,
-						 sizeof(FIO_NOTIFY_INFO));
+			outputXmlHex(level, pArg->pName,
+					&pArg->arg.data.value.fioInfo,
+					sizeof(FIO_NOTIFY_INFO));
 		}
 		break;
 
@@ -1968,12 +1959,9 @@ argFormat(uint16_t ln, const RUN_LEVEL level, ARG_P *pArg)
 
 		case VAR_DSTIT:
 		{
-			sprintf(string, "%s = ...", pArg->pName);
-			outputXmlText(level, string);
-			outputXmlNewLine(level);
-			outputXmlHex(level,
-						 &pArg->arg.data.value.dstinfoValue,
-						 sizeof(dst_info_t));
+			outputXmlHex(level, pArg->pName,
+					&pArg->arg.data.value.dstinfoValue,
+					sizeof(dst_info_t));
 		}
 		break;
 
@@ -2062,11 +2050,30 @@ argSetVar(uint16_t		ln,
 
 		case VAR_PCHAR:
 			{
+				if (pFile != NULL)
+				{
+					unsigned char *pBuf;
+					unsigned int size;
+					if (STATUS_FAIL == (status = argSet(ln,
+								configFileGetSFP(),
+								pFile->arg.data.value.pCharValue,
+								&pBuf,
+								&size)))
+					{
+						break;
+					}
+					memset(pVar->arg.data.value.pCharValue, 0, pVar->arg.data.size);
+					memcpy(pVar->arg.data.value.pCharValue, pBuf,
+						MIN(pVar->arg.data.size, size));
+					free(pBuf);
+					break;
+				}
+
 				if (pValue == NULL)
 				{
 					char	string[OUTPUT_STRING_MAX];
 					sprintf(string,
-							"argSetVar(): Must set data type [%s] from a value",
+							"argSetVar(): Must set data type [%s] from a file or value",
 							argVarStringGet(pVar->varType));
 					OUTPUT_ERR(ln, string, NULL, NULL);
 					break;
