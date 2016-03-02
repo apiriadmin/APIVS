@@ -63,7 +63,7 @@
 
 /** \brief Output Element Tags */
 #define	XML_TAG                "xml version=\"1.0\" encoding=\"utf-8\""
-#define	XML_QUESTION_MARK      '?'
+#define	XML_QUESTION_MARK      "?"
 #define	XML_CLOSE              '/'
 #define	TAG_APIVSRUN           "ApiVsRun"
 #define	ATTR_CONFIG            "configuration"
@@ -150,8 +150,8 @@ extern void outputXmlTagCurrent(const RUN_LEVEL level, const char *tag,
 /** \brief Function for outputting <? string ?>*/
 extern void outputXmlTagCurrentString(const RUN_LEVEL level,
 						const char *string,
-						const char open,
-						const char close);
+						const char *open,
+						const char *close);
 
 /** \brief Function for outputting a closing tag </tag> */
 extern void outputXmlTagClose(const RUN_LEVEL level, const char *tag);

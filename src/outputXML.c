@@ -389,8 +389,8 @@ outputXmlTagCurrent(const RUN_LEVEL level,
 void
 outputXmlTagCurrentString(const RUN_LEVEL level,
 						  const char *string,
-						  const char open,
-						  const char close)
+						  const char *open,
+						  const char *close)
 {
 	// See if this output should be displayed
 	if (level <= s_level)
@@ -402,18 +402,18 @@ outputXmlTagCurrentString(const RUN_LEVEL level,
 		fprintf(s_outputFile, "<");
 
 		// Open tag character
-		if (open != '\0')
+		if (open != NULL)
 		{
-			fprintf(s_outputFile, "%c", open);
+			fprintf(s_outputFile, "%s", open);
 		}
 
 		// Output requested tag
 		fprintf(s_outputFile, string);
 
 		// End in a close tag, CR
-		if (close != '\0')
+		if (close != NULL)
 		{
-			fprintf(s_outputFile, "%c", close);
+			fprintf(s_outputFile, "%s", close);
 		}
 		fprintf(s_outputFile, ">\n");
 	}
@@ -434,15 +434,16 @@ outputXmlTagCurrentString(const RUN_LEVEL level,
 void
 outputXmlText(const RUN_LEVEL level, const char *pText)
 {
+	outputXmlTagOpen(level,"Text",outputXmlAttrGet());
 	// See if this output should be displayed
 	if (level <= s_level)
 	{
 		// Output the current indent level
 		outputIndent();
-
 		// Output requested tag
-		fprintf(s_outputFile, pText);
+		fprintf(s_outputFile, "\"%s\"\n", pText);
 	}
+	outputXmlTagClose(level, "Text");
 }
 
 //=============================================================================
@@ -723,26 +724,21 @@ outputXmlShowCMD(int frame)
 void
 outputXmlHex(const RUN_LEVEL level, const char *pName, void *pBuf, unsigned int size)
 {
-	unsigned int	ii;
-	void			*end;
-	void			*tmpptr;
-	void			*tmpend;
-
+	unsigned int ii;
+	void *end;
+	void *tmpptr;
+	void *tmpend;
+	char string[OUTPUT_STRING_MAX];
+	
 	if (level > s_level)
 	{
 		return;
 	}
 
-	fprintf(s_outputFile, "<dump name=\"%s\" blocks=\"%lx\">\n", "RFC4194 Format Hexdump", 1L);
-	fprintf(s_outputFile, "<block name=\"%s\" ", pName);
-	fprintf(s_outputFile, "address=\"%016lx\" ", 0L);
-	fprintf(s_outputFile, "word_size=\"%lx\" ", 1L);
-	fprintf(s_outputFile, "length=\"%lx\"\n", (unsigned long)size);
-	fprintf(s_outputFile, "checksum=\"");
-	for (ii = 0; ii < 20; ii++) {
-		fprintf(s_outputFile, "%02x", ii);
-	}
-	fprintf(s_outputFile, "\">\n");
+	sprintf(string, "%d", size);
+	outputXmlAttrAdd("length", string);
+	outputXmlTagOpen(level,"HexDump",outputXmlAttrGet());
+	outputIndent();
 	// The bytes
 	end = pBuf + size;
 	while (pBuf < end)
@@ -771,6 +767,5 @@ outputXmlHex(const RUN_LEVEL level, const char *pName, void *pBuf, unsigned int 
 
 		pBuf = tmpend;
 	}
-	fprintf(s_outputFile, "</block>\n");
-	fprintf(s_outputFile, "</dump>\n");
+	outputXmlTagClose(level, "HexDump");
 }

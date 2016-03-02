@@ -3562,7 +3562,6 @@ funcFpuiSetKeymap(uint16_t	lineNumber,
 			return(STATUS_FAIL);
 		}
 	}
-
 	argReturn = fpui_set_keymap(argHandle, argKey, argEseq);
 	argErrno = errno;
 
@@ -3986,7 +3985,7 @@ funcFpuiWriteAt(uint16_t	lineNumber,
 			// Malloc failed
 			char	string[OUTPUT_STRING_MAX];
 			sprintf(string,
-					"funcFpuiGetKeymap(): Failed to malloc space for return string size [%d]",
+					"funcFpuiWriteAt(): Failed to malloc space for return string size [%d]",
 					argSize * sizeof(char));
 			OUTPUT_ERR(lineNumber, string, strerror(errno), NULL);
 			return(STATUS_FAIL);

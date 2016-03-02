@@ -157,7 +157,7 @@ interpretPrint(P_CODE *pCode)
 	outputXmlAttrAddCommon(pCode->code.cPrint.level, &pCode->common, A_NAME);
 	outputXmlTagOpen(pCode->code.cPrint.level, P_PRINT, outputXmlAttrGet());
 	outputXmlText(pCode->code.cPrint.level, pCode->code.cPrint.pText);
-	outputXmlNewLine(pCode->code.cPrint.level);
+	//outputXmlNewLine(pCode->code.cPrint.level);
 	outputXmlTagClose(pCode->code.cPrint.level, P_PRINT);
 
 	return(STATUS_PASS);
@@ -520,6 +520,7 @@ interpretFormat(P_CODE *pCode)
 			}
 		}
 
+		//outputXmlNewLine(pCode->code.cFormat.level);
 		outputXmlTagClose(pCode->code.cFormat.level, P_FORMAT);
 	}
 

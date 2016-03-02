@@ -1816,9 +1816,7 @@ argFormat(uint16_t ln, const RUN_LEVEL level, ARG_P *pArg)
 	{
 		case VAR_CHAR:
 		{
-			sprintf(string, "%s = [%c]",
-					pArg->pName,
-					pArg->arg.data.value.charValue);
+			sprintf(string, "%c", pArg->arg.data.value.charValue);
 			outputXmlText(level, string);
 		}
 		break;
@@ -1838,7 +1836,7 @@ argFormat(uint16_t ln, const RUN_LEVEL level, ARG_P *pArg)
 					pArg->arg.data.value.pCharValue,
 					pArg->arg.data.size);
 			} else {
-				sprintf(string, "%s = [%s]", pArg->pName, buf);
+				sprintf(string, "%s", buf);
 				outputXmlText(level, string);
 			}
 		}
@@ -1846,9 +1844,7 @@ argFormat(uint16_t ln, const RUN_LEVEL level, ARG_P *pArg)
 
 		case VAR_UCHAR:
 		{
-			sprintf(string, "%s = [0x%02x]",
-					pArg->pName,
-					pArg->arg.data.value.uCharValue);
+			sprintf(string, "[0x%02x]", pArg->arg.data.value.uCharValue);
 			outputXmlText(level, string);
 		}
 		break;
@@ -1865,7 +1861,7 @@ argFormat(uint16_t ln, const RUN_LEVEL level, ARG_P *pArg)
 		{
 			unsigned int		value;
 			(void)argCastUint(ln, pArg, &value);
-			sprintf(string, "%s = [%u]", pArg->pName, value);
+			sprintf(string, "[%u]", value);
 			outputXmlText(level, string);
 		}
 		break;
@@ -1892,7 +1888,7 @@ argFormat(uint16_t ln, const RUN_LEVEL level, ARG_P *pArg)
 		{
 			int		value;
 			(void)argCastInt(ln, pArg, &value);
-			sprintf(string, "%s = [%d]", pArg->pName, value);
+			sprintf(string, "[%d]", value);
 			outputXmlText(level, string);
 		}
 		break;
@@ -1977,8 +1973,6 @@ argFormat(uint16_t ln, const RUN_LEVEL level, ARG_P *pArg)
 		}
 		break;
 	}
-
-	outputXmlNewLine(level);
 
 	return(status);
 }
