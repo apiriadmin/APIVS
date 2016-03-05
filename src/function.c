@@ -1595,19 +1595,18 @@ funcFpuiDisplaySpecialChar(uint16_t	lineNumber,
  * 				STATUS_FAIL - Test nonconformance (FAIL)
  */
 static int16_t
-funcFpuiGetAutoRepeat(uint16_t	lineNumber,
-		   	  		  C_FUNC	*pCF)
+funcFpuiGetAutoRepeat(uint16_t lineNumber, C_FUNC *pCF)
 {
 	// Call fpui_get_auto_repeat()
-	boolean			argReturn;
-	int				argErrno;
-	fpui_handle		argHandle = 0;
+	boolean argReturn;
+	int argErrno;
+	fpui_handle argHandle = 0;
 
 	if (pCF->arg[0])
 	{
 		if (STATUS_FAIL == argCastFpuiHandle(lineNumber,
-											 pCF->arg[0],
-											 &argHandle))
+							pCF->arg[0],
+							&argHandle))
 		{
 			return(STATUS_FAIL);
 		}
@@ -3855,22 +3854,19 @@ funcFpuiSetWindowAttr(uint16_t	lineNumber,
  * 				STATUS_FAIL - Test nonconformance (FAIL)
  */
 static int16_t
-funcFpuiWrite(uint16_t	lineNumber,
-		   	  C_FUNC	*pCF)
+funcFpuiWrite(uint16_t	lineNumber, C_FUNC *pCF)
 {
 	// Call fpui_write()
-	ssize_t			argReturn;
-	int				argErrno;
-	fpui_handle		argHandle = 0;
-	char			*argBuf = NULL;
-	int				argSize = 0;
-	ARG_P			pTo;
+	ssize_t        argReturn;
+	int            argErrno;
+	fpui_handle    argHandle = 0;
+	char           *argBuf = NULL;
+	int            argSize = 0;
+	ARG_P          pTo;
 
 	if (pCF->arg[0])
 	{
-		if (STATUS_FAIL == argCastFpuiHandle(lineNumber,
-											 pCF->arg[0],
-											 &argHandle))
+		if (STATUS_FAIL == argCastFpuiHandle(lineNumber, pCF->arg[0], &argHandle))
 		{
 			return(STATUS_FAIL);
 		}
@@ -3878,9 +3874,7 @@ funcFpuiWrite(uint16_t	lineNumber,
 
 	if (pCF->arg[2])
 	{
-		if (STATUS_FAIL == argCastInt(lineNumber,
-									  pCF->arg[2],
-									  &argSize))
+		if (STATUS_FAIL == argCastInt(lineNumber, pCF->arg[2], &argSize))
 		{
 			return(STATUS_FAIL);
 		}
@@ -3905,9 +3899,7 @@ funcFpuiWrite(uint16_t	lineNumber,
 		{
 			pTo.arg.data.value.pCharValue = argBuf;
 			pTo.arg.data.size = argSize * sizeof(char);
-			if (STATUS_FAIL == argCastPchar(lineNumber,
-											pCF->arg[1],
-											&pTo))
+			if (STATUS_FAIL == argCastPchar(lineNumber, pCF->arg[1], &pTo))
 			{
 				free(argBuf);
 				return(STATUS_FAIL);
@@ -3946,24 +3938,21 @@ funcFpuiWrite(uint16_t	lineNumber,
  * 				STATUS_FAIL - Test nonconformance (FAIL)
  */
 static int16_t
-funcFpuiWriteAt(uint16_t	lineNumber,
-		   	 	C_FUNC		*pCF)
+funcFpuiWriteAt(uint16_t lineNumber, C_FUNC *pCF)
 {
 	// Call fpui_write_at()
-	ssize_t			argReturn;
-	int				argErrno;
-	fpui_handle		argHandle = 0;
-	char			*argBuf = NULL;
-	int				argSize = 0;
-	ARG_P			pTo;
-	int				argRow = -1;
-	int				argColumn = -1;
+	ssize_t        argReturn;
+	int            argErrno;
+	fpui_handle    argHandle = 0;
+	char           *argBuf = NULL;
+	int            argSize = 0;
+	ARG_P          pTo;
+	int            argRow = -1;
+	int            argColumn = -1;
 
 	if (pCF->arg[0])
 	{
-		if (STATUS_FAIL == argCastFpuiHandle(lineNumber,
-											 pCF->arg[0],
-											 &argHandle))
+		if (STATUS_FAIL == argCastFpuiHandle(lineNumber, pCF->arg[0], &argHandle))
 		{
 			return(STATUS_FAIL);
 		}
@@ -3996,9 +3985,7 @@ funcFpuiWriteAt(uint16_t	lineNumber,
 		{
 			pTo.arg.data.value.pCharValue = argBuf;
 			pTo.arg.data.size = argSize * sizeof(char);
-			if (STATUS_FAIL == argCastPchar(lineNumber,
-											pCF->arg[1],
-											&pTo))
+			if (STATUS_FAIL == argCastPchar(lineNumber, pCF->arg[1], &pTo))
 			{
 				free(argBuf);
 				return(STATUS_FAIL);
@@ -4061,20 +4048,17 @@ funcFpuiWriteAt(uint16_t	lineNumber,
  * 				STATUS_FAIL - Test nonconformance (FAIL)
  */
 static int16_t
-funcFpuiWriteChar(uint16_t	lineNumber,
-		   	  	  C_FUNC	*pCF)
+funcFpuiWriteChar(uint16_t lineNumber, C_FUNC *pCF)
 {
 	// Call fpui_write_char()
-	ssize_t			argReturn;
-	int				argErrno;
-	fpui_handle		argHandle = 0;
-	char			argCh = '\0';
+	ssize_t        argReturn;
+	int            argErrno;
+	fpui_handle    argHandle = 0;
+	char           argCh = '\0';
 
 	if (pCF->arg[0])
 	{
-		if (STATUS_FAIL == argCastFpuiHandle(lineNumber,
-											 pCF->arg[0],
-											 &argHandle))
+		if (STATUS_FAIL == argCastFpuiHandle(lineNumber, pCF->arg[0], &argHandle))
 		{
 			return(STATUS_FAIL);
 		}
@@ -4114,22 +4098,19 @@ funcFpuiWriteChar(uint16_t	lineNumber,
  * 				STATUS_FAIL - Test nonconformance (FAIL)
  */
 static int16_t
-funcFpuiWriteCharAt(uint16_t	lineNumber,
-		   	  		C_FUNC		*pCF)
+funcFpuiWriteCharAt(uint16_t lineNumber, C_FUNC *pCF)
 {
 	// Call fpui_write_char_at()
-	ssize_t			argReturn;
-	int				argErrno;
-	fpui_handle		argHandle = 0;
-	char			argCh = '\0';
-	int				argRow = -1;
-	int				argColumn = -1;
+	ssize_t        argReturn;
+	int            argErrno;
+	fpui_handle    argHandle = 0;
+	char           argCh = '\0';
+	int            argRow = -1;
+	int            argColumn = -1;
 
 	if (pCF->arg[0])
 	{
-		if (STATUS_FAIL == argCastFpuiHandle(lineNumber,
-											 pCF->arg[0],
-											 &argHandle))
+		if (STATUS_FAIL == argCastFpuiHandle(lineNumber, pCF->arg[0], &argHandle))
 		{
 			return(STATUS_FAIL);
 		}
@@ -4153,7 +4134,7 @@ funcFpuiWriteCharAt(uint16_t	lineNumber,
 
 	if (pCF->arg[3])
 	{
-		if (STATUS_FAIL == argCastInt(lineNumber, pCF->arg[2], &argColumn))
+		if (STATUS_FAIL == argCastInt(lineNumber, pCF->arg[3], &argColumn))
 		{
 			return(STATUS_FAIL);
 		}
@@ -4185,21 +4166,18 @@ funcFpuiWriteCharAt(uint16_t	lineNumber,
  * 				STATUS_FAIL - Test nonconformance (FAIL)
  */
 static int16_t
-funcFpuiWriteString(uint16_t	lineNumber,
-		   	  		  C_FUNC	*pCF)
+funcFpuiWriteString(uint16_t lineNumber, C_FUNC *pCF)
 {
 	// Call fpui_write_string()
-	ssize_t			argReturn;
-	int				argErrno;
-	fpui_handle		argHandle = 0;
-	char			*argBuf = NULL;
-	ARG_P			pTo;
+	ssize_t        argReturn;
+	int            argErrno;
+	fpui_handle    argHandle = 0;
+	char           *argBuf = NULL;
+	ARG_P          pTo;
 
 	if (pCF->arg[0])
 	{
-		if (STATUS_FAIL == argCastFpuiHandle(lineNumber,
-											 pCF->arg[0],
-											 &argHandle))
+		if (STATUS_FAIL == argCastFpuiHandle(lineNumber, pCF->arg[0], &argHandle))
 		{
 			return(STATUS_FAIL);
 		}
@@ -4222,9 +4200,7 @@ funcFpuiWriteString(uint16_t	lineNumber,
 
 		pTo.arg.data.value.pCharValue = argBuf;
 		pTo.arg.data.size = pCF->arg[1]->arg.data.size * sizeof(char);
-		if (STATUS_FAIL == argCastPchar(lineNumber,
-										pCF->arg[1],
-										&pTo))
+		if (STATUS_FAIL == argCastPchar(lineNumber, pCF->arg[1], &pTo))
 		{
 			free(argBuf);
 			return(STATUS_FAIL);
