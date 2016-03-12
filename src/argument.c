@@ -57,7 +57,7 @@
 #include	<ctype.h>
 #include	<sys/types.h>
 #include	<sys/stat.h>
-#include	<fcntl.h>
+#include	<asm/fcntl.h>
 #include	<errno.h>		// STD errno Definitions
 #include	"vse_stnd.h"	// STD VSE Definitions
 #include	"configFile.h"	// Configuration File Definitions
@@ -175,9 +175,9 @@ static char		*s_argType_string[] =
 	VA_TMP
 };
 
-#ifndef	O_DIRECT
-#define	O_DIRECT	0x00	// Define if not defined in include files
-#endif
+//#ifndef	O_DIRECT
+//#define	O_DIRECT	0x00	// Define if not defined in include files
+//#endif
 
 static	ARG_NC	s_NCtable[] =
 {
@@ -1816,7 +1816,11 @@ argFormat(uint16_t ln, const RUN_LEVEL level, ARG_P *pArg)
 	{
 		case VAR_CHAR:
 		{
-			sprintf(string, "%c", pArg->arg.data.value.charValue);
+			char ch = pArg->arg.data.value.charValue;
+			if (isprint(ch))
+				sprintf(string, "%c", pArg->arg.data.value.charValue);
+			else
+				sprintf(string, "[0x%02x]", pArg->arg.data.value.charValue);
 			outputXmlText(level, string);
 		}
 		break;
@@ -1826,12 +1830,12 @@ argFormat(uint16_t ln, const RUN_LEVEL level, ARG_P *pArg)
 			char buf[OUTPUT_STRING_MAX];
 			int i=0;
 			strncpy(buf, pArg->arg.data.value.pCharValue, pArg->arg.data.size);
-			buf[pArg->arg.data.size] = '\0';
+			buf[pArg->arg.data.size-1] = '\0';
 			for(i=0;i<pArg->arg.data.size;i++) {
 				if (!isprint(buf[i]))
 					break;
 			}
-			if (i < pArg->arg.data.size) {
+			if (buf[i] != '\0') {
 				outputXmlHex(level, pArg->pName,
 					pArg->arg.data.value.pCharValue,
 					pArg->arg.data.size);
