@@ -366,9 +366,9 @@ char tempSpecChar    = '\0';
 
 	if( inChar & SPECIAL_CHAR_BIT)
 	{
-//#if DEBUG_ON & DEBUG_SPECIAL
+#if DEBUG_ON & DEBUG_SPECIAL
 		printf("\n SET SPECIAL CHAR for 0x%02x", inChar);
-//#endif
+#endif
 		fillPosition = FALSE;                        // might be invalid spec char 
 		tempSpecChar = inChar &= ~SPECIAL_CHAR_BIT;  // Turn off the special char bit 
 		if( isdigit( tempSpecChar) ) 
@@ -603,7 +603,7 @@ int16_t numBytesWritten = 0;                // bytes written to the Serial Port
 char nextChar = 0;
 int     tempIntValue = 0;
 int16_t seqCode = 0;
-int16_t seqValue = 0;
+int seqValue = 0;
 int16_t initCol = 0;                        // starting column (from cursorPos) in a line
 int16_t i=0, j=0;
 static int ESC_line = 0, ESC_col = 0;       // for Py;Px conversions
@@ -716,7 +716,7 @@ char *pRowAttribs = NULL;
 		seqValue = 0;
 		if( isdigit ( ESC_sequence[2]))
 		{
-			if( sscanf( &ESC_sequence[2], "%d", (int *) &seqValue) != 1 )
+			if( sscanf( &ESC_sequence[2], "%d", &seqValue) != 1 )
 			{
 				printf("sscanf error for seqCode %d\n", seqCode);
 				seqValue = 0;
@@ -724,7 +724,7 @@ char *pRowAttribs = NULL;
 		}
 		else if( isdigit ( ESC_sequence[3]))    // is this <ESC>[?NN or something similar 
 		{
-			if( sscanf( &ESC_sequence[3], "%d", (int *) &seqValue) != 1 )
+			if( sscanf( &ESC_sequence[3], "%d", &seqValue) != 1 )
 			{
 				printf("sscanf error for seqCode %d\n", seqCode);
 				seqValue = 0;
@@ -735,7 +735,7 @@ char *pRowAttribs = NULL;
 				
 		
 #if DEBUG_ON & DEBUG_ESC_SEQ
-		printf("process_ESC_sequence for <ESC> [ %c and seqCode = %d\n", seqValue, seqCode);
+		printf("process_ESC_sequence for <ESC> [ 0x%02x, seqCode=%d\n", seqValue, seqCode);
 #endif
 				
 		switch( seqCode) {
@@ -1010,9 +1010,9 @@ char *pRowAttribs = NULL;
 				printf("\nvt100_processInput error: invalid special char %d", seqValue);
 				break;
 			}
-//#if DEBUG_ON & DEBUG_SPECIAL
+#if DEBUG_ON & DEBUG_SPECIAL
             printf("\n Composing SpecChar # %d [%c] : %s ", seqValue, ESC_sequence[2], &ESC_sequence[1] );
-//#endif
+#endif
 			for(i=0; i < BYTES_PER_SPEC_CHAR; i++)   // up to 8 elements before the 'f' delimiter
 			{
 				sscanf(pESC, "%d", &tempIntValue);
