@@ -1360,19 +1360,16 @@ funcFpuiClose(uint16_t	lineNumber,
  * 				STATUS_FAIL - Test nonconformance (FAIL)
  */
 static int16_t
-funcFpuiCloseAuxSwitch(uint16_t	lineNumber,
-		   	  		   C_FUNC	*pCF)
+funcFpuiCloseAuxSwitch(uint16_t	lineNumber, C_FUNC *pCF)
 {
 	// Call fpui_close_aux_switch()
-	int				argReturn;
-	int				argErrno;
-	fpui_aux_handle		argHandle = 0;
+	int                argReturn;
+	int                argErrno;
+	fpui_aux_handle    argHandle = 0;
 
 	if (pCF->arg[0])
 	{
-		if (STATUS_FAIL == argCastFpuiAuxHandle(lineNumber,
-											 pCF->arg[0],
-											 &argHandle))
+		if (STATUS_FAIL == argCastFpuiAuxHandle(lineNumber, pCF->arg[0], &argHandle))
 		{
 			return(STATUS_FAIL);
 		}
@@ -2429,12 +2426,11 @@ funcFpuiOpen(uint16_t	lineNumber,
  * 				STATUS_FAIL - Test nonconformance (FAIL)
  */
 static int16_t
-funcFpuiOpenAuxSwitch(uint16_t	lineNumber,
-		   	  		  C_FUNC	*pCF)
+funcFpuiOpenAuxSwitch(uint16_t lineNumber, C_FUNC *pCF)
 {
 	// Call fpui_open_aux_switch()
-	fpui_aux_handle			argHandle;
-	int				argErrno;
+	fpui_aux_handle    argHandle;
+	int                argErrno;
 
 	argHandle = fpui_open_aux_switch();
 	argErrno = errno;
@@ -2649,19 +2645,16 @@ funcFpuiRead(uint16_t	lineNumber,
  * 				STATUS_FAIL - Test nonconformance (FAIL)
  */
 static int16_t
-funcFpuiReadAuxSwitch(uint16_t	lineNumber,
-		   	  		  C_FUNC	*pCF)
+funcFpuiReadAuxSwitch(uint16_t lineNumber, C_FUNC *pCF)
 {
 	// Call fpui_read_aux_switch()
-	boolean			argReturn;
-	int				argErrno;
-	fpui_aux_handle		argHandle = 0;
+	int                argReturn;
+	int                argErrno;
+	fpui_aux_handle    argHandle = 0;
 
 	if (pCF->arg[0])
 	{
-		if (STATUS_FAIL == argCastFpuiAuxHandle(lineNumber,
-											 pCF->arg[0],
-											 &argHandle))
+		if (STATUS_FAIL == argCastFpuiAuxHandle(lineNumber, pCF->arg[0], &argHandle))
 		{
 			return(STATUS_FAIL);
 		}
