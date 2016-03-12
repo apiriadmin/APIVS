@@ -711,7 +711,7 @@ outputXmlShowCMD(int frame)
 
 //=============================================================================
 /**
- * \brief Dump a buffer in SHF format (RFC4194)
+ * \brief Dump a buffer in Hex format
  *
  * \param[in]	pFile - FILE * to dump to
  * \param[in]	pName - Name attribute
@@ -738,11 +738,11 @@ outputXmlHex(const RUN_LEVEL level, const char *pName, void *pBuf, unsigned int 
 	sprintf(string, "%d", size);
 	outputXmlAttrAdd("length", string);
 	outputXmlTagOpen(level,"HexDump",outputXmlAttrGet());
-	outputIndent();
 	// The bytes
 	end = pBuf + size;
 	while (pBuf < end)
 	{
+		outputIndent();
 		tmpptr = pBuf;
 		tmpend = pBuf + 16;
 		if (tmpend > end)
