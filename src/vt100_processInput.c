@@ -139,7 +139,7 @@ static char *bufferPointer = NULL;
 	
 	while(!vt100_allDone )      // wait for vt100_end()  or end of line 
 	{
-		usleep (3);     // 300 millisecs delay  
+		//usleep (3000);     // 300 millisecs delay  
 		 
 		nextChar = getNextChar(fd, &bufferPointer);
 		if( nextChar == '\0' )
@@ -153,6 +153,7 @@ static char *bufferPointer = NULL;
 			if(nextChar == 'z') break;   //  quick & dirty out for testing 
 		}
 #endif
+		pthread_mutex_lock(&pDisplay->mutex);
 		
 		if(nextChar == ESC_CHAR ) {
 			
@@ -171,6 +172,7 @@ static char *bufferPointer = NULL;
 			processInputChar(nextChar, pDisplay );
 		}
 		
+		pthread_mutex_unlock(&pDisplay->mutex);
 	}  // end forever while loop 
 	
 
@@ -319,7 +321,6 @@ char tempSpecChar    = '\0';
 	
     // must check for end of row and bottom of DISPLAY using cursorPos cursor position
     //  also check for interaction of autoWrap and autoScroll features 
-
 	if( cursorPos.cp_col > (numCols - 1) ) { // adjust since arrays count from 0, # of cols starts with 1 
 		if(vt100_get_autoWrap() == TEXT_WRAP_OFF) {    // overwrite last char on line 
 			cursorPos.cp_col = numCols -1;  //  starts from col = 0, set to last col position  
@@ -396,6 +397,7 @@ char tempSpecChar    = '\0';
 	else
 	{   // normal character 
 		pRowText[cursorPos.cp_col] = inChar;
+//printf("%c", inChar);
 		pRowAttribs[cursorPos.cp_col] = currentAttribs;
 	}
 		
@@ -416,7 +418,7 @@ char tempSpecChar    = '\0';
 					cursorPos.cp_col = 0;
 				}
 				else {    // at bottom right of DISPLAY -  - do nothing
-					;
+					cursorPos.cp_col = numCols-1;
 				}
 			}
 		}
@@ -497,7 +499,7 @@ int16_t action_code = 0;
 int16_t i = 0;
 
 static char ESC_terminators [] = { 
-		CURSOR_UP, CURSOR_DOWN, CURSOR_RIGHT, CURSOR_LEFT, 0, 0, 0, CURSOR_POSITION,   //  A - H
+		CURSOR_UP, CURSOR_DOWN, CURSOR_RIGHT, CURSOR_LEFT, 0, 0, 0, HOME_CURSOR/*CURSOR_POSITION*/,   //  A - H
 		0, CLEAR_DISPLAY, CLEAR_LINE, 0, 0, 0, 0, COMPOSE_SPECIAL,                     //  I - P
 		0, 0, BACKLIGHT_TIMEOUT, 0, 0, SPECIAL_CHAR, 0, 0, 0, 0,                       //  Q - Z
 		0, 0, 0, 0, 0, 0,                                                              //  : - @
@@ -555,8 +557,6 @@ static char ESC_terminators [] = {
 			term_index = (int16_t) (nextChar - 'A');     // index starts with 0 for letter 'A'
 			if( (action_code = ESC_terminators[term_index]) )
 			{
-				
-				
 			    break;
 			}
 		}
@@ -569,7 +569,7 @@ static char ESC_terminators [] = {
 
 		
 	} // end while 
-	
+
 	return (action_code);
 
 }//  end - get_ESC_Seq()
@@ -603,7 +603,7 @@ int16_t numBytesWritten = 0;                // bytes written to the Serial Port
 char nextChar = 0;
 int     tempIntValue = 0;
 int16_t seqCode = 0;
-int16_t seqValue = 0;
+int seqValue = 0;
 int16_t initCol = 0;                        // starting column (from cursorPos) in a line
 int16_t i=0, j=0;
 static int ESC_line = 0, ESC_col = 0;       // for Py;Px conversions
@@ -612,7 +612,7 @@ char **pTextArray = VD_ptr->pText;          // set up the malloc'd data area poi
 char **pAttribsArray = VD_ptr->pAttribs;
 char *pRowText = NULL;
 char *pRowAttribs = NULL;
-
+//static int seq = 0;
 
 	ESC_sequence[0] = ESC_CHAR;    //  init the start of the sequence
 	ESC_sequence[1] = 0; 
@@ -658,7 +658,7 @@ char *pRowAttribs = NULL;
 		
 		if( seqCode == CURSOR_POSITION )  // should have found an 'f' terminator
 			seqCode = COMPOSE_SPECIAL;    // this should occur
-		
+
 #if DEBUG_ON & DEBUG_SPECIAL
 		else
 			printf("\n process_ESC_seq(): Compose SPECIAL CHAR # %d: seqCode was %d, should be %d ",
@@ -716,15 +716,17 @@ char *pRowAttribs = NULL;
 		seqValue = 0;
 		if( isdigit ( ESC_sequence[2]))
 		{
-			if( sscanf( &ESC_sequence[2], "%d", (int *) &seqValue) != 1 )
+			if( sscanf( &ESC_sequence[2], "%d", &seqValue) != 1 )
 			{
+				printf("sscanf error for seqCode %d\n", seqCode);
 				seqValue = 0;
 			}
 		}
 		else if( isdigit ( ESC_sequence[3]))    // is this <ESC>[?NN or something similar 
 		{
-			if( sscanf( &ESC_sequence[3], "%d", (int *) &seqValue) != 1 )
+			if( sscanf( &ESC_sequence[3], "%d", &seqValue) != 1 )
 			{
+				printf("sscanf error for seqCode %d\n", seqCode);
 				seqValue = 0;
 			}
 		}
@@ -733,7 +735,7 @@ char *pRowAttribs = NULL;
 				
 		
 #if DEBUG_ON & DEBUG_ESC_SEQ
-		printf("\nprocess_ESC_sequence for <ESC> [ %c and seqCode = %d", seqValue, seqCode);
+		printf("process_ESC_sequence for <ESC> [ 0x%02x, seqCode=%d\n", seqValue, seqCode);
 #endif
 				
 		switch( seqCode) {
@@ -756,7 +758,10 @@ char *pRowAttribs = NULL;
 			if ( (cursorPos.cp_col -= seqValue) < 0 )
 				cursorPos.cp_col = 0;              // force to start of line position 
 			break;
-			
+		case HOME_CURSOR:
+			cursorPos.cp_row = 0;
+			cursorPos.cp_col = 0;
+			break;
 		case CURSOR_POSITION:
 			cursorPos.cp_row = 0;
 			cursorPos.cp_col = 0;
@@ -1000,10 +1005,14 @@ char *pRowAttribs = NULL;
 			                       // sequence is <ESC> P P1 [ Pn ; Pn ; Pn ; .... f
 			pESC = &ESC_sequence[4];   // should be the first 8-bit # 
 			
+			seqValue = ESC_sequence[2] - '0';
+			if ((seqValue < 1) || (seqValue > 8)) {
+				printf("\nvt100_processInput error: invalid special char %d", seqValue);
+				break;
+			}
 #if DEBUG_ON & DEBUG_SPECIAL
             printf("\n Composing SpecChar # %d [%c] : %s ", seqValue, ESC_sequence[2], &ESC_sequence[1] );
 #endif
-            
 			for(i=0; i < BYTES_PER_SPEC_CHAR; i++)   // up to 8 elements before the 'f' delimiter
 			{
 				sscanf(pESC, "%d", &tempIntValue);
@@ -1063,7 +1072,7 @@ char *pRowAttribs = NULL;
 			//  sequence is:  <ESC>[<row>;<col>R or similar 
 			// clear and load an output buffer for response 
 #if DEBUG_ON & DEBUG_SERIAL
-			printf("\n vt100_process_ESC_Seq:  STATUS QUERY # %c ", ESC_sequence[2]	);
+			printf("\n vt100_process_ESC_Seq:  STATUS QUERY # %c\n", ESC_sequence[2]);
 #endif
 			
 			for(i = 0; i < MAX_ESC_SEQ_LEN; i++ ){
@@ -1079,14 +1088,14 @@ char *pRowAttribs = NULL;
 				break;
 				
 			case 'A':    // return Auxillary Switch Status
-				sprintf(&outputSeqBuffer[2], "%dR", vt100_get_auxSwitch() );
+				sprintf(&outputSeqBuffer[2], "%cR", vt100_get_auxSwitch()?'h':'l' );
 				break;
 				
 			case 'B':    // return status of various attributes and parameters 
-				sprintf(&outputSeqBuffer[2], "%d;%d;%d;%d;%d;%dR", 
-						vt100_get_autoWrap(),  vt100_get_autoScroll(),       vt100_get_autoRepeat(),
-						vt100_get_backLight(), vt100_get_backLightTimeout(), vt100_get_auxSwitch()
-						);
+				sprintf(&outputSeqBuffer[2], "%c;%c;%c;%c;%d;%cR", 
+					vt100_get_autoWrap()?'h':'l', vt100_get_autoScroll()?'h':'l',
+					vt100_get_autoRepeat()?'h':'l', vt100_get_backLight()?'h':'l',
+					vt100_get_backLightTimeout(), vt100_get_auxSwitch()?'h':'l');
 				break;
 				
 			default:
@@ -1136,5 +1145,6 @@ char *pRowAttribs = NULL;
 		}   // end switch
 	
 	}   // end if 
-	
+//printf("ESC%d|%d[%d;%d]", seqCode, seqValue, cursorPos.cp_row, cursorPos.cp_col);
+//vt100_dumpVD("process_ESC", seq++,"after ESC sequence");	
 }  // end process_ESC_Seq

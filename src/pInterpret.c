@@ -50,6 +50,8 @@
 #include	<string.h>		// STD String Definitions
 #include	<errno.h>		// STD errno Definitions
 #include	<signal.h>		// Signal Definitions
+#include	<sys/time.h>
+#include	<sys/resource.h>
 #include	<vt100.h>		// VT100 Definitions
 #include	"vse_stnd.h"	// STD VSE Definitions
 #include	"configFile.h"	// Configuration File Definitions
@@ -155,7 +157,7 @@ interpretPrint(P_CODE *pCode)
 	outputXmlAttrAddCommon(pCode->code.cPrint.level, &pCode->common, A_NAME);
 	outputXmlTagOpen(pCode->code.cPrint.level, P_PRINT, outputXmlAttrGet());
 	outputXmlText(pCode->code.cPrint.level, pCode->code.cPrint.pText);
-	outputXmlNewLine(pCode->code.cPrint.level);
+	//outputXmlNewLine(pCode->code.cPrint.level);
 	outputXmlTagClose(pCode->code.cPrint.level, P_PRINT);
 
 	return(STATUS_PASS);
@@ -424,45 +426,47 @@ static
 int16_t
 interpretFIOR(P_CODE *pCode)
 {
-	char			file[OUTPUT_STRING_MAX];
-	char			frame[OUTPUT_STRING_MAX];
-	unsigned char	*pBuf;
-	unsigned int	size;
+	char            file[OUTPUT_STRING_MAX];
+	char            frame[OUTPUT_STRING_MAX];
+	char            delaystr[OUTPUT_STRING_MAX];
+	unsigned char   *pBuf;
+	unsigned int    size;
+	int		delay = 0;
 
-	sprintf(file,
-			"%s%s",
-			configFileGetFIORFP(),
-			pCode->code.cFIOR.pFile->arg.data.value.pCharValue);
+	sprintf(file, "%s%s", configFileGetFIORFP(),
+		pCode->code.cFIOR.pFile->arg.data.value.pCharValue);
 	sprintf(frame, "%d", pCode->code.cFIOR.pFrame->arg.data.value.intValue);
+	if (pCode->code.cFIOR.pDelay) {
+		delay = pCode->code.cFIOR.pDelay->arg.data.value.intValue;
+		sprintf(delaystr, "%d", delay);
+	}
 
 	// Complete FIOR format processing
-	outputXmlAttrAddCommon(LEVEL_TRACE,  &pCode->common, A_VAR);
+	outputXmlAttrAddCommon(LEVEL_TRACE, &pCode->common, A_VAR);
 	outputXmlAttrAdd(A_FILE, file);
 	outputXmlAttrAdd(A_FRAME, frame);
+	if (pCode->code.cFIOR.pDelay) {
+		outputXmlAttrAdd(A_DELAY, delaystr);	
+	}
 	outputXmlTagCurrent(LEVEL_TRACE, P_FIOR, outputXmlAttrGet());
 
 	if (STATUS_FAIL == argSet(pCode->common.lineNumber,
-							  configFileGetFIORFP(),
-							  pCode->code.cFIOR.pFile->arg.data.value.pCharValue,
-							  &pBuf,
-							  &size))
+					configFileGetFIORFP(),
+					pCode->code.cFIOR.pFile->arg.data.value.pCharValue,
+					&pBuf,
+					&size))
 	{
 		return(STATUS_FAIL);
 	}
 
 	if (emfio_setResponse(pCode->code.cFIOR.pFrame->arg.data.value.intValue,
-						  pBuf,
-						  (uint32_t)size))
+				pBuf, (uint32_t)size, (uint32_t)delay) != 0)
 	{
 		// Could not load response
-		char	string[OUTPUT_STRING_MAX];
-		sprintf(string,
-				"interpretFIOR(): Could not load response frame [%s]",
-				frame);
-		OUTPUT_ERR(pCode->common.lineNumber,
-				   string,
-				   emfio_getErrorText(),
-				   NULL);
+		char string[OUTPUT_STRING_MAX];
+		sprintf(string, "interpretFIOR(): Could not load response frame [%s]",
+			frame);
+		OUTPUT_ERR(pCode->common.lineNumber, string, emfio_getErrorText(), NULL);
 		free(pBuf);
 		return(STATUS_FAIL);
 	}
@@ -516,6 +520,7 @@ interpretFormat(P_CODE *pCode)
 			}
 		}
 
+		//outputXmlNewLine(pCode->code.cFormat.level);
 		outputXmlTagClose(pCode->code.cFormat.level, P_FORMAT);
 	}
 
@@ -975,6 +980,10 @@ interpretFunction(P_CODE *pCode)
 	{
 		outputXmlAttrAdd(A_P6, pCode->code.cFunc.arg[5]->pName);
 	}
+	if (NULL != pCode->code.cFunc.arg[6])
+	{
+		outputXmlAttrAdd(A_P7, pCode->code.cFunc.arg[6]->pName);
+	}
 	outputXmlTagCurrent(LEVEL_SUMMARY, P_FUNCTION, outputXmlAttrGet());
 
 	// See if there is a function defined
@@ -1151,7 +1160,7 @@ interpretPcode(P_CODE *pCode)
 			break;
 		}
 
-		if ((STATUS_FAIL == status) || done)
+		if ( done || (/*(pCode->type == PC_E_ABORT) &&*/ (STATUS_FAIL == status)) )
 		{
 			break;		// We failed or we are done
 		}
@@ -1206,6 +1215,7 @@ interpretTC(P_TC *pTC)
 int16_t
 interpretTS(P_TS *pTS)
 {
+	char msg[OUTPUT_STRING_MAX];
 	int16_t	status;
 	
 	P_TC	*pTC;
@@ -1216,36 +1226,43 @@ interpretTS(P_TS *pTS)
 	outputXmlAttrAddCommon(LEVEL_SUMMARY, &pTS->common, A_NAME);
 	outputXmlTagOpen(LEVEL_SUMMARY, P_TESTSUITE, outputXmlAttrGet());
 
-	if (0 != vt100_start(configFileGetFPUILBDEV(),
-						 configFileGetSH(),
-						 configFileGetSW()))
+	if (strcmp(configFileGetFPUILBDEV(), "NULL")
+		&& (0 != vt100_start(configFileGetFPUILBDEV(),
+					configFileGetSH(),
+					configFileGetSW())))
 	{
 		// vt100_start failed
-		char	string[OUTPUT_STRING_MAX];
-		sprintf(string,
+		sprintf(msg,
 				"interpretTS(): VT100 Virtual Display error starting device [%s]",
 				configFileGetFPUILBDEV());
 		OUTPUT_ERR(pTS->common.lineNumber,
-				   string,
+				   msg,
 				   vt100_get_errorText(),
 				   NULL);
 		return(STATUS_FAIL);
 	}
 
-	if (EMFIO_OK != emfio_start(configFileGetFIOLBDEV()))
+	if (strcmp(configFileGetFIOLBDEV(), "NULL")
+		&& (EMFIO_OK != emfio_start(configFileGetFIOLBDEV())))
 	{
 		// emfio_start failed
-		char	string[OUTPUT_STRING_MAX];
-		sprintf(string,
+		sprintf(msg,
 				"interpretTS(): FIO Emulator start error starting device [%s]",
 				configFileGetFIOLBDEV());
 		OUTPUT_ERR(pTS->common.lineNumber,
-				   string,
+				   msg,
 				   emfio_getErrorText(),
 				   NULL);
 		return(STATUS_FAIL);
 	}
 
+	// Lower relative priority after thread startup
+	errno = 0;
+	int prio = getpriority(PRIO_PROCESS, 0);
+	if (errno == 0) {
+		setpriority(PRIO_PROCESS, 0, prio+1);
+	}
+	
 	if (STATUS_PASS == (status = interpretSetUp(pTS->pSU)))
 	{
 		pTC = pTS->pTC;			// First TC
@@ -1271,12 +1288,12 @@ interpretTS(P_TS *pTS)
 		}
 	}
 
-	if (configFileGetFPUILBDEV())
+	if (strcmp(configFileGetFPUILBDEV(), "NULL") && configFileGetFPUILBDEV())
 	{
 		vt100_end();
 	}
 
-	if (configFileGetFIOLBDEV())
+	if (strcmp(configFileGetFIOLBDEV(), "NULL") && configFileGetFIOLBDEV())
 	{
 		emfio_end();
 	}

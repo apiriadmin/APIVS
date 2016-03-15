@@ -44,6 +44,7 @@
 /**
  * Includes
  */
+#include <unistd.h>
 #include "vt100.h"
 
 //=============================================================================
@@ -87,7 +88,7 @@ char *ptrSC = NULL;                           // pointer to play with special ch
 int16_t numSpecChars = 0;                     // count # of defined Special Chars with non-zero bitmaps
 int16_t numSpecCols  = 0;                     // number of vertical bitmap columns in this special character 
 int16_t specCharNumber = 0;                   // which special character are we processing 
-int16_t valueSC = 0;                          // pull value from the array for compare 
+int valueSC = 0;                              // pull value from the array for compare 
 int16_t errorSC = 0;                          // flag an SC error 
 int16_t compareStage = COMPARE_TEXT;          // 8 stages of compares: 1st one: text, then attribs, tabs, parms, cursor, Spec chars
 int16_t compareResult = 0;
@@ -124,7 +125,8 @@ char errorBuffer[100] = {
 	//     7.  Compare the Special Character Bitmaps per each SC
 	//     8.  Compare Completed OKAY!
 	//
-	
+	//pthread_mutex_lock(&vDisplay.mutex);
+	usleep(100000);
 	while ( compareStage < COMPARE_COMPLETE  )
 	{
 		    // read a line at a time to compare with the VD
@@ -344,7 +346,7 @@ char errorBuffer[100] = {
 					
 					for(i = 0; i < NUMBER_OF_SPEC_CHARS; i++)
 					{
-						sscanf(ptrSC, "%1d,", (int *) &valueSC);
+						sscanf(ptrSC, "%1d,", &valueSC);
 						if( valueSC != specialCharColumns[i] )   // are they the same size (# of vertical columns?)
 						{
 							errorSC = TRUE;
@@ -406,7 +408,7 @@ char errorBuffer[100] = {
 
 				for(j = 0; j < numSpecCols; j++)
 				{
-					sscanf(ptrSC, "%d", (int *) &valueSC);
+					sscanf(ptrSC, "%d", &valueSC);
 					if( valueSC != specialChars[specCharNumber - 1][j] )
 					{
 						errorSC = TRUE;
@@ -453,7 +455,8 @@ char errorBuffer[100] = {
 		}   // endif - compareStage > COMPARE_CURSOR  
 	
 	}   // end - while ( 1) 
-
+	//pthread_mutex_unlock(&vDisplay.mutex);
+	
 	if( compareStage != COMPARE_COMPLETE)   // check for incomplete "compare file" without all the "stages"
 	{
 		if( errorBuffer[0] == '\0')         // not here because of a break on a prior error 

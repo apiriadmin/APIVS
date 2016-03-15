@@ -174,6 +174,9 @@ int16_t i            = 0;           // array loop variable
 	//       a similar list of pointers for the attributes - 1 pointer per line 
 	// 
 	
+	if (pthread_mutex_init(&vDisplay.mutex, NULL) != 0) {
+		return( vt100_set_errorCode(ERR_10_THREAD_CREATE) );
+	}
 	
 	/*    
 	 *   First - malloc() all Virtual Display data area and set up pointer arrays   
@@ -205,6 +208,7 @@ int16_t i            = 0;           // array loop variable
 	
 	//  init the Virtual Display with the buffer addresses & row pointer arrays
 	//   buffer & array addresses used for later free() calls 
+	pthread_mutex_lock(&vDisplay.mutex);
 	vDisplay.pText        = pTextPtrsBuffer;
 	vDisplay.pAttribs     = pAttribsPtrsBuffer;
 	vDisplay.pTextBuf     = pTextBuffer;
@@ -226,6 +230,8 @@ int16_t i            = 0;           // array loop variable
 		
 	}
 	
+	vt100_clearVD();        // start clean & clear before text input 
+	pthread_mutex_unlock(&vDisplay.mutex);
 	
 #if DEBUG_ON & DEBUG_MALLOC
 		printf("\n vDisplay struct: TextPtrBuffer: %0x, AttribsPtrBuffer: %0x,", 
@@ -240,8 +246,6 @@ int16_t i            = 0;           // array loop variable
 	
 	
 	// check if fpui port is present and can be opened 
-	
-	
 	portName  = args[0].thr_portName; 
 	pVDisplay = args[0].thr_DisplayPtr;
 	
@@ -260,18 +264,15 @@ int16_t i            = 0;           // array loop variable
 	{        
 		// we are given port to open like "/dev/fpi" 
 		// we will open the port and process characters received to the VT 
-		
 #if DEBUG_ON
     //  clear the display and show the results 
 	// do compare on the display that was just cleared with the local dump file 
 	//  this must be removed for delivery - should not be accessed from the library routines
-int16_t result = 0;
-		vt100_clearVD();        // start clean & clear before text input 
+		int16_t result = 0;
 		result = vt100_compareVD("display.clear");
 		printf("\nvt100_thread: compareVD: display.clear = %d \n", result);
 		vt100_showVD(stdout, "After call to vt100_clearVD");
 #endif
-	
 	
 		if( (fdSerialPort = openSerialPort(portName) ) <= 0 ){   // Error on open
 #if DEBUG_ON
@@ -280,8 +281,17 @@ int16_t result = 0;
 			vt100_set_errorCode(ERR_05_PORT_OPEN); 
 			threadErrorCode = ERR_05_PORT_OPEN;
 			vt100_allDone = TRUE;
+		} else {
+			// Send a "Power UP" sequence on startup
+			char outputSeqBuffer[MAX_ESC_SEQ_LEN];
+			int outBufLen = sprintf(outputSeqBuffer, "\x1b[PU");
+			if (writeSerialPort(fdSerialPort, outputSeqBuffer, outBufLen) != outBufLen) {
+				vt100_set_errorCode(ERR_07_PORT_WRITE); 
+				threadErrorCode = ERR_07_PORT_WRITE;
+				vt100_allDone = TRUE;
+			}
 		}
-	
+
 #if DEBUG_ON
 		printf("\nTHREAD %d ready to read input from %s ... ", 
 					args[0].thr_threadId, portName);
@@ -308,11 +318,14 @@ int16_t result = 0;
 	
 	sleep(1);
 	
+	pthread_mutex_lock(&vDisplay.mutex);
 	//  free the malloc'd memory in reverse order
 	free( vDisplay.pAttribs );
 	free( vDisplay.pText );
 	free( vDisplay.pAttribsBuf );	
 	free( vDisplay.pTextBuf  );
+	pthread_mutex_unlock(&vDisplay.mutex);
+	pthread_mutex_destroy(&vDisplay.mutex);
 	
 	pthread_exit(&threadErrorCode);   // return error code to the original start function
 	

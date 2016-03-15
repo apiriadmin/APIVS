@@ -170,6 +170,7 @@ typedef struct pCode P_CODE;
 #define	A_P4		"p4"
 #define	A_P5		"p5"
 #define	A_P6		"p6"
+#define A_P7		"p7"
 #define	A_TIME		"time"
 #define	A_FORCE		"force"
 #define	A_FRAME		"frame"
@@ -178,6 +179,7 @@ typedef struct pCode P_CODE;
 #define	VALUE_ENABLE	"enable"
 #define	VALUE_DISABLE	"disable"
 #define	A_FLIP		"flip"
+#define A_DELAY		"delay"
 
 /** \brief This enum defines the contents of a pCode */
 typedef	enum
@@ -290,6 +292,7 @@ struct	codeFIOR
 {
 	ARG_P			*pFile;				// File to dump
 	ARG_P			*pFrame;			// Frame number
+	ARG_P                   *pDelay;			// Delay
 };
 
 /** \brief Set code forward reference */

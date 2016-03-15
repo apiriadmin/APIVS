@@ -103,7 +103,7 @@ static	char	*s_level_string[LEVEL_MAX] =
 static	const char		*s_attrArray[(ATTR_ARRAY_MAX * 2) + 1] = { NULL };
 /** \brief Where to add next name / value pair */
 static	const char		**s_attrNext = &s_attrArray[0];	// next element
-
+static struct timeval	start_tv;
 //=============================================================================
 /**
  * \brief This function reports the current status
@@ -168,6 +168,8 @@ outputXmlStart(RUN_LEVEL level, const char *outputXml)
 		s_outputXml = outputXml;
 	}
 
+	gettimeofday(&start_tv, NULL);
+	
 	return(STATUS_PASS);
 }
 
@@ -260,7 +262,7 @@ outputXmlErr(const int16_t lineNo,
 			 const char *desc)
 {
 	// Construct the error element to output
-	outputXmlAttrAddDate();		// Date ATTR is first
+	outputXmlAttrAddTimeStamp();		// Date ATTR is first
 
 	if (lineNo)
 	{
@@ -306,7 +308,7 @@ outputXmlInfo(const int16_t lineNo,
 			  const char 	*pDesc)
 {
 	// Construct the information element to output
-	outputXmlAttrAddDate();		// Time ATTR is first
+	outputXmlAttrAddTimeStamp();		// Time ATTR is first
 
 	if (lineNo)
 	{
@@ -387,8 +389,8 @@ outputXmlTagCurrent(const RUN_LEVEL level,
 void
 outputXmlTagCurrentString(const RUN_LEVEL level,
 						  const char *string,
-						  const char open,
-						  const char close)
+						  const char *open,
+						  const char *close)
 {
 	// See if this output should be displayed
 	if (level <= s_level)
@@ -400,18 +402,18 @@ outputXmlTagCurrentString(const RUN_LEVEL level,
 		fprintf(s_outputFile, "<");
 
 		// Open tag character
-		if (open != '\0')
+		if (open != NULL)
 		{
-			fprintf(s_outputFile, "%c", open);
+			fprintf(s_outputFile, "%s", open);
 		}
 
 		// Output requested tag
 		fprintf(s_outputFile, string);
 
 		// End in a close tag, CR
-		if (close != '\0')
+		if (close != NULL)
 		{
-			fprintf(s_outputFile, "%c", close);
+			fprintf(s_outputFile, "%s", close);
 		}
 		fprintf(s_outputFile, ">\n");
 	}
@@ -432,15 +434,16 @@ outputXmlTagCurrentString(const RUN_LEVEL level,
 void
 outputXmlText(const RUN_LEVEL level, const char *pText)
 {
+	outputXmlTagOpen(level,"Text",outputXmlAttrGet());
 	// See if this output should be displayed
 	if (level <= s_level)
 	{
 		// Output the current indent level
 		outputIndent();
-
 		// Output requested tag
-		fprintf(s_outputFile, pText);
+		fprintf(s_outputFile, "\"%s\"\n", pText);
 	}
+	outputXmlTagClose(level, "Text");
 }
 
 //=============================================================================
@@ -599,7 +602,7 @@ outputXmlAttrAdd(const char *name, const char *value)
 
 //=============================================================================
 /**
- * \brief This function adds the time attribute to the attribute array
+ * \brief This function adds the date attribute to the attribute array
  *
  * \return		void
  */
@@ -612,9 +615,29 @@ outputXmlAttrAddDate()
 
 	// Add the time to the attribute list
 	tm = time(NULL);
-	tms = localtime(&tm);
+	tms = gmtime(&tm);
 	strftime(timeString, sizeof(timeString), DATE_FORMAT, tms);
+	
 	outputXmlAttrAdd(ATTR_DATE, timeString);
+}
+
+//=============================================================================
+/**
+ * \brief This function adds the time attribute to the attribute array
+ *
+ * \return		void
+ */
+void
+outputXmlAttrAddTimeStamp()
+{
+	struct timeval tv, current_tv;
+	static char timeString[OUTPUT_STRING_MAX];
+
+	// Add the timestamp to the attribute list
+	gettimeofday(&current_tv, NULL);
+	timersub(&current_tv, &start_tv, &tv);
+	sprintf(timeString, "%+ld.%06ld", tv.tv_sec, tv.tv_usec);
+	outputXmlAttrAdd(ATTR_TIME, timeString);
 }
 
 //=============================================================================
@@ -650,7 +673,7 @@ outputXmlAttrAddCommon(const RUN_LEVEL level, P_COMMON *pCommon, char *pName)
 		outputXmlAttrAdd(ATTR_LINE, string);
 
 		// Add the time stamp
-		outputXmlAttrAddDate();
+		outputXmlAttrAddTimeStamp();
 
 		// Add the name if it is there
 		outputXmlAttrAdd(pName, pCommon->pName);
@@ -688,9 +711,10 @@ outputXmlShowCMD(int frame)
 
 //=============================================================================
 /**
- * \brief Dump a buffer in a hex dump fashion
+ * \brief Dump a buffer in Hex format
  *
  * \param[in]	pFile - FILE * to dump to
+ * \param[in]	pName - Name attribute
  * \param[in]	pBuf - Buffer to hexdump
  * \param[in]	size - Number of bytes to dump
  * 
@@ -698,35 +722,27 @@ outputXmlShowCMD(int frame)
  *              STATUS_SUCCESS = Operation succeeded
  */
 void
-outputXmlHex(const RUN_LEVEL level, void *pBuf, unsigned int size)
+outputXmlHex(const RUN_LEVEL level, const char *pName, void *pBuf, unsigned int size)
 {
-	unsigned int	ii;
-	void			*end;
-	void			*tmpptr;
-	void			*tmpend;
-	void			*addr = NULL;
-
+	unsigned int ii;
+	void *end;
+	void *tmpptr;
+	void *tmpend;
+	char string[OUTPUT_STRING_MAX];
+	
 	if (level > s_level)
 	{
 		return;
 	}
 
-	fprintf(s_outputFile, "0x???????? ");
-	for (ii = 0; ii < 16; ii++)
-	{
-		fprintf(s_outputFile, "%02x ", ii);
-	}
-	fprintf(s_outputFile, "\n");
-	fprintf(s_outputFile, "---------- ");
-	for (ii = 0; ii < 16; ii++)
-	{
-		fprintf(s_outputFile, "-- ");
-	}
-	fprintf(s_outputFile, "\n");
-
+	sprintf(string, "%d", size);
+	outputXmlAttrAdd("length", string);
+	outputXmlTagOpen(level,"HexDump",outputXmlAttrGet());
+	// The bytes
 	end = pBuf + size;
 	while (pBuf < end)
 	{
+		outputIndent();
 		tmpptr = pBuf;
 		tmpend = pBuf + 16;
 		if (tmpend > end)
@@ -735,8 +751,6 @@ outputXmlHex(const RUN_LEVEL level, void *pBuf, unsigned int size)
 		}
 
 		// Output the hex codes
-		fprintf(s_outputFile, "%10p ", addr);
-		addr += 16;
 		ii = 0;
 		while (tmpptr < tmpend)
 		{
@@ -749,22 +763,9 @@ outputXmlHex(const RUN_LEVEL level, void *pBuf, unsigned int size)
 			fprintf(s_outputFile, "   ");
 		}
 
-		// Output the ASCII codes
-		tmpptr = pBuf;
-		while (tmpptr < tmpend)
-		{
-			if ((' ' > *(uint8_t *)tmpptr) || (0x7f < *(uint8_t *)tmpptr))
-			{
-				fprintf(s_outputFile, ".");
-			}
-			else
-			{
-				fprintf(s_outputFile, "%c", *(uint8_t *)tmpptr);
-			}
-			tmpptr++;
-		}
 		fprintf(s_outputFile, "\n");
 
 		pBuf = tmpend;
 	}
+	outputXmlTagClose(level, "HexDump");
 }

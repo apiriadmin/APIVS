@@ -217,12 +217,11 @@ exprParse(P_CODE *pCode)
 		pExpr++;
 	}
 	ptr = left;
-	while (   (*pExpr != ' ')
-		   && (*pExpr != '\t')
-		   && (*pExpr != '\0')
-		   && (*pExpr != ARG_MEMBER))
+	while ((*pExpr != ' ') && (*pExpr != '\t') && (*pExpr != '\0'))
 	{
 		*ptr++ = *pExpr++;
+		if ((*pExpr == ARG_MEMBER) && (left[0] == ARG_VAR_PREFIX))
+			break;
 	}
 	*ptr = '\0';
 	if (*pExpr == ARG_MEMBER)
@@ -255,12 +254,11 @@ exprParse(P_CODE *pCode)
 		pExpr++;
 	}
 	ptr = right;
-	while (   (*pExpr != ' ')
-		   && (*pExpr != '\t')
-		   && (*pExpr != '\0')
-		   && (*pExpr != ARG_MEMBER))
+	while ((*pExpr != ' ') && (*pExpr != '\t') && (*pExpr != '\0'))
 	{
 		*ptr++ = *pExpr++;
+		if ((*pExpr == ARG_MEMBER) && (right[0] == ARG_VAR_PREFIX))
+			break;
 	}
 	*ptr = '\0';
 	if (*pExpr == ARG_MEMBER)

@@ -640,7 +640,7 @@ int16_t emfio_teardownCommands()
  */
 int16_t emfio_setupResponses()
 {
-	SDLCResponseInfo * pResponse = 0;
+	SDLCResponseInfo *pResponse = NULL;
 
 	// LOAD_SWITCH_DRIVERS_RESPONSE.
 	pResponse = &emfio_responses[LOAD_SWITCH_DRIVERS_RESPONSE - EMFIO_SDLC_RESPONSE_OFFSET];
