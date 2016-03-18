@@ -150,6 +150,7 @@ typedef struct pCode P_CODE;
 #define	OP_S_SUB	"subtract"
 #define	A_TYPE		"type"
 #define	A_MEMBER	"member"
+#define A_INDEX		"index"
 #define	A_FNAME		"funcName"
 #define	A_RETURN	"return"
 #define	A_ERRNO		"errno"
@@ -304,6 +305,7 @@ struct	codeSet
 	ARG_P		*pVal;				// Pointer to argument to Set from
 	ARG_P		*pFile;				// Pointer to file to Set from
 	char		*pMember;			// member name, NULL if not present
+	ARG_P           *pIndex;                        // array index if applicable
 	OP_TYPE		operation;			// The operation to perform
 };
 

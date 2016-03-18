@@ -199,8 +199,7 @@ exprParse(P_CODE *pCode)
 	// Expression is of the form:
 	// 	LEFT OP RIGHT
 	// We parse out the LEFT, then OP then RIGHT
-	// And attempt to resolve the parts
-	
+	// And attempt to resolve the parts	
 	char	left[OUTPUT_STRING_MAX];
 	char	leftMember[OUTPUT_STRING_MAX];
 	boolean	leftMemberFound = FALSE;
@@ -296,9 +295,7 @@ exprParse(P_CODE *pCode)
 		return(STATUS_FAIL);
 	}
 
-	if (STATUS_FAIL == argDereferenceArg(pCode->common.lineNumber,
-										 left,
-										 &pCode->code.cIf.expr.left))
+	if (STATUS_FAIL == argDereferenceArg(pCode->common.lineNumber, left, &pCode->code.cIf.expr.left))
 	{
 		return(STATUS_FAIL);
 	}
@@ -308,18 +305,13 @@ exprParse(P_CODE *pCode)
 		if (!(ptr = malloc(strlen(leftMember) + 1)))
 		{
 			// Malloc failed
-			char	string[OUTPUT_STRING_MAX];
-			sprintf(string,
-					"exprParse(): Failed to malloc space for left member [%s] size [%d]",
-					leftMember,
-					strlen(leftMember) + 1);
-			OUTPUT_ERR(pCode->common.lineNumber,
-					   string,
-					   strerror(errno),
-					   NULL);
+			char string[OUTPUT_STRING_MAX];
+			sprintf(string, "exprParse(): Failed to malloc space for left member [%s] size [%d]",
+				leftMember,
+				strlen(leftMember) + 1);
+			OUTPUT_ERR(pCode->common.lineNumber, string, strerror(errno), NULL);
 			return(STATUS_FAIL);
 		}
-
 		strncpy(ptr, leftMember, strlen(leftMember) + 1);
 		pCode->code.cIf.expr.pLeftMember = ptr;
 	}
@@ -330,9 +322,7 @@ exprParse(P_CODE *pCode)
 		return(STATUS_FAIL);
 	}
 
-	if (STATUS_FAIL == argDereferenceArg(pCode->common.lineNumber,
-										 right,
-										 &pCode->code.cIf.expr.right))
+	if (STATUS_FAIL == argDereferenceArg(pCode->common.lineNumber, right, &pCode->code.cIf.expr.right))
 	{
 		return(STATUS_FAIL);
 	}
@@ -342,18 +332,13 @@ exprParse(P_CODE *pCode)
 		if (!(ptr = malloc(strlen(rightMember) + 1)))
 		{
 			// Malloc failed
-			char	string[OUTPUT_STRING_MAX];
-			sprintf(string,
-					"exprParse(): Failed to malloc space for right member [%s] size [%d]",
-					rightMember,
-					strlen(rightMember) + 1);
-			OUTPUT_ERR(pCode->common.lineNumber,
-					   string,
-					   strerror(errno),
-					   NULL);
+			char string[OUTPUT_STRING_MAX];
+			sprintf(string, "exprParse(): Failed to malloc space for right member [%s] size [%d]",
+				rightMember,
+				strlen(rightMember) + 1);
+			OUTPUT_ERR(pCode->common.lineNumber, string, strerror(errno), NULL);
 			return(STATUS_FAIL);
 		}
-
 		strncpy(ptr, rightMember, strlen(rightMember) + 1);
 		pCode->code.cIf.expr.pRightMember = ptr;
 	}
@@ -374,8 +359,8 @@ exprParse(P_CODE *pCode)
  * \param[in]	ln - Line number of XML
  * \param[in]	pExpr - Pointer to expression to evaluate
  * \param[out]	result - Boolean result
- * \return		STATUS_PASS - Test conformance (PASS)
- * 				STATUS_FAIL - Test nonconformance (FAIL)
+ * \return	STATUS_PASS - Test conformance (PASS)
+ * 		STATUS_FAIL - Test nonconformance (FAIL)
  */
 int16_t
 exprEvaluate(uint16_t ln, EXPR_P *pExpr, boolean *result)

@@ -111,6 +111,7 @@ static char		*s_varType_string[] =
 	V_FPORT,
 	V_FDEVT,
 	V_FFDSTAT,
+	V_FFINFO,
 	V_FFMST,
 	V_FVMST,
 	V_FNOTI,
@@ -156,6 +157,7 @@ static	VAR_TYPE	s_varType[] =
 	VAR_INT,		// VAR_FPORT
 	VAR_INT,		// VAR_FDEVT
 	VAR_FFDSTAT,
+	VAR_FFINFO,		// VAR_FFINFO
 	VAR_INT,		// VAR_FFMST
 	VAR_INT,		// VAR_FVMST
 	VAR_FNOTI,
@@ -255,18 +257,39 @@ static	ARG_NC	s_NCtable[] =
 	{ NC_FIOOUT6SIU4,		FIOOUT6SIU4,				VAR_INT },
 	{ NC_FIOOUT14SIU1,		FIOOUT14SIU1,				VAR_INT },
 	{ NC_FIOOUT14SIU2,		FIOOUT14SIU2,				VAR_INT },
+	{ NC_FIO_HZ_0,			FIO_HZ_0,				VAR_INT },
+	{ NC_FIO_HZ_ONCE,		FIO_HZ_ONCE,				VAR_INT },
+	{ NC_FIO_HZ_1,			FIO_HZ_1,				VAR_INT },
+	{ NC_FIO_HZ_5,			FIO_HZ_5,				VAR_INT },
+	{ NC_FIO_HZ_10,			FIO_HZ_10,				VAR_INT },
+	{ NC_FIO_HZ_20,			FIO_HZ_20,				VAR_INT },
+	{ NC_FIO_HZ_30,			FIO_HZ_30,				VAR_INT },
+	{ NC_FIO_HZ_40,			FIO_HZ_40,				VAR_INT },
+	{ NC_FIO_HZ_50,			FIO_HZ_50,				VAR_INT },
+	{ NC_FIO_HZ_60,			FIO_HZ_60,				VAR_INT },
+	{ NC_FIO_HZ_70,			FIO_HZ_70,				VAR_INT },
+	{ NC_FIO_HZ_80,			FIO_HZ_80,				VAR_INT },
+	{ NC_FIO_HZ_90,			FIO_HZ_90,				VAR_INT },
+	{ NC_FIO_HZ_100,		FIO_HZ_100,				VAR_INT },
+	{ NC_FIO_HZ_MAX,		FIO_HZ_MAX,				VAR_INT },
+	{ NC_FIO_GREEN,			FIO_GREEN,				VAR_INT },
+	{ NC_FIO_YELLOW,		FIO_YELLOW,				VAR_INT },
+	{ NC_FIO_RED,                   FIO_RED,				VAR_INT },
 
 	{ NC_TOD_V_SRC_LINE,	TOD_TIMESRC_LINESYNC,		VAR_INT },
-	{ NC_TOD_V_SRC_RTC,		TOD_TIMESRC_RTCSQWR,		VAR_INT },
+	{ NC_TOD_V_SRC_RTC,     TOD_TIMESRC_RTCSQWR,		VAR_INT },
 	{ NC_TOD_V_SRC_CRYS,	TOD_TIMESRC_CRYSTAL,		VAR_INT },
 	{ NC_TOD_V_SRC_EXT1,	TOD_TIMESRC_EXTERNAL1,		VAR_INT },
 	{ NC_TOD_V_SRC_EXT2,	TOD_TIMESRC_EXTERNAL2,		VAR_INT },
 
-	{ NC_SIG_SIGIO,			(32+4)/*FIO_SIGIO*/,					VAR_INT },
-	{ NC_SIG_WINCH,			SIGWINCH,					VAR_INT },
+	{ NC_SIG_FIO,           (32+4)/*FIO_SIGIO*/,            VAR_INT },
+	{ NC_SIG_TOD,           SIGIO,                          VAR_INT },
+	{ NC_SIG_WINCH,         SIGWINCH,                       VAR_INT },
+	{ NC_SIG_USR1,          SIGUSR1,                        VAR_INT },
+	{ NC_SIG_IO,            SIGIO,                          VAR_INT },
 
 	// End of table, must be last entry
-	{ NULL,					0,							0  }
+	{ NULL,                 0,                              0  }
 };
 
 static	ARG_MAC	s_MACtable[] =
@@ -466,6 +489,10 @@ argParseType(const char *pValue, VAR_TYPE *pType)
 	{
 		*pType = VAR_FFDSTAT;
 	}
+	else if (!strcmp(pValue, V_FFINFO))
+	{
+		*pType = VAR_FFINFO;
+	}
 	else if (!strcmp(pValue, V_FFMST))
 	{
 		*pType = VAR_FFMST;
@@ -626,12 +653,12 @@ argValidateArgSyntax(uint16_t 		lineNumber,
 				  	 const char 	*value)
 {
 	const char argPrefix[] = { ARG_VAR_PREFIX,
-				  			   ARG_NAMED_CONST_PREFIX,
-				  			   ARG_NUMERIC_CONST_PREFIX,
-				  			   ARG_STRING_CONST_PREFIX,
-							   ARG_MACRO_PREFIX,
-				  			   '\0'
-							 };
+					ARG_NAMED_CONST_PREFIX,
+					ARG_NUMERIC_CONST_PREFIX,
+					ARG_STRING_CONST_PREFIX,
+					ARG_MACRO_PREFIX,
+				  	'\0'
+	};
 
 	return(argValidateParameter(lineNumber, value, argPrefix));
 }
@@ -644,14 +671,12 @@ argValidateArgSyntax(uint16_t 		lineNumber,
  * \param[in]	pName - The variable name
  * \param[in]	varType - Variable type
  * \param[in]	size - Array size, if needed
- * \return		STATUS_PASS - Parse occurred correctly
- * 				STATUS_FAIL - Parse failed
+ * \return	STATUS_PASS - Parse occurred correctly
+ * 		STATUS_FAIL - Parse failed
  */
 int16_t
-argDefineVar(uint16_t 		lineNumber,
-			 const char 	*pName,
-			 VAR_TYPE		varType,
-			 uint16_t		size)
+argDefineVar(uint16_t lineNumber, const char *pName, VAR_TYPE varType,
+		uint16_t size)
 {
 	char		*ptr;
 	ARG_NODE	*pNode = s_argContainer.pVar;
@@ -794,6 +819,23 @@ argDefineVar(uint16_t 		lineNumber,
 		}
 		memset(pUC, 0, size * sizeof(FIO_FRAME_SCHD));
 		pNode->argCode.arg.data.value.fioFschd = pUC;
+	}
+	else if (VAR_FFINFO == varType)
+	{
+		FIO_FRAME_INFO	*pUC;
+		if (NULL == (pUC = malloc(size * sizeof(FIO_FRAME_INFO))))
+		{
+			// Malloc failed
+			char	string[OUTPUT_STRING_MAX];
+			sprintf(string,
+					"argDefineVar(): Failed to malloc space for variable array [%s] size [%d]",
+					pName,
+					size * sizeof(FIO_FRAME_INFO));
+			OUTPUT_ERR(lineNumber, string, strerror(errno), NULL);
+			return(STATUS_FAIL);
+		}
+		memset(pUC, 0, size * sizeof(FIO_FRAME_INFO));
+		pNode->argCode.arg.data.value.fioFrameInfo = pUC;
 	}
 	else if (VAR_FCMAP == varType)
 	{
@@ -1346,7 +1388,6 @@ argProcessMacro(uint16_t 	ln, ARG_P *pArg, int **ppInt)
 				free(pBuf);
 				return(STATUS_FAIL);
 			}
-			printf("\nMAC_TYPE_CMDMSG %d\n", cmd_frame);
 
 			if (EMFIO_OK != emfio_compareCommand(cmd_frame,
 												 pBuf,
@@ -1668,11 +1709,10 @@ argDereferenceMacro(uint16_t		lineNumber,
  * 				STATUS_FAIL - Parse failed
  */
 int16_t
-argDereferenceNC(uint16_t		lineNumber,
-				 const char 	*pName,
-			 	 ARG_P			**ppNC)
+argDereferenceNC(uint16_t lineNumber, const char *pName,
+			ARG_P **ppNC)
 {
-	ARG_NODE	*pNode = s_argContainer.pNC;	// Start at top
+	ARG_NODE *pNode = s_argContainer.pNC;	// Start at top
 
 	// See if this named constant is defined
 	while (NULL != pNode)
@@ -1907,25 +1947,81 @@ argFormat(uint16_t ln, const RUN_LEVEL level, ARG_P *pArg)
 
 		case VAR_FCMAP:
 		{
-			outputXmlHex(level, pArg->pName,
+			if (pArg->arg.data.size > 1) {
+				outputXmlHex(level, pArg->pName,
 					pArg->arg.data.value.fioFcmap,
 					pArg->arg.data.size * sizeof(FIO_CHANNEL_MAP));
+			} else {
+				sprintf(string, "%s%c%s = [%d], %s%c%s = [%d], %s%c%s = [%d], %s%c%s = [%d]",
+					pArg->pName, ARG_MEMBER, MEM_FCMAP_OUT,
+					pArg->arg.data.value.fioFcmap->output_point,
+					pArg->pName, ARG_MEMBER, MEM_FCMAP_FIOD,
+					pArg->arg.data.value.fioFcmap->fiod,
+					pArg->pName, ARG_MEMBER, MEM_FCMAP_CHAN,
+					pArg->arg.data.value.fioFcmap->channel,
+					pArg->pName, ARG_MEMBER, MEM_FCMAP_CLR,
+					pArg->arg.data.value.fioFcmap->color);
+				outputXmlText(level, string);
+			}
 		}
 		break;
 
 		case VAR_FFSCHD:
 		{
-			outputXmlHex(level, pArg->pName,
+			if (pArg->arg.data.size > 1) {
+				sprintf(string, "%s%c%s = [%d], %s%c%s = [%d]",
+					pArg->pName, ARG_MEMBER, MEM_FFSCHD_REQ,
+					pArg->arg.data.value.fioFschd->req_frame,
+					pArg->pName, ARG_MEMBER, MEM_FFSCHD_HZ,
+					pArg->arg.data.value.fioFschd->frequency);
+				outputXmlText(level, string);
+			} else {
+				outputXmlHex(level, pArg->pName,
 					pArg->arg.data.value.fioFschd,
 					pArg->arg.data.size * sizeof(FIO_FRAME_SCHD));
+			}
 		}
 		break;
 
 		case VAR_FINF:
 		{
-			outputXmlHex(level, pArg->pName,
+			if (pArg->arg.data.size > 1) {
+				outputXmlHex(level, pArg->pName,
 					pArg->arg.data.value.fioFinf,
 					pArg->arg.data.size * sizeof(FIO_INPUT_FILTER));
+			} else {
+				sprintf(string, "%s%c%s = [%d], %s%c%s = [%d], %s%c%s = [%d]",
+					pArg->pName, ARG_MEMBER, MEM_FINF_IP,
+					pArg->arg.data.value.fioFinf->input_point,
+					pArg->pName, ARG_MEMBER, MEM_FINF_LEAD,
+					pArg->arg.data.value.fioFinf->leading,
+					pArg->pName, ARG_MEMBER, MEM_FINF_TRAIL,
+					pArg->arg.data.value.fioFinf->trailing);
+				outputXmlText(level, string);
+			}
+		}
+		break;
+
+		case VAR_FFINFO:
+		{
+			if (pArg->arg.data.size > 1) {
+				outputXmlHex(level, pArg->pName,
+					pArg->arg.data.value.fioFinf,
+					pArg->arg.data.size * sizeof(FIO_FRAME_INFO));
+			} else {
+				sprintf(string, "%s%c%s = [%d], %s%c%s = [%d], %s%c%s = [%d], %s%c%s = [%d], %s%c%s = [%d]",
+					pArg->pName, ARG_MEMBER, MEM_FFINFO_HZ,
+					pArg->arg.data.value.fioFrameInfo->frequency,
+					pArg->pName, ARG_MEMBER, MEM_FFINFO_SRX,
+					pArg->arg.data.value.fioFrameInfo->success_rx,
+					pArg->pName, ARG_MEMBER, MEM_FFINFO_ERX,
+					pArg->arg.data.value.fioFrameInfo->error_rx,
+					pArg->pName, ARG_MEMBER, MEM_FFINFO_E10,
+					pArg->arg.data.value.fioFrameInfo->error_last_10,
+					pArg->pName, ARG_MEMBER, MEM_FFINFO_SEQ,
+					pArg->arg.data.value.fioFrameInfo->last_seq);
+				outputXmlText(level, string);
+			}
 		}
 		break;
 
@@ -1939,9 +2035,18 @@ argFormat(uint16_t ln, const RUN_LEVEL level, ARG_P *pArg)
 
 		case VAR_FNOTI:
 		{
-			outputXmlHex(level, pArg->pName,
-					&pArg->arg.data.value.fioInfo,
-					sizeof(FIO_NOTIFY_INFO));
+			sprintf(string, "%s%c%s = [%d], %s%c%s = [%d], %s%c%s = [%d], %s%c%s = [%d], %s%c%s = [%d]",
+				pArg->pName, ARG_MEMBER, MEM_FNOTI_RXF,
+				pArg->arg.data.value.fioNotifyInfo.rx_frame,
+				pArg->pName, ARG_MEMBER, MEM_FNOTI_STAT,
+				pArg->arg.data.value.fioNotifyInfo.status,
+				pArg->pName, ARG_MEMBER, MEM_FNOTI_SEQ,
+				pArg->arg.data.value.fioNotifyInfo.seq_number,
+				pArg->pName, ARG_MEMBER, MEM_FNOTI_CNT,
+				pArg->arg.data.value.fioNotifyInfo.count,
+				pArg->pName, ARG_MEMBER, MEM_FNOTI_FIOD,
+				pArg->arg.data.value.fioNotifyInfo.fiod);
+			outputXmlText(level, string);
 		}
 		break;
 
@@ -1992,17 +2097,19 @@ argFormat(uint16_t ln, const RUN_LEVEL level, ARG_P *pArg)
  * \param[in]	pValue - Pointer to initialize from a value
  * \param[in]	pFile - Pointer to initialize from a file
  * \param[in]	pVar - Pointer of Variable to be initialized
+ * \param[in]	pIndex - array index if applicable
  * \param[in]	pMember - Member to initialize if structure
- * \return		STATUS_PASS - Parse occurred correctly
- * 				STATUS_FAIL - Parse failed
+ * \return	STATUS_PASS - Parse occurred correctly
+ * 		STATUS_FAIL - Parse failed
  */
 int16_t
-argSetVar(uint16_t		ln,
-		  OP_TYPE		operation,
-		  ARG_P			*pValue,
-		  ARG_P			*pFile,
-		  ARG_P			*pVar,
-		  const char	*pMember)
+argSetVar(uint16_t ln,
+		  OP_TYPE operation,
+		  ARG_P *pValue,
+		  ARG_P *pFile,
+		  ARG_P *pVar,
+		  ARG_P *pIndex,
+		  const char *pMember)
 {
 	boolean	memberAllowed = FALSE;		// If a Member name is allowed
 	int16_t	status = STATUS_FAIL;
@@ -2523,46 +2630,119 @@ argSetVar(uint16_t		ln,
 
 		case VAR_FCMAP:
 			{
-				unsigned	char	*pBuf;
-				unsigned	int		size;
+				unsigned char *pBuf;
+				unsigned int size;
+				unsigned int index = 0;
 
-				if (pFile == NULL)
+				if (pFile != NULL) {
+					if ((operation == OP_ADD) || (operation == OP_SUB))
+					{
+						OUTPUT_ERR(ln, "argSetVar(): Operation add/subtract not allowed on this variable type",
+							NULL, NULL);
+					}
+					else
+					{
+						if (STATUS_FAIL == (status = argSet(ln,
+								configFileGetSFP(),
+								pFile->arg.data.value.pCharValue,
+								&pBuf,
+								&size)))
+						{
+							break;
+						}
+						memset(pVar->arg.data.value.fioFcmap,
+							0, pVar->arg.data.size * sizeof(FIO_CHANNEL_MAP));
+						memcpy(pVar->arg.data.value.fioFcmap,
+							pBuf, MIN(pVar->arg.data.size * sizeof(FIO_CHANNEL_MAP), size));
+						free(pBuf);
+					}
+					break;
+				}
+				
+				if (pValue == NULL)
 				{
-					char	string[OUTPUT_STRING_MAX];
-					sprintf(string,
-							"argSetVar(): Must set data type [%s] from a file",
+					char string[OUTPUT_STRING_MAX];
+					sprintf(string, "argSetVar(): Must set data type [%s] from file or value",
 							argVarStringGet(pVar->varType));
 					OUTPUT_ERR(ln, string, NULL, NULL);
 					break;
 				}
 
-				if (   (operation == OP_ADD)
-					|| (operation == OP_SUB))
-				{
-					OUTPUT_ERR(ln, 
-							   "argSetVar(): Operation add/subtract not allowed on this variable type",
-							   NULL,
-							   NULL);
-				}
-				else
-				{
-					if (STATUS_FAIL ==
-							(status = argSet(ln,
-											 configFileGetSFP(),
-											 pFile->arg.data.value.pCharValue,
-										 	 &pBuf,
-											 &size)))
-					{
+				// get array index, if any
+				if (pIndex != NULL) {
+					if (argCastUint(ln, pIndex, &index) == STATUS_PASS) {
+						if (index >= pVar->arg.data.size)
+							index = pVar->arg.data.size;
+					} else {
 						break;
 					}
-					memset(pVar->arg.data.value.pUcharValue,
-						   0,
-						   pVar->arg.data.size * sizeof(FIO_CHANNEL_MAP));
-					memcpy(pVar->arg.data.value.fioFcmap,
-						   pBuf,
-						   MIN(pVar->arg.data.size * sizeof(FIO_CHANNEL_MAP),
-						   	   size));
-					free(pBuf);
+				}
+								
+				if (pMember != NULL) {
+					unsigned int value;
+					unsigned int *var;
+
+					// get unsigned int value
+					if ((status = argCastUint(ln, pValue, &value)) != STATUS_PASS)
+						break;
+					
+					memberAllowed = TRUE;	
+					if (!strcmp(MEM_FCMAP_OUT, pMember)) {
+						var = &pVar->arg.data.value.fioFcmap[index].output_point;
+					}
+					else if (!strcmp(MEM_FCMAP_FIOD, pMember)) {
+						var = &pVar->arg.data.value.fioFcmap[index].fiod;
+					}
+					else if (!strcmp(MEM_FCMAP_CHAN, pMember)) {
+						var = &pVar->arg.data.value.fioFcmap[index].channel;
+					}
+					else if (!strcmp(MEM_FCMAP_CLR, pMember)) {
+						var = &pVar->arg.data.value.fioFcmap[index].color;
+					}
+					else {
+						// Invalid member specified
+						char string[OUTPUT_STRING_MAX];
+						sprintf(string, "argSetVar(): Illegal member [%s] specified for variable [%s]",
+							pMember,
+							pVar->pName);
+						OUTPUT_ERR(ln, string, NULL, NULL);
+						break;
+					}
+					switch (operation)
+					{
+						case OP_ADD:
+							*var += value;
+							break;
+						case OP_SUB:
+							*var -= value;
+							break;
+						default:
+							*var = value;
+							break;
+					}
+				} else {
+					if ((operation == OP_ADD) || (operation == OP_SUB)) {
+						OUTPUT_ERR(ln, "argSetVar(): Operation add/subtract not allowed on this variable type",
+							NULL, NULL);
+					} else {
+						if ((pValue->argType == ARG_VAR)
+							&& (pValue->varType == VAR_FCMAP)) {
+							if (pIndex != NULL) {
+								// Set array element
+								memcpy(&pVar->arg.data.value.fioFcmap[index],
+									pValue->arg.data.value.fioFcmap,
+									sizeof(FIO_CHANNEL_MAP));
+							} else {
+								// Set whole array
+								memset(pVar->arg.data.value.fioFcmap,
+									0, pVar->arg.data.size * sizeof(FIO_CHANNEL_MAP));
+								memcpy(pVar->arg.data.value.fioFcmap,
+									pValue->arg.data.value.fioFcmap,
+									MIN(pVar->arg.data.size * sizeof(FIO_CHANNEL_MAP),
+									pValue->arg.data.size));
+							}
+						}
+					}
 				}
 			}
 			break;
@@ -2654,94 +2834,227 @@ argSetVar(uint16_t		ln,
 			}
 			break;
 
-		case VAR_FFSCHD:
+		case VAR_FINF:
 			{
-				unsigned	char	*pBuf;
-				unsigned	int		size;
+				unsigned char *pBuf;
+				unsigned int size;
+				unsigned int index = 0;
 
-				if (pFile == NULL)
+				if (pFile != NULL) {
+					if ((operation == OP_ADD) || (operation == OP_SUB))
+					{
+						OUTPUT_ERR(ln, "argSetVar(): Operation add/subtract not allowed on this variable type",
+							NULL, NULL);
+					}
+					else
+					{
+						if (STATUS_FAIL == (status = argSet(ln,
+								configFileGetSFP(),
+								pFile->arg.data.value.pCharValue,
+								&pBuf,
+								&size)))
+						{
+							break;
+						}
+						memset(pVar->arg.data.value.fioFinf,
+							0, pVar->arg.data.size * sizeof(FIO_INPUT_FILTER));
+						memcpy(pVar->arg.data.value.fioFinf,
+							pBuf, MIN(pVar->arg.data.size * sizeof(FIO_INPUT_FILTER), size));
+						free(pBuf);
+					}
+					break;
+				}
+				
+				if (pValue == NULL)
 				{
-					char	string[OUTPUT_STRING_MAX];
-					sprintf(string,
-							"argSetVar(): Must set data type [%s] from a file",
+					char string[OUTPUT_STRING_MAX];
+					sprintf(string, "argSetVar(): Must set data type [%s] from file or value",
 							argVarStringGet(pVar->varType));
 					OUTPUT_ERR(ln, string, NULL, NULL);
 					break;
 				}
 
-				if (   (operation == OP_ADD)
-					|| (operation == OP_SUB))
-				{
-					OUTPUT_ERR(ln, 
-							   "argSetVar(): Operation add/subtract not allowed on this variable type",
-							   NULL,
-							   NULL);
-				}
-				else
-				{
-					if (STATUS_FAIL ==
-							(status = argSet(ln,
-											 configFileGetSFP(),
-											 pFile->arg.data.value.pCharValue,
-										 	 &pBuf,
-											 &size)))
-					{
+				// get array index, if any
+				if (pIndex != NULL) {
+					if (argCastUint(ln, pIndex, &index) == STATUS_PASS) {
+						if (index >= pVar->arg.data.size)
+							index = pVar->arg.data.size;
+					} else {
 						break;
 					}
-					memset(pVar->arg.data.value.fioFschd,
-						   0,
-						   pVar->arg.data.size * sizeof(FIO_FRAME_SCHD));
-					memcpy(pVar->arg.data.value.fioFschd,
-						   pBuf,
-						   MIN(pVar->arg.data.size * sizeof(FIO_FRAME_SCHD),
-						   	   size));
-					free(pBuf);
+				}
+								
+				if (pMember != NULL) {
+					unsigned int value;
+					unsigned int *var;
+
+					// get unsigned int value
+					if ((status = argCastUint(ln, pValue, &value)) != STATUS_PASS)
+						break;
+					
+					memberAllowed = TRUE;	
+					if (!strcmp(MEM_FINF_IP, pMember)) {
+						var = &pVar->arg.data.value.fioFinf[index].input_point;
+					}
+					else if (!strcmp(MEM_FINF_LEAD, pMember)) {
+						var = &pVar->arg.data.value.fioFinf[index].leading;
+					}
+					else if (!strcmp(MEM_FINF_TRAIL, pMember)) {
+						var = &pVar->arg.data.value.fioFinf[index].trailing;
+					}
+					else {
+						// Invalid member specified
+						char string[OUTPUT_STRING_MAX];
+						sprintf(string, "argSetVar(): Illegal member [%s] specified for variable [%s]",
+							pMember,
+							pVar->pName);
+						OUTPUT_ERR(ln, string, NULL, NULL);
+						break;
+					}
+					switch (operation)
+					{
+						case OP_ADD:
+							*var += value;
+							break;
+						case OP_SUB:
+							*var -= value;
+							break;
+						default:
+							*var = value;
+							break;
+					}
+				} else {
+					if ((operation == OP_ADD) || (operation == OP_SUB)) {
+						OUTPUT_ERR(ln, "argSetVar(): Operation add/subtract not allowed on this variable type",
+							NULL, NULL);
+					} else {
+						if ((pValue->argType == ARG_VAR)
+							&& (pValue->varType == VAR_FINF)) {
+							if (pIndex != NULL) {
+								// Set array element
+								memcpy(&pVar->arg.data.value.fioFinf[index],
+									pValue->arg.data.value.fioFinf,
+									sizeof(FIO_INPUT_FILTER));
+							} else {
+								// Set whole array
+								memset(pVar->arg.data.value.fioFinf,
+									0, pVar->arg.data.size * sizeof(FIO_INPUT_FILTER));
+								memcpy(pVar->arg.data.value.fioFinf,
+									pValue->arg.data.value.fioFinf,
+									MIN(pVar->arg.data.size * sizeof(FIO_INPUT_FILTER),
+									pValue->arg.data.size));
+							}
+						}
+					}
 				}
 			}
 			break;
 
-		case VAR_FINF:
+		case VAR_FFSCHD:
 			{
-				unsigned	char	*pBuf;
-				unsigned	int		size;
-
-				if (pFile == NULL)
+				unsigned char *pBuf;
+				unsigned int size;
+				if (pFile != NULL) {
+					if ((operation == OP_ADD) || (operation == OP_SUB))
+					{
+						OUTPUT_ERR(ln, "argSetVar(): Operation add/subtract not allowed on this variable type",
+							NULL, NULL);
+					}
+					else
+					{
+						if (STATUS_FAIL == (status = argSet(ln,
+								configFileGetSFP(),
+								pFile->arg.data.value.pCharValue,
+								&pBuf,
+								&size)))
+						{
+							break;
+						}
+						memset(pVar->arg.data.value.fioFschd,
+							0, pVar->arg.data.size * sizeof(FIO_INPUT_FILTER));
+						memcpy(pVar->arg.data.value.fioFschd,
+							pBuf, MIN(pVar->arg.data.size * sizeof(FIO_INPUT_FILTER), size));
+						free(pBuf);
+					}
+					break;
+				}
+				
+				if (pValue == NULL)
 				{
-					char	string[OUTPUT_STRING_MAX];
-					sprintf(string,
-							"argSetVar(): Must set data type [%s] from a file",
+					char string[OUTPUT_STRING_MAX];
+					sprintf(string, "argSetVar(): Must set data type [%s] from a value",
 							argVarStringGet(pVar->varType));
 					OUTPUT_ERR(ln, string, NULL, NULL);
 					break;
 				}
 
-				if (   (operation == OP_ADD)
-					|| (operation == OP_SUB))
+				if (NULL != pMember)
 				{
-					OUTPUT_ERR(ln, 
-							   "argSetVar(): Operation add/subtract not allowed on this variable type",
-							   NULL,
-							   NULL);
+					unsigned int value;
+					
+					memberAllowed = TRUE;
+					if (!strcmp(MEM_FFSCHD_REQ, pMember))
+					{
+						// Initialize member
+						if (STATUS_PASS == (status = argCastUint(ln, pValue, &value)))
+						{
+							switch (operation)
+							{
+								case OP_ADD:
+								{
+									pVar->arg.data.value.fioFschd->req_frame += value;
+								}
+								break;
+								case OP_SUB:
+								{
+									pVar->arg.data.value.fioFschd->req_frame -= value;
+								}
+								break;
+								default:
+								{
+									pVar->arg.data.value.fioFschd->req_frame = value;
+								}
+								break;
+							}
+						}
+					}
+					else if (!strcmp(MEM_FFSCHD_HZ, pMember))
+					{
+						if (STATUS_PASS == (status = argCastUint(ln, pValue, &value)))
+						{
+							switch (operation)
+							{
+								case OP_ADD:
+								{
+									pVar->arg.data.value.fioFschd->frequency += value;
+								}
+								break;
+								case OP_SUB:
+								{
+									pVar->arg.data.value.fioFschd->frequency -= value;
+								}
+								break;
+								default:
+								{
+									pVar->arg.data.value.fioFschd->frequency = value;
+								}
+								break;
+							}
+						}
+					}
+					else
+					{
+						// Invalid member specified
+						char string[OUTPUT_STRING_MAX];
+						sprintf(string, "argSetVar(): Illegal member [%s] specified for variable [%s]",
+							pMember,
+							pVar->pName);
+						OUTPUT_ERR(ln, string, NULL, NULL);
+					}
 				}
 				else
 				{
-					if (STATUS_FAIL ==
-							(status = argSet(ln,
-											 configFileGetSFP(),
-											 pFile->arg.data.value.pCharValue,
-										 	 &pBuf,
-											 &size)))
-					{
-						break;
-					}
-					memset(pVar->arg.data.value.fioFinf,
-						   0,
-						   pVar->arg.data.size * sizeof(FIO_INPUT_FILTER));
-					memcpy(pVar->arg.data.value.fioFinf,
-						   pBuf,
-						   MIN(pVar->arg.data.size * sizeof(FIO_INPUT_FILTER),
-						   	   size));
-					free(pBuf);
+					OUTPUT_ERR(ln, "argSetVar(): Not supported", NULL, NULL);
 				}
 			}
 			break;
@@ -2939,45 +3252,226 @@ argSetVar(uint16_t		ln,
 
 		case VAR_FFDSTAT:
 			{
-				unsigned	char	*pBuf;
-				unsigned	int		size;
+				unsigned char *pBuf;
+				unsigned int size;
 
-				if (pFile == NULL)
-				{
-					char	string[OUTPUT_STRING_MAX];
-					sprintf(string,
-							"argSetVar(): Must set data type [%s] from a file",
+				if (pFile != NULL) {
+					if ((operation == OP_ADD) || (operation == OP_SUB)) {
+						OUTPUT_ERR(ln, "argSetVar(): Operation add/subtract not allowed on this variable type",
+							NULL, NULL);
+					} else {
+						if (STATUS_FAIL == (status = argSet(ln,
+								configFileGetSFP(),
+								pFile->arg.data.value.pCharValue,
+								&pBuf,
+								&size))) {
+							break;
+						}
+						memset(&pVar->arg.data.value.fioFiodStatus,
+							0, sizeof(FIO_FIOD_STATUS));
+						memcpy(&pVar->arg.data.value.fioFiodStatus,
+							pBuf, MIN(pVar->arg.data.size * sizeof(FIO_FIOD_STATUS), size));
+						free(pBuf);
+					}
+					break;
+				}
+				
+				if (pValue == NULL) {
+					char string[OUTPUT_STRING_MAX];
+					sprintf(string, "argSetVar(): Must set data type [%s] from file or value",
 							argVarStringGet(pVar->varType));
 					OUTPUT_ERR(ln, string, NULL, NULL);
 					break;
 				}
 
-				if (   (operation == OP_ADD)
-					|| (operation == OP_SUB))
-				{
-					OUTPUT_ERR(ln, 
-							   "argSetVar(): Operation add/subtract not allowed on this variable type",
-							   NULL,
-							   NULL);
+				if (pMember != NULL) {
+					memberAllowed = TRUE;	
+
+					if (!strcmp(MEM_FFDSTAT_INF, pMember)) {
+						if ((operation == OP_ADD) || (operation == OP_SUB)) {
+							OUTPUT_ERR(ln, "argSetVar(): Operation add/subtract not allowed on this variable type",
+								NULL, NULL);
+						} else if ((pValue->argType == ARG_VAR)
+							&& (pValue->varType == VAR_FFINFO)) {
+								memset(pVar->arg.data.value.fioFiodStatus.frame_info,
+									0, pVar->arg.data.size * sizeof(FIO_FRAME_INFO));
+								memcpy(pVar->arg.data.value.fioFiodStatus.frame_info,
+									pValue->arg.data.value.fioFrameInfo,
+									MIN(pVar->arg.data.size * sizeof(FIO_FRAME_INFO),
+									pValue->arg.data.size));
+						}
+					} else {
+						unsigned int value;
+						unsigned int *var;
+						
+						// get unsigned int value
+						if ((status = argCastUint(ln, pValue, &value)) != STATUS_PASS)
+							break;
+
+						if (!strcmp(MEM_FFDSTAT_COM, pMember))
+							var = &pVar->arg.data.value.fioFiodStatus.comm_enabled;
+						else if (!strcmp(MEM_FFDSTAT_SRX, pMember))
+							var = &pVar->arg.data.value.fioFiodStatus.success_rx;
+						else if (!strcmp(MEM_FFDSTAT_ERX, pMember))
+							var = &pVar->arg.data.value.fioFiodStatus.error_rx;
+						else {
+							// Invalid member specified
+							char string[OUTPUT_STRING_MAX];
+							sprintf(string, "argSetVar(): Illegal member [%s] specified for variable [%s]",
+								pMember,
+								pVar->pName);
+							OUTPUT_ERR(ln, string, NULL, NULL);
+							break;
+						}
+						switch (operation)
+						{
+							case OP_ADD:
+								*var += value;
+								break;
+							case OP_SUB:
+								*var -= value;
+								break;
+							default:
+								*var = value;
+								break;
+						}
+					}
+				} else {
+					if ((operation == OP_ADD) || (operation == OP_SUB)) {
+						OUTPUT_ERR(ln, "argSetVar(): Operation add/subtract not allowed on this variable type",
+							NULL, NULL);
+					} else {
+						if ((pValue->argType == ARG_VAR)
+							&& (pValue->varType == VAR_FFDSTAT)) {
+								memset(&pVar->arg.data.value.fioFiodStatus,
+									0, sizeof(FIO_FIOD_STATUS));
+								memcpy(&pVar->arg.data.value.fioFiodStatus,
+									&pValue->arg.data.value.fioFiodStatus,
+									sizeof(FIO_FIOD_STATUS));
+						}
+					}
 				}
-				else
-				{
-					if (STATUS_FAIL ==
-							(status = argSet(ln,
-											 configFileGetSFP(),
-											 pFile->arg.data.value.pCharValue,
-										 	 &pBuf,
-											 &size)))
+			}
+			break;
+
+		case VAR_FFINFO:
+			{
+				unsigned char *pBuf;
+				unsigned int size;
+				unsigned int index = 0;
+
+				if (pFile != NULL) {
+					if ((operation == OP_ADD) || (operation == OP_SUB))
 					{
+						OUTPUT_ERR(ln, "argSetVar(): Operation add/subtract not allowed on this variable type",
+							NULL, NULL);
+					}
+					else
+					{
+						if (STATUS_FAIL == (status = argSet(ln,
+								configFileGetSFP(),
+								pFile->arg.data.value.pCharValue,
+								&pBuf,
+								&size)))
+						{
+							break;
+						}
+						memset(pVar->arg.data.value.fioFrameInfo,
+							0, pVar->arg.data.size * sizeof(FIO_FRAME_INFO));
+						memcpy(pVar->arg.data.value.fioFrameInfo,
+							pBuf, MIN(pVar->arg.data.size * sizeof(FIO_FRAME_INFO), size));
+						free(pBuf);
+					}
+					break;
+				}
+				
+				if (pValue == NULL)
+				{
+					char string[OUTPUT_STRING_MAX];
+					sprintf(string, "argSetVar(): Must set data type [%s] from file or value",
+							argVarStringGet(pVar->varType));
+					OUTPUT_ERR(ln, string, NULL, NULL);
+					break;
+				}
+
+				// get array index, if any
+				if (pIndex != NULL) {
+					if (argCastUint(ln, pIndex, &index) == STATUS_PASS) {
+						if (index >= pVar->arg.data.size)
+							index = pVar->arg.data.size;
+					} else {
 						break;
 					}
-					memset(&pVar->arg.data.value.fioFiodStatus,
-						   0,
-						   sizeof(FIO_FIOD_STATUS));
-					memcpy(&pVar->arg.data.value.fioFiodStatus,
-						   pBuf,
-						   MIN(sizeof(FIO_FIOD_STATUS), size));
-					free(pBuf);
+				}
+								
+				if (pMember != NULL) {
+					unsigned int value;
+					unsigned int *var;
+
+					// get unsigned int value
+					if ((status = argCastUint(ln, pValue, &value)) != STATUS_PASS)
+						break;
+					
+					memberAllowed = TRUE;	
+					if (!strcmp(MEM_FFINFO_HZ, pMember)) {
+						var = &pVar->arg.data.value.fioFrameInfo[index].frequency;
+					}
+					else if (!strcmp(MEM_FFINFO_SRX, pMember)) {
+						var = &pVar->arg.data.value.fioFrameInfo[index].success_rx;
+					}
+					else if (!strcmp(MEM_FFINFO_ERX, pMember)) {
+						var = &pVar->arg.data.value.fioFrameInfo[index].error_rx;
+					}
+					else if (!strcmp(MEM_FFINFO_E10, pMember)) {
+						var = &pVar->arg.data.value.fioFrameInfo[index].error_last_10;
+					}
+					else if (!strcmp(MEM_FFINFO_SEQ, pMember)) {
+						var = &pVar->arg.data.value.fioFrameInfo[index].last_seq;
+					}
+					else {
+						// Invalid member specified
+						char string[OUTPUT_STRING_MAX];
+						sprintf(string, "argSetVar(): Illegal member [%s] specified for variable [%s]",
+							pMember,
+							pVar->pName);
+						OUTPUT_ERR(ln, string, NULL, NULL);
+						break;
+					}
+					switch (operation)
+					{
+						case OP_ADD:
+							*var += value;
+							break;
+						case OP_SUB:
+							*var -= value;
+							break;
+						default:
+							*var = value;
+							break;
+					}
+				} else {
+					if ((operation == OP_ADD) || (operation == OP_SUB)) {
+						OUTPUT_ERR(ln, "argSetVar(): Operation add/subtract not allowed on this variable type",
+							NULL, NULL);
+					} else {
+						if ((pValue->argType == ARG_VAR)
+							&& (pValue->varType == VAR_FFINFO)) {
+							if (pIndex != NULL) {
+								// Set array element
+								memcpy(&pVar->arg.data.value.fioFrameInfo[index],
+									pValue->arg.data.value.fioFrameInfo,
+									sizeof(FIO_FRAME_INFO));
+							} else {
+								// Set whole array
+								memset(pVar->arg.data.value.fioFrameInfo,
+									0, pVar->arg.data.size * sizeof(FIO_FRAME_INFO));
+								memcpy(pVar->arg.data.value.fioFrameInfo,
+									pValue->arg.data.value.fioFrameInfo,
+									MIN(pVar->arg.data.size * sizeof(FIO_FRAME_INFO),
+									pValue->arg.data.size));
+							}
+						}
+					}
 				}
 			}
 			break;
@@ -3042,45 +3536,98 @@ argSetVar(uint16_t		ln,
 
 		case VAR_FNOTI:
 			{
-				unsigned	char	*pBuf;
-				unsigned	int		size;
+				unsigned char *pBuf;
+				unsigned int size;
 
-				if (pFile == NULL)
-				{
-					char	string[OUTPUT_STRING_MAX];
+				if (pFile != NULL) {
+					if ((operation == OP_ADD)
+						|| (operation == OP_SUB)) {
+						OUTPUT_ERR(ln, "argSetVar(): Operation add/subtract not allowed on this variable type",
+							NULL,
+							NULL);
+					} else {
+						if (STATUS_FAIL == (status = argSet(ln,
+								configFileGetSFP(),
+								pFile->arg.data.value.pCharValue,
+								&pBuf,
+								&size))) {
+							break;
+						}
+						memset(&pVar->arg.data.value.fioNotifyInfo, 0,
+						   sizeof(FIO_NOTIFY_INFO));
+						memcpy(&pVar->arg.data.value.fioNotifyInfo, pBuf,
+						   MIN(sizeof(FIO_NOTIFY_INFO), size));
+						free(pBuf);
+					}
+					break;
+				}
+				
+				if (pValue == NULL) {
+					char string[OUTPUT_STRING_MAX];
 					sprintf(string,
-							"argSetVar(): Must set data type [%s] from a file",
-							argVarStringGet(pVar->varType));
+						"argSetVar(): Must set data type [%s] from a file or value",
+						argVarStringGet(pVar->varType));
 					OUTPUT_ERR(ln, string, NULL, NULL);
 					break;
 				}
 
-				if (   (operation == OP_ADD)
-					|| (operation == OP_SUB))
-				{
-					OUTPUT_ERR(ln, 
-							   "argSetVar(): Operation add/subtract not allowed on this variable type",
-							   NULL,
-							   NULL);
-				}
-				else
-				{
-					if (STATUS_FAIL ==
-							(status = argSet(ln,
-											 configFileGetSFP(),
-											 pFile->arg.data.value.pCharValue,
-										 	 &pBuf,
-											 &size)))
-					{
+				if (pMember != NULL) {
+					unsigned int value;
+					unsigned int *var;
+
+					// get unsigned int value
+					if ((status = argCastUint(ln, pValue, &value)) != STATUS_PASS)
+						break;
+					
+					memberAllowed = TRUE;	
+					if (!strcmp(MEM_FNOTI_RXF, pMember)) {
+						var = &pVar->arg.data.value.fioNotifyInfo.rx_frame;
+					}
+					else if (!strcmp(MEM_FNOTI_STAT, pMember)) {
+						var = &pVar->arg.data.value.fioNotifyInfo.status;
+					}
+					else if (!strcmp(MEM_FNOTI_SEQ, pMember)) {
+						var = &pVar->arg.data.value.fioNotifyInfo.seq_number;
+					}
+					else if (!strcmp(MEM_FNOTI_CNT, pMember)) {
+						var = &pVar->arg.data.value.fioNotifyInfo.count;
+					}
+					else if (!strcmp(MEM_FNOTI_FIOD, pMember)) {
+						var = &pVar->arg.data.value.fioNotifyInfo.fiod;
+					}
+					else {
+						// Invalid member specified
+						char string[OUTPUT_STRING_MAX];
+						sprintf(string, "argSetVar(): Illegal member [%s] specified for variable [%s]",
+							pMember,
+							pVar->pName);
+						OUTPUT_ERR(ln, string, NULL, NULL);
 						break;
 					}
-					memset(&pVar->arg.data.value.fioInfo,
-						   0,
-						   sizeof(FIO_NOTIFY_INFO));
-					memcpy(&pVar->arg.data.value.fioInfo,
-						   pBuf,
-						   MIN(sizeof(FIO_NOTIFY_INFO), size));
-					free(pBuf);
+					switch (operation)
+					{
+						case OP_ADD:
+							*var += value;
+							break;
+						case OP_SUB:
+							*var -= value;
+							break;
+						default:
+							*var = value;
+							break;
+					}
+				} else {
+					if ((operation == OP_ADD) || (operation == OP_SUB)) {
+						OUTPUT_ERR(ln, "argSetVar(): Operation add/subtract not allowed on this variable type",
+							NULL, NULL);
+					} else {
+						if ((pValue->argType == ARG_VAR)
+							&& (pValue->varType == VAR_FNOTI)) {
+								memcpy(&pVar->arg.data.value.fioNotifyInfo,
+									&pValue->arg.data.value.fioNotifyInfo,
+									sizeof(FIO_NOTIFY_INFO));
+						}
+					}
 				}
 			}
 			break;
@@ -3296,16 +3843,13 @@ argSetVar(uint16_t		ln,
  * \param[in]	pArg - Pointer from from argument
  * \param[in]	pMember - Pointer to member name, if present
  * \param[out]	pLong - Point to long to compare to return
- * \return		STATUS_PASS - Parse occurred correctly
- * 				STATUS_FAIL - Parse failed
+ * \return	STATUS_PASS - Parse occurred correctly
+ * 		STATUS_FAIL - Parse failed
  */
 int16_t
-argCastNumCompare(uint16_t		lineNumber,
-		   		  ARG_P			*pArg,
-				  char			*pMember,
-		   		  long			*pLong)
+argCastNumCompare(uint16_t lineNumber, ARG_P *pArg, char *pMember, long *pLong)
 {
-	char	string[OUTPUT_STRING_MAX];
+	char string[OUTPUT_STRING_MAX];
 	int16_t	status = STATUS_PASS;
 	boolean	memberAllowed = FALSE;
 
@@ -3318,132 +3862,73 @@ argCastNumCompare(uint16_t		lineNumber,
 				case VAR_INT:
 				case VAR_BOOL:
 				case VAR_OFLAGS:
-				{
 					*pLong = (long)pArg->arg.data.value.intValue;
-				}
-				break;
-
+					break;
 				case VAR_UINT:
-				{
 					*pLong = (long)pArg->arg.data.value.uintValue;
-				}
-				break;
-
+					break;
 				case VAR_SSIZET:
-				{
 					*pLong = (long)pArg->arg.data.value.ssizetValue;
-				}
-				break;
-
+					break;
 				case VAR_FPUIH:
-				{
 					*pLong = (long)pArg->arg.data.value.fpuiHandle;
-				}
-				break;
-
+					break;
 				case VAR_FPUIAUXH:
-				{
 					*pLong = (long)pArg->arg.data.value.fpuiAuxHandle;
-				}
-				break;
-
+					break;
 				case VAR_FAPPH:
-				{
 					*pLong = (long)pArg->arg.data.value.fioAppHandle;
-				}
-				break;
-
+					break;
 				case VAR_FDEVH:
-				{
 					*pLong = (long)pArg->arg.data.value.fioDevHandle;
-				}
-				break;
-
+					break;
 				case VAR_FVER:
-				{
 					*pLong = (long)pArg->arg.data.value.fioVer;
-				}
-				break;
-
+					break;
 				case VAR_FVIEW:
-				{
 					*pLong = (long)pArg->arg.data.value.fioView;
-				}
-				break;
-
+					break;
 				case VAR_FCMASK:
-				{
 					*pLong = (long)pArg->arg.data.value.fioFcmask;
-				}
-				break;
-
+					break;
 				case VAR_FCFSA:
-				{
 					*pLong = (long)pArg->arg.data.value.fioFcfsa;
-				}
-				break;
-
+					break;
 				case VAR_FNOTF:
-				{
 					*pLong = (long)pArg->arg.data.value.fioFnotf;
-				}
-				break;
-
+					break;
 				case VAR_FINT:
-				{
 					*pLong = (long)pArg->arg.data.value.fioFint;
-				}
-				break;
-
+					break;
 				case VAR_FTST:
-				{
 					*pLong = (long)pArg->arg.data.value.fioTstatus;
-				}
-				break;
-
+					break;
 				case VAR_FMFB:
-				{
 					*pLong = (long)pArg->arg.data.value.fioFb;
-				}
-				break;
-
+					break;
 				case VAR_FPORT:
-				{
 					*pLong = (long)pArg->arg.data.value.fioPort;
-				}
-				break;
-
+					break;
 				case VAR_FDEVT:
-				{
 					*pLong = (long)pArg->arg.data.value.fioDt;
-				}
-				break;
-
+					break;
 				case VAR_FFMST:
-				{
 					*pLong = (long)pArg->arg.data.value.fioFms;
-				}
-				break;
-
+					break;
 				case VAR_FVMST:
-				{
 					*pLong = (long)pArg->arg.data.value.fioVms;
-				}
-				break;
-
+					break;
 				case VAR_TVAL:
-				{
 					if (NULL != pMember)
 					{
 						memberAllowed = TRUE;
+						// Initialize member
 						if (!strcmp(MEM_TV_SEC, pMember))
 						{
-							// Initialize member
 							*pLong = pArg->arg.data.value.timevalValue.tv_sec;
 						}
 						else if (!strcmp(MEM_TV_USEC, pMember))
 						{
-							// Initialize member
 							*pLong = pArg->arg.data.value.timevalValue.tv_usec;
 						}
 						else
@@ -3468,23 +3953,255 @@ argCastNumCompare(uint16_t		lineNumber,
 						OUTPUT_ERR(lineNumber, string, NULL, NULL);
 						status = STATUS_FAIL;
 					}
-				}
-				break;
+					break;
+
+				case VAR_FINF:
+					if (NULL != pMember)
+					{
+						memberAllowed = TRUE;
+						// Initialize member
+						if (!strcmp(MEM_FINF_IP, pMember))
+						{
+							*pLong = pArg->arg.data.value.fioFinf->input_point;
+						}
+						else if (!strcmp(MEM_FINF_LEAD, pMember))
+						{
+							*pLong = pArg->arg.data.value.fioFinf->leading;
+						}
+						else if (!strcmp(MEM_FINF_TRAIL, pMember))
+						{
+							*pLong = pArg->arg.data.value.fioFinf->trailing;
+						}
+						else
+						{
+							// Invalid member specified
+							char string[OUTPUT_STRING_MAX];
+							sprintf(string, "argCastNumCompare(): Illegal member [%s] specified for variable [%s]",
+								pMember,
+								pArg->pName);
+							OUTPUT_ERR(lineNumber, string, NULL, NULL);
+							status = STATUS_FAIL;
+						}
+					}
+					else
+					{
+						// Illegal member
+						char string[OUTPUT_STRING_MAX];
+						sprintf(string, "argCastNumCompare(): No member specified for variable [%s]",
+							pArg->pName);
+						OUTPUT_ERR(lineNumber, string, NULL, NULL);
+						status = STATUS_FAIL;
+					}
+					break;
+
+				case VAR_FFSCHD:
+					if (NULL != pMember)
+					{
+						memberAllowed = TRUE;
+						// Initialize member
+						if (!strcmp(MEM_FFSCHD_REQ, pMember))
+						{
+							*pLong = pArg->arg.data.value.fioFschd->req_frame;
+						}
+						else if (!strcmp(MEM_FFSCHD_HZ, pMember))
+						{
+							*pLong = pArg->arg.data.value.fioFschd->req_frame;
+						}
+						else
+						{
+							// Invalid member specified
+							char string[OUTPUT_STRING_MAX];
+							sprintf(string, "argCastNumCompare(): Illegal member [%s] specified for variable [%s]",
+								pMember,
+								pArg->pName);
+							OUTPUT_ERR(lineNumber, string, NULL, NULL);
+							status = STATUS_FAIL;
+						}
+					}
+					else
+					{
+						// Illegal member
+						char string[OUTPUT_STRING_MAX];
+						sprintf(string, "argCastNumCompare(): No member specified for variable [%s]",
+							pArg->pName);
+						OUTPUT_ERR(lineNumber, string, NULL, NULL);
+						status = STATUS_FAIL;
+					}
+					break;
+
+				case VAR_FFDSTAT:
+					if (NULL != pMember)
+					{
+						memberAllowed = TRUE;
+						// Initialize member
+						if (!strcmp(MEM_FFDSTAT_COM, pMember))
+						{
+							*pLong = pArg->arg.data.value.fioFiodStatus.comm_enabled;
+						}
+						else if (!strcmp(MEM_FFDSTAT_SRX, pMember))
+						{
+							*pLong = pArg->arg.data.value.fioFiodStatus.success_rx;
+						}
+						else if (!strcmp(MEM_FFDSTAT_ERX, pMember))
+						{
+							*pLong = pArg->arg.data.value.fioFiodStatus.error_rx;
+						}
+						else
+						{
+							// Invalid member specified
+							char string[OUTPUT_STRING_MAX];
+							sprintf(string, "argCastNumCompare(): Illegal member [%s] specified for variable [%s]",
+								pMember,
+								pArg->pName);
+							OUTPUT_ERR(lineNumber, string, NULL, NULL);
+							status = STATUS_FAIL;
+						}
+					}
+					else
+					{
+						// Illegal member
+						char string[OUTPUT_STRING_MAX];
+						sprintf(string, "argCastNumCompare(): No member specified for variable [%s]",
+							pArg->pName);
+						OUTPUT_ERR(lineNumber, string, NULL, NULL);
+						status = STATUS_FAIL;
+					}
+					break;
+
+				case VAR_FFINFO:
+					if (pMember != NULL)
+					{
+						memberAllowed = TRUE;
+						// Initialize member
+						if (!strcmp(MEM_FFINFO_HZ, pMember))
+						{
+							*pLong = pArg->arg.data.value.fioFrameInfo->frequency;
+						}
+						else if (!strcmp(MEM_FFINFO_SRX, pMember))
+						{
+							*pLong = pArg->arg.data.value.fioFrameInfo->success_rx;
+						}
+						else if (!strcmp(MEM_FFINFO_ERX, pMember))
+						{
+							*pLong = pArg->arg.data.value.fioFrameInfo->error_rx;
+						}
+						else if (!strcmp(MEM_FFINFO_E10, pMember))
+						{
+							*pLong = pArg->arg.data.value.fioFrameInfo->error_last_10;
+						}
+						else if (!strcmp(MEM_FFINFO_SEQ, pMember))
+						{
+							*pLong = pArg->arg.data.value.fioFrameInfo->last_seq;
+						}
+						else
+						{
+							// Invalid member specified
+							char string[OUTPUT_STRING_MAX];
+							sprintf(string, "argCastNumCompare(): Illegal member [%s] specified for variable [%s]",
+								pMember,
+								pArg->pName);
+							OUTPUT_ERR(lineNumber, string, NULL, NULL);
+							status = STATUS_FAIL;
+						}
+					}
+					else
+					{
+						// Illegal member
+						char string[OUTPUT_STRING_MAX];
+						sprintf(string, "argCastNumCompare(): No member specified for variable [%s]",
+							pArg->pName);
+						OUTPUT_ERR(lineNumber, string, NULL, NULL);
+						status = STATUS_FAIL;
+					}
+					break;
+
+				case VAR_FCMAP:
+					if (pMember != NULL)
+					{
+						memberAllowed = TRUE;
+						// Initialize member
+						if (!strcmp(MEM_FCMAP_OUT, pMember))
+						{
+							*pLong = pArg->arg.data.value.fioFcmap->output_point;
+						}
+						else if (!strcmp(MEM_FCMAP_FIOD, pMember))
+						{
+							*pLong = pArg->arg.data.value.fioFcmap->fiod;
+						}
+						else if (!strcmp(MEM_FCMAP_CHAN, pMember))
+						{
+							*pLong = pArg->arg.data.value.fioFcmap->channel;
+						}
+						else if (!strcmp(MEM_FCMAP_CLR, pMember))
+						{
+							*pLong = pArg->arg.data.value.fioFcmap->color;
+						}
+						else
+						{
+							// Invalid member specified
+							char string[OUTPUT_STRING_MAX];
+							sprintf(string, "argCastNumCompare(): Illegal member [%s] specified for variable [%s]",
+								pMember,
+								pArg->pName);
+							OUTPUT_ERR(lineNumber, string, NULL, NULL);
+							status = STATUS_FAIL;
+						}
+					}
+					else
+					{
+						// Illegal member
+						char string[OUTPUT_STRING_MAX];
+						sprintf(string, "argCastNumCompare(): No member specified for variable [%s]",
+							pArg->pName);
+						OUTPUT_ERR(lineNumber, string, NULL, NULL);
+						status = STATUS_FAIL;
+					}
+					break;
+
+				case VAR_FNOTI:
+					if (pMember != NULL)
+					{
+						memberAllowed = TRUE;
+						// Initialize member
+						if (!strcmp(MEM_FNOTI_RXF, pMember)) {
+							*pLong = pArg->arg.data.value.fioNotifyInfo.rx_frame;
+						} else if (!strcmp(MEM_FNOTI_STAT, pMember)) {
+							*pLong = pArg->arg.data.value.fioNotifyInfo.status;
+						} else if (!strcmp(MEM_FNOTI_SEQ, pMember)) {
+							*pLong = pArg->arg.data.value.fioNotifyInfo.seq_number;
+						} else if (!strcmp(MEM_FNOTI_CNT, pMember)) {
+							*pLong = pArg->arg.data.value.fioNotifyInfo.count;
+						} else if (!strcmp(MEM_FNOTI_FIOD, pMember)) {
+							*pLong = pArg->arg.data.value.fioNotifyInfo.fiod;
+						} else {
+							// Invalid member specified
+							char string[OUTPUT_STRING_MAX];
+							sprintf(string, "argCastNumCompare(): Illegal member [%s] specified for variable [%s]",
+								pMember,
+								pArg->pName);
+							OUTPUT_ERR(lineNumber, string, NULL, NULL);
+							status = STATUS_FAIL;
+						}
+					}
+					else
+					{
+						// Illegal member
+						char string[OUTPUT_STRING_MAX];
+						sprintf(string, "argCastNumCompare(): No member specified for variable [%s]",
+							pArg->pName);
+						OUTPUT_ERR(lineNumber, string, NULL, NULL);
+						status = STATUS_FAIL;
+					}
+					break;
 
 				case VAR_VOID:
 				case VAR_CHAR:
 				case VAR_PCHAR:
 				case VAR_UCHAR:
 				case VAR_PUCHAR:
-				case VAR_FCMAP:
-				case VAR_FFSCHD:
-				case VAR_FINF:
 				case VAR_FTBUF:
-				case VAR_FFDSTAT:
-				case VAR_FNOTI:
 				case VAR_DSTIT:
 				default:
-				{
 					// Finish implementing all cast types
 					sprintf(string,
 							"argCastNumCompare(): Cannot cast [%s, %s] to [%s]",
@@ -3493,8 +4210,7 @@ argCastNumCompare(uint16_t		lineNumber,
 							argVarStringGet(VAR_INT));
 					OUTPUT_ERR(lineNumber, string, NULL, NULL);
 					status = STATUS_FAIL;
-				}
-				break;
+					break;
 			}
 		}
 		break;
@@ -3530,13 +4246,11 @@ argCastNumCompare(uint16_t		lineNumber,
 
 	}
 
-	if (   (status == STATUS_PASS)
-	    && (pMember != NULL)
-		&& (memberAllowed == FALSE))
-	{
+	if ((status == STATUS_PASS) && (pMember != NULL)
+		&& (memberAllowed == FALSE)) {
 		sprintf(string,
-				"argCastNumCompare(): Member [%s] not allowed",
-				pMember);
+			"argCastNumCompare(): Member [%s] not allowed",
+			pMember);
 		OUTPUT_ERR(lineNumber, string, NULL, NULL);
 		status = STATUS_FAIL;
 	}
@@ -3690,10 +4404,10 @@ argCastInt(uint16_t		lineNumber,
 				case VAR_UCHAR:
 				case VAR_PUCHAR:
 				case VAR_FCMAP:
-				case VAR_FFSCHD:
 				case VAR_FINF:
 				case VAR_FTBUF:
 				case VAR_FFDSTAT:
+				case VAR_FFINFO:
 				case VAR_FNOTI:
 				case VAR_TVAL:
 				case VAR_DSTIT:
@@ -4511,9 +5225,7 @@ argCastFint(uint16_t			lineNumber,
  * 				STATUS_FAIL - Parse failed
  */
 int16_t
-argCastFnotf(uint16_t		lineNumber,
-		   	 ARG_P			*pArg,
-		   	 FIO_NOTIFY		*pFnotf)
+argCastFnotf(uint16_t lineNumber, ARG_P *pArg, FIO_NOTIFY *pFnotf)
 {
 	char	string[OUTPUT_STRING_MAX];
 	int16_t	status = STATUS_PASS;
@@ -5095,15 +5807,13 @@ argCastFdevt(uint16_t			lineNumber,
  * \param[in]	lineNumber - Line number in APIVSXML file
  * \param[in]	pArg - Pointer from argument
  * \param[in]	pLong - Point to long to return
- * \return		STATUS_PASS - Parse occurred correctly
- * 				STATUS_FAIL - Parse failed
+ * \return	STATUS_PASS - Parse occurred correctly
+ * 		STATUS_FAIL - Parse failed
  */
 int16_t
-argCastLong(uint16_t		lineNumber,
-		   	ARG_P			*pArg,
-		   	long			*pLong)
+argCastLong(uint16_t lineNumber, ARG_P *pArg, long *pLong)
 {
-	char	string[OUTPUT_STRING_MAX];
+	char string[OUTPUT_STRING_MAX];
 	int16_t	status = STATUS_PASS;
 
 	switch (pArg->argType)
@@ -5160,13 +5870,11 @@ argCastLong(uint16_t		lineNumber,
  * \param[in]	lineNumber - Line number in APIVSXML file
  * \param[in]	pArg - Pointer from from argument
  * \param[in]	pChar - Point to char to return
- * \return		STATUS_PASS - Parse occurred correctly
- * 				STATUS_FAIL - Parse failed
+ * \return	STATUS_PASS - Parse occurred correctly
+ * 		STATUS_FAIL - Parse failed
  */
 int16_t
-argCastChar(uint16_t		lineNumber,
-		    ARG_P			*pArg,
-		    char			*pChar)
+argCastChar(uint16_t lineNumber, ARG_P *pArg, char *pChar)
 {
 	char	string[OUTPUT_STRING_MAX];
 	int16_t	status = STATUS_PASS;
@@ -5370,13 +6078,11 @@ argCastPchar(uint16_t		lineNumber,
  * \param[in]	lineNumber - Line number in APIVSXML file
  * \param[in]	pArg - Pointer from from argument
  * \param[in]	pUchar - Point to uchar to return
- * \return		STATUS_PASS - Parse occurred correctly
- * 				STATUS_FAIL - Parse failed
+ * \return	STATUS_PASS - Parse occurred correctly
+ * 		STATUS_FAIL - Parse failed
  */
 int16_t
-argCastUchar(uint16_t		lineNumber,
-		     ARG_P			*pArg,
-		     unsigned char	*pUchar)
+argCastUchar(uint16_t lineNumber, ARG_P *pArg, unsigned char *pUchar)
 {
 	char	string[OUTPUT_STRING_MAX];
 	int16_t	status = STATUS_PASS;
@@ -5440,15 +6146,13 @@ argCastUchar(uint16_t		lineNumber,
  * \param[in]	lineNumber - Line number in APIVSXML file
  * \param[in]	pFrom - Pointer from from argument
  * \param[in]	pTo - Point to to return
- * \return		STATUS_PASS - Parse occurred correctly
- * 				STATUS_FAIL - Parse failed
+ * \return	STATUS_PASS - Parse occurred correctly
+ * 		STATUS_FAIL - Parse failed
  */
 int16_t
-argCastPuchar(uint16_t		lineNumber,
-		      ARG_P			*pFrom,
-		      ARG_P			*pTo)
+argCastPuchar(uint16_t lineNumber, ARG_P *pFrom, ARG_P *pTo)
 {
-	char	string[OUTPUT_STRING_MAX];
+	char string[OUTPUT_STRING_MAX];
 	int16_t	status = STATUS_PASS;
 
 	switch (pFrom->argType)
@@ -5537,13 +6241,11 @@ argCastPuchar(uint16_t		lineNumber,
  * \param[in]	lineNumber - Line number in APIVSXML file
  * \param[in]	pArg - Pointer from from argument
  * \param[in]	pSsizet - Point to ssize_t to return
- * \return		STATUS_PASS - Parse occurred correctly
- * 				STATUS_FAIL - Parse failed
+ * \return	STATUS_PASS - Parse occurred correctly
+ * 		STATUS_FAIL - Parse failed
  */
 int16_t
-argCastSsizet(uint16_t		lineNumber,
-		      ARG_P			*pArg,
-		      ssize_t		*pSsizet)
+argCastSsizet(uint16_t lineNumber, ARG_P *pArg, ssize_t *pSsizet)
 {
 	char	string[OUTPUT_STRING_MAX];
 	int16_t	status = STATUS_PASS;
@@ -5602,13 +6304,11 @@ argCastSsizet(uint16_t		lineNumber,
  * \param[in]	lineNumber - Line number in APIVSXML file
  * \param[in]	pArg - Pointer from from argument
  * \param[in]	pBoolean - Point to boolean to return
- * \return		STATUS_PASS - Parse occurred correctly
- * 				STATUS_FAIL - Parse failed
+ * \return	STATUS_PASS - Parse occurred correctly
+ * 		STATUS_FAIL - Parse failed
  */
 int16_t
-argCastBoolean(uint16_t		lineNumber,
-		       ARG_P		*pArg,
-		       boolean		*pBoolean)
+argCastBoolean(uint16_t lineNumber, ARG_P *pArg, boolean *pBoolean)
 {
 	char	string[OUTPUT_STRING_MAX];
 	int16_t	status = STATUS_PASS;
@@ -5701,13 +6401,11 @@ argCastBoolean(uint16_t		lineNumber,
  * \param[in]	lineNumber - Line number in APIVSXML file
  * \param[in]	pArg - Pointer from from argument
  * \param[in]	pUint - Point to unsigned integer to return
- * \return		STATUS_PASS - Parse occurred correctly
- * 				STATUS_FAIL - Parse failed
+ * \return	STATUS_PASS - Parse occurred correctly
+ * 		STATUS_FAIL - Parse failed
  */
 int16_t
-argCastUint(uint16_t		lineNumber,
-		    ARG_P			*pArg,
-		    unsigned int	*pUint)
+argCastUint(uint16_t lineNumber, ARG_P *pArg, unsigned int *pUint)
 {
 	char	string[OUTPUT_STRING_MAX];
 	int16_t	status = STATUS_PASS;
@@ -5806,15 +6504,13 @@ argCastUint(uint16_t		lineNumber,
  * \param[in]	lineNumber - Line number in APIVSXML file
  * \param[in]	pArg - Pointer from from argument
  * \param[out]	pTv - Point to timeval struct to return
- * \return		STATUS_PASS - Parse occurred correctly
- * 				STATUS_FAIL - Parse failed
+ * \return	STATUS_PASS - Parse occurred correctly
+ * 		STATUS_FAIL - Parse failed
  */
 int16_t
-argCastTv(uint16_t			lineNumber,
-		  ARG_P				*pArg,
-		  struct timeval	*pTv)
+argCastTv(uint16_t lineNumber, ARG_P *pArg, struct timeval *pTv)
 {
-	char	string[OUTPUT_STRING_MAX];
+	char string[OUTPUT_STRING_MAX];
 	int16_t	status = STATUS_PASS;
 
 	switch (pArg->argType)
@@ -5871,15 +6567,13 @@ argCastTv(uint16_t			lineNumber,
  * \param[in]	lineNumber - Line number in APIVSXML file
  * \param[in]	pArg - Pointer from from argument
  * \param[in]	pDstInfo - Point to dst_info_t to return
- * \return		STATUS_PASS - Parse occurred correctly
- * 				STATUS_FAIL - Parse failed
+ * \return	STATUS_PASS - Parse occurred correctly
+ * 		STATUS_FAIL - Parse failed
  */
 int16_t
-argCastDstInfo(uint16_t		lineNumber,
-		  	   ARG_P		*pArg,
-		  	   dst_info_t	*pDstInfo)
+argCastDstInfo(uint16_t lineNumber, ARG_P *pArg, dst_info_t *pDstInfo)
 {
-	char	string[OUTPUT_STRING_MAX];
+	char string[OUTPUT_STRING_MAX];
 	int16_t	status = STATUS_PASS;
 
 	switch (pArg->argType)
@@ -5938,17 +6632,14 @@ argCastDstInfo(uint16_t		lineNumber,
  * \param[in]	pArg - The argument that will decide the comparison
  * \param[in]	pMember - member name if any
  * \param[out]	comp - Flag for INT = TRUE, PCHAR = FALSE
- * \return		STATUS_PASS - Parse occurred correctly
- * 				STATUS_FAIL - Parse failed
+ * \return	STATUS_PASS - Parse occurred correctly
+ * 		STATUS_FAIL - Parse failed
  */
 int16_t
-argCompareType(uint16_t		ln,
-			   ARG_P		*pArg,
-			   char			*pMember,
-			   boolean		*comp)
+argCompareType(uint16_t ln, ARG_P *pArg, char *pMember, boolean *comp)
 {
-	int16_t		status = STATUS_PASS;
-	boolean		memberOK = FALSE;
+	int16_t status = STATUS_PASS;
+	boolean memberOK = FALSE;
 	*comp = TRUE;
 
 	switch(pArg->varType)
@@ -5970,11 +6661,8 @@ argCompareType(uint16_t		ln,
 			if (NULL != pMember)
 			{
 				memberOK = TRUE;
-				if (!strcmp(MEM_TV_SEC, pMember))
-				{
-					*comp = TRUE;	// Show numeric comparison
-				}
-				else if (!strcmp(MEM_TV_USEC, pMember))
+				if ((!strcmp(MEM_TV_SEC, pMember))
+					|| (!strcmp(MEM_TV_USEC, pMember)))
 				{
 					*comp = TRUE;	// Show numeric comparison
 				}
@@ -5986,6 +6674,178 @@ argCompareType(uint16_t		ln,
 							"argCompareType(): Illegal member [%s] specified for variable [%s]",
 							pMember,
 							pArg->pName);
+					OUTPUT_ERR(ln, string, NULL, NULL);
+				}
+			}
+			else
+			{
+				// member not specified, must have member
+				char string[OUTPUT_STRING_MAX];
+				sprintf(string,
+						"argCompareType(): Member must be specified for variable [%s, %s]",
+						pArg->pName,
+						argVarStringGet(pArg->varType));
+				OUTPUT_ERR(ln, string, NULL, NULL);
+			}
+		}
+		break;
+
+		case VAR_FINF:
+		{
+			if (NULL != pMember)
+			{
+				memberOK = TRUE;
+				if ((!strcmp(MEM_FINF_IP, pMember))
+					|| (!strcmp(MEM_FINF_LEAD, pMember))
+					|| (!strcmp(MEM_FINF_TRAIL, pMember)))
+				{
+					*comp = TRUE;	// Show numeric comparison
+				}
+				else
+				{
+					// Invalid member specified
+					char string[OUTPUT_STRING_MAX];
+					sprintf(string,
+						"argCompareType(): Illegal member [%s] specified for variable [%s]",
+						pMember,
+						pArg->pName);
+					OUTPUT_ERR(ln, string, NULL, NULL);
+				}
+			}
+			else
+			{
+				// member not specified, must have member
+				char	string[OUTPUT_STRING_MAX];
+				sprintf(string,
+						"argCompareType(): Member must be specified for variable [%s, %s]",
+						pArg->pName,
+						argVarStringGet(pArg->varType));
+				OUTPUT_ERR(ln, string, NULL, NULL);
+			}
+		}
+		break;
+
+		case VAR_FFDSTAT:
+		{
+			if (NULL != pMember)
+			{
+				memberOK = TRUE;
+				if ((!strcmp(MEM_FFDSTAT_COM, pMember))
+					|| (!strcmp(MEM_FFDSTAT_SRX, pMember))
+					|| (!strcmp(MEM_FFDSTAT_ERX, pMember)))
+				{
+					*comp = TRUE;	// Show numeric comparison
+				}
+				else
+				{
+					// Invalid member specified
+					char string[OUTPUT_STRING_MAX];
+					sprintf(string,
+						"argCompareType(): Illegal member [%s] specified for variable [%s]",
+						pMember,
+						pArg->pName);
+					OUTPUT_ERR(ln, string, NULL, NULL);
+				}
+			}
+			else
+			{
+				// member not specified, must have member
+				char	string[OUTPUT_STRING_MAX];
+				sprintf(string,
+						"argCompareType(): Member must be specified for variable [%s, %s]",
+						pArg->pName,
+						argVarStringGet(pArg->varType));
+				OUTPUT_ERR(ln, string, NULL, NULL);
+			}
+		}
+		break;
+
+		case VAR_FFINFO:
+		{
+			if (NULL != pMember)
+			{
+				memberOK = TRUE;
+				if ((!strcmp(MEM_FFINFO_HZ, pMember))
+					|| (!strcmp(MEM_FFINFO_SRX, pMember))
+					|| (!strcmp(MEM_FFINFO_ERX, pMember))
+					|| (!strcmp(MEM_FFINFO_E10, pMember))
+					|| (!strcmp(MEM_FFINFO_SEQ, pMember)))
+				{
+					*comp = TRUE;	// Show numeric comparison
+				}
+				else
+				{
+					// Invalid member specified
+					char string[OUTPUT_STRING_MAX];
+					sprintf(string,
+						"argCompareType(): Illegal member [%s] specified for variable [%s]",
+						pMember,
+						pArg->pName);
+					OUTPUT_ERR(ln, string, NULL, NULL);
+				}
+			}
+			else
+			{
+				// member not specified, must have member
+				char	string[OUTPUT_STRING_MAX];
+				sprintf(string,
+						"argCompareType(): Member must be specified for variable [%s, %s]",
+						pArg->pName,
+						argVarStringGet(pArg->varType));
+				OUTPUT_ERR(ln, string, NULL, NULL);
+			}
+		}
+		break;
+
+		case VAR_FNOTI:
+		{
+			if (pMember != NULL) {
+				memberOK = TRUE;
+				if ((!strcmp(MEM_FNOTI_RXF, pMember))
+					|| (!strcmp(MEM_FNOTI_STAT, pMember))
+					|| (!strcmp(MEM_FNOTI_SEQ, pMember))
+					|| (!strcmp(MEM_FNOTI_CNT, pMember))
+					|| (!strcmp(MEM_FNOTI_FIOD, pMember))) {
+					*comp = TRUE;	// Show numeric comparison
+				} else {
+					// Invalid member specified
+					char string[OUTPUT_STRING_MAX];
+					sprintf(string, "argCompareType(): Illegal member [%s] specified for variable [%s]",
+						pMember,
+						pArg->pName);
+					OUTPUT_ERR(ln, string, NULL, NULL);
+				}
+			} else {
+				// member not specified, must have member
+				char	string[OUTPUT_STRING_MAX];
+				sprintf(string, "argCompareType(): Member must be specified for variable [%s, %s]",
+						pArg->pName,
+						argVarStringGet(pArg->varType));
+				OUTPUT_ERR(ln, string, NULL, NULL);
+			}
+		}
+		break;
+
+		case VAR_FCMAP:
+		{
+			if (NULL != pMember)
+			{
+				memberOK = TRUE;
+				if ((!strcmp(MEM_FCMAP_OUT, pMember))
+					|| (!strcmp(MEM_FCMAP_FIOD, pMember))
+					|| (!strcmp(MEM_FCMAP_CHAN, pMember))
+					|| (!strcmp(MEM_FCMAP_CLR, pMember)))
+				{
+					*comp = TRUE;	// Show numeric comparison
+				}
+				else
+				{
+					// Invalid member specified
+					char string[OUTPUT_STRING_MAX];
+					sprintf(string,
+						"argCompareType(): Illegal member [%s] specified for variable [%s]",
+						pMember,
+						pArg->pName);
 					OUTPUT_ERR(ln, string, NULL, NULL);
 				}
 			}
@@ -6038,12 +6898,7 @@ argCompareType(uint16_t		ln,
 		}
 		break;
 
-		case VAR_FCMAP:
-		case VAR_FFSCHD:
-		case VAR_FINF:
 		case VAR_FTBUF:
-		case VAR_FFDSTAT:
-		case VAR_FNOTI:
 		case VAR_DSTIT:
 		default:
 		{
@@ -6126,19 +6981,17 @@ argConvert (char *pIn, unsigned char **ppOut)
  * \param[out]	ppBuf - Buffer that has data to initialize from
  * \param[out]	pSize - Bytes in *ppBuf
  * 
- * \return		STATUS_FAIL = Operation failed
+ * \return	STATUS_FAIL = Operation failed
  *              STATUS_SUCCESS = Operation succeeded
  */
 int16_t
-argSet(uint16_t ln,
-	   const char *pPath,
-	   const char *pFileName,
-	   unsigned char **ppBuf,
-	   unsigned int *pSize)
+argSet(uint16_t ln, const char *pPath, const char *pFileName,
+		unsigned char **ppBuf,
+		unsigned int *pSize)
 {
-	FILE 			*pFile;
-	char			line[OUTPUT_STRING_MAX];
-	unsigned char	*pOut;
+	FILE *pFile;
+	char line[OUTPUT_STRING_MAX];
+	unsigned char *pOut;
 
 	if (NULL == (pOut = malloc(ARG_CONVERTED_MAX)))
 	{
