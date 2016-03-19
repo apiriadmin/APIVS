@@ -2670,17 +2670,19 @@ argSetVar(uint16_t ln,
 
 				// get array index, if any
 				if (pIndex != NULL) {
-					if (argCastUint(ln, pIndex, &index) == STATUS_PASS) {
-						if (index >= pVar->arg.data.size)
-							index = pVar->arg.data.size;
-					} else {
+					if (argCastUint(ln, pIndex, &index) != STATUS_PASS)
 						break;
-					}
 				}
 								
 				if (pMember != NULL) {
 					unsigned int value;
 					unsigned int *var;
+
+					if (index >= pVar->arg.data.size) {
+						OUTPUT_ERR(ln, "argSetVar(): variable array index out of range",
+							NULL, NULL);
+						break;
+					}
 
 					// get unsigned int value
 					if ((status = argCastUint(ln, pValue, &value)) != STATUS_PASS)
@@ -2728,9 +2730,15 @@ argSetVar(uint16_t ln,
 						if ((pValue->argType == ARG_VAR)
 							&& (pValue->varType == VAR_FCMAP)) {
 							if (pIndex != NULL) {
-								// Set array element
-								memcpy(&pVar->arg.data.value.fioFcmap[index],
-									pValue->arg.data.value.fioFcmap,
+								// Set from array element
+								if (index >= pValue->arg.data.size) {
+									OUTPUT_ERR(ln,
+										"argSetVar(): value array index out of range",
+										NULL, NULL);
+									break;
+								}
+								memcpy(pVar->arg.data.value.fioFcmap,
+									&pValue->arg.data.value.fioFcmap[index],
 									sizeof(FIO_CHANNEL_MAP));
 							} else {
 								// Set whole array
@@ -2741,6 +2749,7 @@ argSetVar(uint16_t ln,
 									MIN(pVar->arg.data.size * sizeof(FIO_CHANNEL_MAP),
 									pValue->arg.data.size));
 							}
+							status = STATUS_PASS;
 						}
 					}
 				}
@@ -2840,6 +2849,7 @@ argSetVar(uint16_t ln,
 				unsigned int size;
 				unsigned int index = 0;
 
+printf("argSetVar(): VAR_FINF\n");
 				if (pFile != NULL) {
 					if ((operation == OP_ADD) || (operation == OP_SUB))
 					{
@@ -2876,18 +2886,21 @@ argSetVar(uint16_t ln,
 
 				// get array index, if any
 				if (pIndex != NULL) {
-					if (argCastUint(ln, pIndex, &index) == STATUS_PASS) {
-						if (index >= pVar->arg.data.size)
-							index = pVar->arg.data.size;
-					} else {
+					if (argCastUint(ln, pIndex, &index) != STATUS_PASS) {
 						break;
 					}
 				}
-								
+												
 				if (pMember != NULL) {
 					unsigned int value;
 					unsigned int *var;
 
+					if (index >= pVar->arg.data.size) {
+						OUTPUT_ERR(ln, "argSetVar(): variable array index out of range",
+							NULL, NULL);
+						break;
+					}
+						
 					// get unsigned int value
 					if ((status = argCastUint(ln, pValue, &value)) != STATUS_PASS)
 						break;
@@ -2931,9 +2944,15 @@ argSetVar(uint16_t ln,
 						if ((pValue->argType == ARG_VAR)
 							&& (pValue->varType == VAR_FINF)) {
 							if (pIndex != NULL) {
-								// Set array element
-								memcpy(&pVar->arg.data.value.fioFinf[index],
-									pValue->arg.data.value.fioFinf,
+								// Set from array element
+								if (index >= pValue->arg.data.size) {
+									OUTPUT_ERR(ln,
+										"argSetVar(): value array index out of range",
+										NULL, NULL);
+									break;
+								}
+								memcpy(pVar->arg.data.value.fioFinf,
+									&pValue->arg.data.value.fioFinf[index],
 									sizeof(FIO_INPUT_FILTER));
 							} else {
 								// Set whole array
@@ -2944,6 +2963,7 @@ argSetVar(uint16_t ln,
 									MIN(pVar->arg.data.size * sizeof(FIO_INPUT_FILTER),
 									pValue->arg.data.size));
 							}
+							status = STATUS_PASS;
 						}
 					}
 				}
@@ -3348,6 +3368,7 @@ argSetVar(uint16_t ln,
 								memcpy(&pVar->arg.data.value.fioFiodStatus,
 									&pValue->arg.data.value.fioFiodStatus,
 									sizeof(FIO_FIOD_STATUS));
+								status = STATUS_PASS;
 						}
 					}
 				}
@@ -3396,18 +3417,20 @@ argSetVar(uint16_t ln,
 
 				// get array index, if any
 				if (pIndex != NULL) {
-					if (argCastUint(ln, pIndex, &index) == STATUS_PASS) {
-						if (index >= pVar->arg.data.size)
-							index = pVar->arg.data.size;
-					} else {
+					if (argCastUint(ln, pIndex, &index) != STATUS_PASS)
 						break;
-					}
 				}
 								
 				if (pMember != NULL) {
 					unsigned int value;
 					unsigned int *var;
 
+					if (index >= pVar->arg.data.size) {
+						OUTPUT_ERR(ln, "argSetVar(): variable array index out of range",
+							NULL, NULL);
+						break;
+					}
+						
 					// get unsigned int value
 					if ((status = argCastUint(ln, pValue, &value)) != STATUS_PASS)
 						break;
@@ -3457,9 +3480,15 @@ argSetVar(uint16_t ln,
 						if ((pValue->argType == ARG_VAR)
 							&& (pValue->varType == VAR_FFINFO)) {
 							if (pIndex != NULL) {
-								// Set array element
-								memcpy(&pVar->arg.data.value.fioFrameInfo[index],
-									pValue->arg.data.value.fioFrameInfo,
+								// Set from array element
+								if (index >= pValue->arg.data.size) {
+									OUTPUT_ERR(ln,
+										"argSetVar(): value array index out of range",
+										NULL, NULL);
+									break;
+								}
+								memcpy(pVar->arg.data.value.fioFrameInfo,
+									&pValue->arg.data.value.fioFrameInfo[index],
 									sizeof(FIO_FRAME_INFO));
 							} else {
 								// Set whole array
@@ -3470,6 +3499,7 @@ argSetVar(uint16_t ln,
 									MIN(pVar->arg.data.size * sizeof(FIO_FRAME_INFO),
 									pValue->arg.data.size));
 							}
+							status = STATUS_PASS;
 						}
 					}
 				}
@@ -3626,6 +3656,7 @@ argSetVar(uint16_t ln,
 								memcpy(&pVar->arg.data.value.fioNotifyInfo,
 									&pValue->arg.data.value.fioNotifyInfo,
 									sizeof(FIO_NOTIFY_INFO));
+								status = STATUS_PASS;
 						}
 					}
 				}
