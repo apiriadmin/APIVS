@@ -895,6 +895,8 @@ interpretSet(P_CODE *pCode)
 	outputXmlAttrAddCommon(LEVEL_TRACE, &pCode->common, A_VAR);
 	outputXmlAttrAdd(A_OP, s_opType_string[pCode->code.cSet.operation]);
 	outputXmlAttrAdd(A_MEMBER, pCode->code.cSet.pMember);
+	if (pCode->code.cSet.pIndex)
+		outputXmlAttrAdd(A_INDEX, pCode->code.cSet.pIndex->pName);
 	if (pCode->code.cSet.pVal)
 	{
 		outputXmlAttrAdd(A_VALUE, pCode->code.cSet.pVal->pName);
@@ -910,6 +912,7 @@ interpretSet(P_CODE *pCode)
 					 pCode->code.cSet.pVal,
 					 pCode->code.cSet.pFile,
 					 pCode->code.cSet.pVar,
+					 pCode->code.cSet.pIndex,
 					 pCode->code.cSet.pMember));
 }
 

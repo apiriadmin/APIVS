@@ -6176,14 +6176,17 @@ funcFioFiodFrameScheduleGet(uint16_t	lineNumber,
 			return(STATUS_FAIL);
 		}
 
-		memset(argSchd, 0, count * sizeof(FIO_FRAME_SCHD));
+		if (pCF->arg[3])
+		{
+			memset(argSchd, 0, count * sizeof(FIO_FRAME_SCHD));
+			memcpy(argSchd, pCF->arg[3]->arg.data.value.fioFschd,
+			   MIN(sizeof(FIO_FRAME_SCHD) * pCF->arg[3]->arg.data.size,
+			   	   sizeof(FIO_FRAME_SCHD) * count));
+		}
 	}
 
-	argReturn = fio_fiod_frame_schedule_get(argHandle,
-											argDh,
-											argView,
-											argSchd,
-											count);
+	argReturn = fio_fiod_frame_schedule_get(argHandle, argDh, argView,
+							argSchd, count);
 	argErrno = errno;
 
 	if (pCF->arg[3])
@@ -6538,13 +6541,17 @@ funcFioFiodInputsFilterGet(uint16_t	lineNumber,
 		}
 
 		memset(argFilter, 0, count * sizeof(FIO_INPUT_FILTER));
+		if (pCF->arg[3]) {
+			memcpy(argFilter, pCF->arg[3]->arg.data.value.fioFinf,
+			   MIN(sizeof(FIO_INPUT_FILTER) * pCF->arg[3]->arg.data.size,
+			   	   sizeof(FIO_INPUT_FILTER) * count));
+		}
 	}
 
-	argReturn = fio_fiod_inputs_filter_get(argHandle,
-										   argDh,
-										   argView,
-										   argFilter,
-										   count);
+	argReturn = fio_fiod_inputs_filter_get(argHandle, argDh,
+						argView,
+						argFilter,
+						count);
 	argErrno = errno;
 
 	if (pCF->arg[3])
@@ -6582,20 +6589,19 @@ funcFioFiodInputsFilterGet(uint16_t	lineNumber,
  *
  * \param[in]	lineNumber - Line number in XML file
  * \param[in]	pCF - Pointer to function calling info
- * \return		STATUS_PASS - Test conformance (PASS)
- * 				STATUS_FAIL - Test nonconformance (FAIL)
+ * \return	STATUS_PASS - Test conformance (PASS)
+ * 		STATUS_FAIL - Test nonconformance (FAIL)
  */
 static int16_t
-funcFioFiodInputsFilterSet(uint16_t	lineNumber,
-						   C_FUNC		*pCF)
+funcFioFiodInputsFilterSet(uint16_t lineNumber, C_FUNC *pCF)
 {
 	// Call fio_fiod_inputs_filter_set()
-	int				argErrno;
-	int				argReturn;
-	FIO_APP_HANDLE	argHandle = -1;
-	FIO_DEV_HANDLE	argDh = -1;
-	FIO_INPUT_FILTER	*argFilter = NULL;
-	unsigned int	count = 0;
+	int argErrno;
+	int argReturn;
+	FIO_APP_HANDLE argHandle = -1;
+	FIO_DEV_HANDLE argDh = -1;
+	FIO_INPUT_FILTER *argFilter = NULL;
+	unsigned int count = 0;
 
 	if (pCF->arg[0])
 	{
@@ -8513,7 +8519,7 @@ funcFioQueryFrameNotifyStatus(uint16_t	lineNumber,
 
 	if (pCF->arg[1])
 	{
-		pCF->arg[1]->arg.data.value.fioInfo = argInfo;
+		pCF->arg[1]->arg.data.value.fioNotifyInfo = argInfo;
 	}
 
 	if (pCF->returnValue)

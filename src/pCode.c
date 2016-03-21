@@ -1368,6 +1368,57 @@ pCode_parseSetOpen(XML_Parser pParser, const char **pAttr)
 			strncpy(ptr, pAttr_value, strlen(pAttr_value) + 1);
 			pCode->code.cSet.pMember = ptr;
 		}
+		else if (!strcmp(pAttr_name, A_INDEX))
+		{
+			// ATTR: index
+			if (!(ptr = malloc(strlen(pAttr_value) + 1)))
+			{
+				// Malloc failed
+				char	string[OUTPUT_STRING_MAX];
+				sprintf(string,
+						"pCode_parseSetOpen(): Failed to malloc space for attribute [%s] size [%d]",
+						pAttr_name,
+						strlen(pAttr_value) + 1);
+				OUTPUT_ERR(pCode->common.lineNumber,
+						   string,
+						   strerror(errno),
+						   NULL);
+				return(STATUS_FAIL);
+			}
+
+			strncpy(ptr, pAttr_value, strlen(pAttr_value) + 1);
+
+			if (STATUS_FAIL == argValidateArgSyntax(pCode->common.lineNumber,
+								pAttr_value))
+			{
+				return(STATUS_FAIL);
+			}
+
+			if (STATUS_FAIL == argDereferenceArg(pCode->common.lineNumber,
+								pAttr_value,
+								&pCode->code.cSet.pIndex))
+			{
+				return(STATUS_FAIL);
+			}
+
+			pCode->code.cSet.pIndex->pName = ptr;
+
+			if (pCode->code.cSet.pIndex->varType != VAR_INT)
+			{
+				// Illegal variable type specified
+				char	string[OUTPUT_STRING_MAX];
+				sprintf(string,
+						"pCode_parseSetOpen(): Invalid variable specified, [%s] required [%s] passed, for ATTR [%s]",
+						argVarStringGet(VAR_INT),
+						argVarStringGet(pCode->code.cSet.pIndex->varType),
+						A_INDEX);
+				OUTPUT_ERR(pCode->common.lineNumber,
+						   string,
+						   NULL,
+						   NULL);
+				return(STATUS_FAIL);
+			}
+		}
 		else if (!strcmp(pAttr_name, A_OP))
 		{
 			// ATTR: operation
