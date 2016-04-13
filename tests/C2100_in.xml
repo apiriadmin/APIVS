@@ -3,31 +3,36 @@
 <!--
  ATC 5401 API Reference Implementation Project 
  
-     Filename: C2001d_in.xml
+     Filename: C2100_in.xml
     File Type: APIVSXML test script (XML format)
-    Test Case: APIRI.TCS.2001d
-  Description: Demonstrate FPUI API function testing
+    Test Case: APIRI.TCS.2100
+  Description: API Version Information (All Libraries)
  
+APIR3.2[1]	The API shall provide a method to determine the version number(s)
+            of the API.
+
  Date      Revision    Description
- 10/28/15  1.0         initial release
+ 2/22/16   1.0         initial release
 -->
 
 <Define var="$fpui_handle"  type="fpui_handle" />
-<Define var="$errno"        type="int" />
+<Define var="$fio_handle"   type="FIO_APP_HANDLE" />
+<Define var="$ver_string"   type="char []" size="%64" />
+<Define var="$null_string"  type="char []" size="%64" />
+<Define var="$fpui_ver"     type="int" />
+<Define var="$fio_ver"      type="FIO_VERSION" />
 <Define var="$returnCode"   type="int" />
+<Define var="$errno"        type="int" />
 <Define var="$flags"        type="int" />
 <Define var="$regname"      type="char []" size="%16" />
-<Define var="$write_buf"    type="char []" size="%64" />
-<Define var="$write_cnt"    type="ssize_t" />
-<Define var="$row"          type="int" />
-<Define var="$column"       type="int" />
+
 <Define var="$abort_mode"   type="boolean" />
 <Define var="$failed"       type="boolean" />
 
 <!--
- subroutines for setup, teardown, error logging
+ subroutines for setUp, teardown, error logging
 -->
-<SetUp name="FPUI_Init_Variables">
+<SetUp name="API_Init_Variables">
    <Set var="$returnCode"  value="%-1"/>
    <Set var="$errno"       value="%0"/>
 </SetUp>
@@ -105,22 +110,31 @@
    <Format var="$errno" />
    <Set var="$failed" value="#TRUE"/>
    <If expression="$abort_mode EQ #TRUE" >
-      <Then> <Abort status="FAIL" /> </Then> </If>
+      <Then> <Abort status="FAIL" /> </Then>
+   <Else>
+      <Print>Function failed properly (forced)</Print>
+   </Else>
+   </If>
 </Subroutine>
 
 <!--
  subroutines to call API functions and verify return status
 -->
-<Subroutine name="fpui_clear" description="Call fpui_clear()" >
-   <Function funcName="fpui_clear"
-             return="$returnCode"
+<Subroutine name="fpui_apiver" description="Call fpui_apiver()" >
+   <Function funcName="fpui_apiver"
+             return="$ver_string"
              errno="$errno"
-             p1="$fpui_handle" />
-   <If expression="$returnCode EQ %-1">
+             p1="$fpui_handle"
+             p2="$fpui_ver" />
+   <If expression="$ver_string EQ $null_string" >
       <Then>
-      <Print>Function fpui_clear() failed</Print>
+      <Print>Function fpui_apiver() failed</Print>
       <Call ref="Error_Handler" />
       </Then>
+   <Else>
+      <Format var="$fpui_ver" />
+      <Format var="$ver_string" />
+   </Else>
    </If>
 </Subroutine>
 
@@ -151,22 +165,60 @@
    </If>
 </Subroutine>
 
-<Subroutine name="fpui_write_string_at" description="Call fpui_write_string_at()" >
-   <Function funcName="fpui_write_string_at"
-             return="$write_cnt"
+<Subroutine name="fio_apiver" description="Call fio_apiver()" >
+   <Function funcName="fio_apiver"
+             return="$ver_string"
              errno="$errno"
-             p1="$fpui_handle"
-             p2="$write_buf"
-             p3="$row"
-             p4="$column" />
-   <If expression="$write_cnt EQ %-1">
+             p1="$fio_handle"
+             p2="$fio_ver" />
+   <If expression="$ver_string EQ $null_string" >
       <Then>
-      <Print>Function fpui_write_string_at() failed</Print>
+      <Print>Function fio_apiver() failed</Print>
       <Call ref="Error_Handler" />
       </Then>
    <Else>
-      <Format var="$write_buf" />
-      <Format var="$write_cnt" />
+      <Format var="$fio_ver" />
+      <Format var="$ver_string" />
+   </Else>
+   </If>
+</Subroutine>
+
+<Subroutine name="fio_deregister" description="Call fio_deregister()" >
+   <Function funcName="fio_deregister"
+             return="$returnCode"
+             errno="$errno"
+             p1="$fio_handle" />
+   <If expression="$returnCode EQ %-1">
+      <Then>
+      <Print>Function fio_deregister() failed</Print>
+      <Call ref="Error_Handler" />
+      </Then>
+   </If>
+</Subroutine>
+
+<Subroutine name="fio_register" description="Call fio_register()" >
+   <Function funcName="fio_register"
+             return="$fio_handle"
+             errno="$errno" />
+   <If expression="$fio_handle EQ %-1">
+      <Then>
+      <Print>Function fio_register() failed</Print>
+      <Call ref="Error_Handler" />
+      </Then>
+   </If>
+</Subroutine>
+
+<Subroutine name="tod_apiver" description="Call tod_apiver()" >
+   <Function funcName="tod_apiver"
+             return="$ver_string"
+             errno="$errno" />
+   <If expression="$ver_string EQ $null_string" >
+      <Then>
+      <Print>Function tod_apiver() failed</Print>
+      <Call ref="Error_Handler" />
+      </Then>
+   <Else>
+      <Format var="$ver_string" />
    </Else>
    </If>
 </Subroutine>
@@ -174,55 +226,53 @@
 <!--
  test case(s)
 -->
-<TestCase name="Case_C2001d" description="C2001d: Demonstrate FPUI API function testing" >
+<TestCase name="Case_C2100" description="C2100: API Version Information (All Libraries)" >
+   <!-- set abort_mode to FALSE to attempt 'invalid' API function operations;
+        script will proceed (not abort) in these cases to allow validation
+        of the (forced) error -->
+   <!-- when abort_mode is TRUE, script operates normally (abort on error) -->
    <Set var="$abort_mode"  value="#TRUE"/>
    <Set var="$failed"      value="#FALSE"/>
-
-   <!-- open a connection to the Front Panel API -->
+   <Set var="$null_string" value="@Cxxxx_null.txt"/>
+   
    <Set var="$flags"   value="#O_RDWR"/>
-   <Set var="$flags"   value="#O_NONBLOCK" operation="add" />
-   <Set var="$regname" value="@C2001d"/>
-   <Call ref="fpui_open" setUp="FPUI_Init_Variables" />
+   <Set var="$regname" value="@C2100"/>
+   <Call ref="fpui_open" setUp="API_Init_Variables" />
 
-   <!-- select our test application for display by FPM -->
-   <FPUIInput file="@Cxxxx_key0.txt" description="Provide keypress [0] input" />
-
-   <!-- clear our screen and confirm that it is clear -->
-   <Call ref="fpui_clear" setUp="FPUI_Init_Variables" />
-   <Dump dump="VD" file="@C2001d_vd_clr" /> <!-- (this dump only occurs in 'capture' mode) -->
-   <If expression="!VDCompare(@C2001d_vd_clr) EQ #FALSE">
-      <Then>
-      <Print >The display is NOT clear</Print>
-      <Dump dump="VD" force="#TRUE" file="@C2001d_vd_clrfail" />
-      <Abort status="FAIL" />
-      </Then>
-   </If>
+   <!-- get FPUI versions -->
+   <Set var="$ver_string" value="@Cxxxx_null.txt"/>
+   <Set var="$fpui_ver" value="%1"/>
+   <Call ref="fpui_apiver" setUp="API_Init_Variables" />
    
-   <!-- write a text string to the display at Row 3, Column 5 -->
-   <Set var="$row"       value="%3"/>
-   <Set var="$column"    value="%5"/>
-   <Set var="$write_buf" value="@Demonstration of FPUI API"/>
-   <Call ref="fpui_write_string_at" setUp="FPUI_Init_Variables" />
+   <Set var="$ver_string" value="@Cxxxx_null.txt"/>
+   <Set var="$fpui_ver" value="%2"/>
+   <Call ref="fpui_apiver" setUp="API_Init_Variables" />
    
-<!-- grab our screen and confirm the write -->
-   <Dump dump="VD" file="@C2001d_vd_00" /> <!-- (this dump only occurs in 'capture' mode) -->
-   <If expression="!VDCompare(@C2001d_vd_00) EQ #FALSE">
-      <Then>
-      <Print >The display is NOT correct</Print>
-      <Dump dump="VD" force="#TRUE" file="@C2001d_vd_00_fail" />
-      <Abort status="FAIL" />
-      </Then>
-   </If>
+   <Call ref="fpui_close" setUp="API_Init_Variables" />
 
-   <!-- close our connection to the Front Panel API -->
-   <Call ref="fpui_close" setUp="FPUI_Init_Variables" />
+   <Call ref="fio_register" setUp="API_Init_Variables" />
+
+   <!-- get FIO versions -->
+   <Set var="$ver_string" value="@Cxxxx_null.txt"/>
+   <Set var="$fio_ver" value="#FIO_VERSION_LIBRARY"/>
+   <Call ref="fio_apiver" setUp="API_Init_Variables" />
+   
+   <Set var="$ver_string" value="@Cxxxx_null.txt"/>
+   <Set var="$fio_ver" value="#FIO_VERSION_LKM"/>
+   <Call ref="fio_apiver" setUp="API_Init_Variables" />
+
+   <Call ref="fio_deregister" setUp="API_Init_Variables" />
+
+   <!-- get TOD version -->
+   <Set var="$ver_string" value="@Cxxxx_null.txt"/>
+   <Call ref="tod_apiver" setUp="API_Init_Variables" />
 </TestCase>
 
 <!--
  test suite(s)
 -->
 <TestSuite name="All_Test_Cases" description="Run All Test Cases" >
-  <TestCaseRef ref="Case_C2001d" />
+  <TestCaseRef ref="Case_C2100" />
 </TestSuite>
 
 </APIVSXML>

@@ -1,0 +1,1455 @@
+<?xml version="1.0" encoding="utf-8"?>
+<APIVSXML>
+<!--
+ ATC 5401 API Reference Implementation Project 
+ 
+     Filename: C3010_in.xml
+    File Type: APIVSXML test script (XML format)
+    Test Case: APIRI.TCS.3010
+  Description: General FIO Operations
+ 
+APIR3.1.2[5]	The API shall support all cabinet architectures and associated
+               Field I/O Device types as listed in the ATC Controller Standard
+               Section 8.
+
+APIR3.1.2[6]	The API shall support the Field I/O Device types shown in
+               Table 2.
+
+APIR3.1.2[8]	The API shall support communication to multiple Field I/O
+               Devices on a single communications port provided the Field
+               I/O Devices have compatible physical communication attributes.
+
+APIR3.1.2[9]	The API shall support a maximum of one Field I/O Device of
+               each type per communications port except in the case of BIUs
+               and SIUs.
+
+APIR3.1.2[10]	The API shall support up to 8 Detector BIU and 8 Terminal & 
+               Facilities BIU Field I/O Devices per communications port.
+
+APIR3.1.2[11]	The API shall support up to 5 Input SIU, 2 14-Pack Output SIU
+               and 4 6-Pack Output SIU Field I/O Devices per communications
+               port.
+
+APIR3.1.2[12]	The API shall only support valid Output SIU combinations as
+               defined in the ITS Cabinet Standard, Section 4.7.
+
+APIR3.1.2[13]	The API shall identify specific Field I/O Devices using the
+               API Field I/O Device Names in Table 2.
+
+APIR3.1.2[14]	The API shall provide a method for application programs to
+               register and deregister with the API for access to the API
+               Field I/O services.
+
+APIR3.1.2[15]	The process of application program registration shall not
+               cause the API to perform any communications with the Field
+               I/O Device.
+
+APIR3.1.2[16]	When an application program deregisters for access to Field
+               I/O services, the API shall deregister (as defined in
+               Item “e”) all Field I/O devices registered by that application
+               program.
+
+APIR3.1.2[17]	The API shall provide a method to allow application programs
+               to register and deregister for access to specific Field I/O
+               Devices by specifying the communications port, device type,
+               and where applicable, the Field I/O Device number.
+
+APIR3.1.2[18]	Once a device has been registered on a communications port,
+               the API shall permit the registration of additional compatible
+               Field I/O Devices on the same communications port and prohibit
+               the registration of incompatible Field I/O Devices on the same
+               communications port.
+
+APIR3.1.2[19]	The Field I/O Device registration process shall not cause the
+               API to perform any device communications.
+
+APIR3.1.2[20]	When an application program deregisters for access to a Field
+               I/O Device, the API shall disable (as defined in Item “g”) the
+               Field I/O Device, relinquish all output points for that device
+               and set all application program settable states to their default
+               values.
+
+APIR3.1.2[21]	The API shall provide a method for application programs to
+               query for the presence of a Field I/O Device using the
+               communications port, device type, and where applicable,
+               the Field I/O Device number.
+
+APIR3.1.2[23]	If the API has the communications port open at the time of
+               the query and the communications attributes for the Field I/O
+               Device used in the query are not compatible with the current
+               settings on the communications port, the API shall assume that
+               the Field I/O Device is not present.
+
+APIR3.1.2[24]	If the API has the communications port open at the time of the
+               query and API is already successfully completing scheduled
+               communications to the Field I/O Device, the API shall indicate
+               that the Field I/O Device is present without sending any
+               additional frames to the device.
+
+APIR3.1.2[25]	The API shall provide a method which allows an application
+               program to enable and disable communications to a Field I/O
+               Device for which the application program has registered.
+
+APIR3.1.2[26]	When the communications enable method is called, the API shall
+               initiate scheduled communications between the API and the
+               specified Field I/O Device if not already active.
+
+APIR3.1.2[27]	When the disable communications method is called, the API shall
+               cease scheduled communications between the API and the specified
+               Field I/O Device if the device is no longer enabled by any
+               application program.
+
+ Date      Revision    Description
+ 2/22/16   1.0         initial release
+ 2/25/16   1.1         second release
+-->
+
+<Define var="$returnCode"     type="int" />
+<Define var="$errno"          type="int" />
+<Define var="$fio_handle"     type="FIO_APP_HANDLE" />
+<Define var="$fiod_handle"    type="FIO_DEV_HANDLE" />
+<Define var="$fiod_hdl_CMU"   type="FIO_DEV_HANDLE" />
+<Define var="$fiod_hdl_ISIU"  type="FIO_DEV_HANDLE" />
+<Define var="$fiod_hdl_OSIU"  type="FIO_DEV_HANDLE" />
+<Define var="$fiod_hdl_MMU"   type="FIO_DEV_HANDLE" />
+<Define var="$fiod_hdl_TF1"   type="FIO_DEV_HANDLE" />
+<Define var="$fiod_hdl_DR1"   type="FIO_DEV_HANDLE" />
+<Define var="$fio_view"       type="FIO_VIEW" />
+<Define var="$map_count"      type="int" />
+<Define var="$channel_map"    type="FIO_CHANNEL_MAP" />
+<Define var="$fill_count"     type="int" />
+<Define var="$chan_res"       type="unsigned char []" size="#FIO_CHANNEL_BYTES" />
+<Define var="$config_chg"     type="int" />
+<Define var="$dark_mask"      type="FIO_CMU_DC_MASK" />
+<Define var="$cmu_fsa"        type="FIO_CMU_FSA" />
+<Define var="$frame_number"   type="unsigned int" />
+<Define var="$notify_freq"    type="FIO_NOTIFY" />
+<Define var="$seq_number"     type="unsigned int" />
+<Define var="$read_buffer"    type="unsigned char []" size="%128" />
+<Define var="$bytes_read"     type="int" />
+<Define var="$frame_sched"    type="FIO_FRAME_SCHD" size="%1" />
+<Define var="$frame_size"     type="int" />
+<Define var="$write_buffer"   type="unsigned char []" size="%128" />
+<Define var="$write_count"    type="unsigned int" />
+<Define var="$input_filter"   type="FIO_INPUT_FILTER" size="%1" />
+<Define var="$input_type"     type="FIO_INPUTS_TYPE" />
+<Define var="$inputs"         type="unsigned char []" size="#FIO_INPUT_POINTS_BYTES" />
+<Define var="$trans_status"   type="FIO_TRANS_STATUS" size="%1" />
+<Define var="$trans_buf"      type="FIO_TRANS_BUFFER" size="%1" />
+<Define var="$trans_count"    type="int" />
+<Define var="$flash_bit"      type="FIO_MMU_FLASH_BIT" />
+<Define var="$ls_plus"        type="unsigned char []" size="%16" />
+<Define var="$ls_minus"       type="unsigned char []" size="%16" />
+<Define var="$outputs"        type="unsigned char []" size="#FIO_OUTPUT_POINTS_BYTES" />
+<Define var="$fio_port"       type="FIO_PORT" />
+<Define var="$fio_device"     type="FIO_DEVICE_TYPE" />
+<Define var="$fiod_status"    type="FIO_FIOD_STATUS" />
+<Define var="$fm_state"       type="FIO_TS_FM_STATE" />
+<Define var="$vm_state"       type="FIO_TS1_VM_STATE" />
+<Define var="$output_point"   type="unsigned int" />
+<Define var="$hm_timeout"     type="unsigned int" />
+<Define var="$fiod_query"     type="int" />
+<Define var="$notify_info"    type="FIO_NOTIFY_INFO" />
+<Define var="$time_offset"    type="int" />
+<Define var="$num_bytes"      type="unsigned int" />
+<Define var="$timeout"        type="unsigned int" />
+<Define var="$FIO_asyncsig"   type="boolean" />
+
+<Define var="$abort_mode"     type="boolean" />
+<Define var="$failed"         type="boolean" />
+
+<!--
+ subroutines for setup, teardown, error logging
+-->
+<SetUp name="API_Init_Variables">
+   <Set var="$returnCode"  value="%-1"/>
+   <Set var="$errno"       value="%0"/>
+</SetUp>
+
+<Subroutine name="Error_Handler">
+   <If expression="$errno EQ %1" >
+      <Then> <Print>EPERM: Operation not permitted</Print> </Then> </If>
+   <If expression="$errno EQ %2" >
+      <Then> <Print>ENOENT: No such file or directory</Print> </Then> </If>
+   <If expression="$errno EQ %3" >
+      <Then> <Print>ESRCH: No such process</Print> </Then> </If>
+   <If expression="$errno EQ %4" >
+      <Then> <Print>EINTR: Interrupted system call</Print> </Then> </If>
+   <If expression="$errno EQ %5" >
+      <Then> <Print>EIO: I/O error</Print> </Then> </If>
+   <If expression="$errno EQ %6" >
+      <Then> <Print>ENXIO: No such device or address</Print> </Then> </If>
+   <If expression="$errno EQ %7" >
+      <Then> <Print>E2BIG: Argument list too long</Print> </Then> </If>
+   <If expression="$errno EQ %8" >
+      <Then> <Print>ENOEXEC: Exec format error</Print> </Then> </If>
+   <If expression="$errno EQ %9" >
+      <Then> <Print>EBADF: Bad file number</Print> </Then> </If>
+   <If expression="$errno EQ %10" >
+      <Then> <Print>ECHILD: No child processes</Print> </Then> </If>
+   <If expression="$errno EQ %11" >
+      <Then> <Print>EAGAIN: Try again</Print> </Then> </If>
+   <If expression="$errno EQ %12" >
+      <Then> <Print>ENOMEM: Out of memory</Print> </Then> </If>
+   <If expression="$errno EQ %13" >
+      <Then> <Print>EACCES: Permission denied</Print> </Then> </If>
+   <If expression="$errno EQ %14" >
+      <Then> <Print>EFAULT: Bad address</Print> </Then> </If>
+   <If expression="$errno EQ %15" >
+      <Then> <Print>ENOTBLK: Block device required</Print> </Then> </If>
+   <If expression="$errno EQ %16" >
+      <Then> <Print>EBUSY: Device or resource busy</Print> </Then> </If>
+   <If expression="$errno EQ %17" >
+      <Then> <Print>EEXIST: File exists</Print> </Then> </If>
+   <If expression="$errno EQ %18" >
+      <Then> <Print>EXDEV: Cross-device link</Print> </Then> </If>
+   <If expression="$errno EQ %19" >
+      <Then> <Print>ENODEV: No such device</Print> </Then> </If>
+   <If expression="$errno EQ %20" >
+      <Then> <Print>ENOTDIR: Not a directory</Print> </Then> </If>
+   <If expression="$errno EQ %21" >
+      <Then> <Print>EISDIR: Is a directory</Print> </Then> </If>
+   <If expression="$errno EQ %22" >
+      <Then> <Print>EINVAL: Invalid argument</Print> </Then> </If>
+   <If expression="$errno EQ %23" >
+      <Then> <Print>ENFILE: File table overflow</Print> </Then> </If>
+   <If expression="$errno EQ %24" >
+      <Then> <Print>EMFILE: Too many open files</Print> </Then> </If>
+   <If expression="$errno EQ %25" >
+      <Then> <Print>ENOTTY: Not a typewriter</Print> </Then> </If>
+   <If expression="$errno EQ %26" >
+      <Then> <Print>ETXTBSY: Text file busy</Print> </Then> </If>
+   <If expression="$errno EQ %27" >
+      <Then> <Print>EFBIG: File too large</Print> </Then> </If>
+   <If expression="$errno EQ %28" >
+      <Then> <Print>ENOSPC: No space left on device</Print> </Then> </If>
+   <If expression="$errno EQ %29" >
+      <Then> <Print>ESPIPE: Illegal seek</Print> </Then> </If>
+   <If expression="$errno EQ %30" >
+      <Then> <Print>EROFS: Read-only file system</Print> </Then> </If>
+   <If expression="$errno EQ %31" >
+      <Then> <Print>EMLINK: Too many links</Print> </Then> </If>
+   <If expression="$errno EQ %32" >
+      <Then> <Print>EPIPE: Broken pipe</Print> </Then> </If>
+   <If expression="$errno EQ %33" >
+      <Then> <Print>EDOM: Math argument out of domain of func</Print> </Then> </If>
+   <If expression="$errno EQ %34" >
+      <Then> <Print>ERANGE: Math result not representable</Print> </Then> </If>
+   <If expression="$errno EQ %61" >
+      <Then> <Print>ECONNREFUSED: Incompatible device</Print> </Then> </If>
+   <If expression="$errno EQ %110" >
+      <Then> <Print>ETIMEDOUT: Connection timed out</Print> </Then> </If>
+      
+   <Format var="$errno" />
+   <Set var="$failed" value="#TRUE"/>
+   <If expression="$abort_mode EQ #TRUE" >
+      <Then> <Abort status="FAIL" /> </Then>
+   <Else>
+      <Print>Function failed properly (forced)</Print>
+   </Else>
+   </If>
+</Subroutine>
+
+<Subroutine name="Success_Handler">
+   <If expression="$abort_mode EQ #FALSE" >
+      <Then>
+      <Print>Function succeeded but should have failed</Print>
+      <Abort status="FAIL" />
+      </Then>
+   </If>
+</Subroutine>
+
+<SignalHandler name="SigHandler" description="Signal handler for FIO_SIGIO">
+	<Print>FIO_SIGIO occurred</Print>
+	<Set var="$FIO_asyncsig" value="#TRUE"/>
+</SignalHandler>
+
+<!--
+ subroutines to call API functions and verify return status
+-->
+<Subroutine name="fio_deregister" description="Call fio_deregister()" >
+   <Function funcName="fio_deregister"
+             return="$returnCode"
+             errno="$errno"
+             p1="$fio_handle" />
+   <If expression="$returnCode EQ %-1">
+      <Then>
+      <Print>Function fio_deregister() failed</Print>
+      <Call ref="Error_Handler" />
+      </Then>
+   <Else>
+      <Call ref="Success_Handler" />
+   </Else>
+   </If>
+</Subroutine>
+
+<Subroutine name="fio_fiod_begin_outputs_set" description="Call fio_fiod_begin_outputs_set()" >
+   <Function funcName="fio_fiod_begin_outputs_set"
+             return="$returnCode"
+             errno="$errno"
+             p1="$fio_handle" />
+   <If expression="$returnCode EQ %-1">
+      <Then>
+      <Print>Function fio_fiod_begin_outputs_set() failed</Print>
+      <Call ref="Error_Handler" />
+      </Then>
+   <Else>
+      <Call ref="Success_Handler" />
+   </Else>
+   </If>
+</Subroutine>
+
+<Subroutine name="fio_fiod_channel_map_count" description="Call fio_fiod_channel_map_count()" >
+   <Function funcName="fio_fiod_channel_map_count"
+             return="$map_count"
+             errno="$errno"
+             p1="$fio_handle"
+             p2="$fiod_handle"
+			    p3="$fio_view" />
+   <If expression="$map_count EQ %-1">
+      <Then>
+      <Print >Function fio_fiod_channel_map_count() failed</Print>
+      <Call ref="Error_Handler" />
+      </Then>
+   <Else>
+      <Format var="$map_count" />
+      <Call ref="Success_Handler" />
+   </Else>
+   </If>
+</Subroutine>
+
+<Subroutine name="fio_fiod_channel_map_get" description="Call fio_fiod_channel_map_get()" >
+   <Function funcName="fio_fiod_channel_map_get"
+             return="$fill_count"
+             errno="$errno"
+             p1="$fio_handle"
+             p2="$fiod_handle"
+			    p3="$fio_view"
+			    p4="$channel_map"
+			    p5="$map_count" />
+   <If expression="$fill_count EQ %-1">
+      <Then>
+      <Print>Function fio_fiod_channel_map_get() failed</Print>
+      <Call ref="Error_Handler" />
+      </Then>
+   <Else>
+      <Format var="$fill_count" />
+      <Format var="$channel_map" />
+      <Call ref="Success_Handler" />
+   </Else>
+   </If>
+</Subroutine>
+
+<Subroutine name="fio_fiod_channel_map_set" description="Call fio_fiod_channel_map_set()" >
+   <Function funcName="fio_fiod_channel_map_set"
+             return="$returnCode"
+             errno="$errno"
+             p1="$fio_handle"
+             p2="$fiod_handle"
+			    p3="$channel_map"
+			    p4="$map_count" />
+   <If expression="$returnCode EQ %-1">
+      <Then>
+      <Print>Function fio_fiod_channel_map_set() failed</Print>
+      <Call ref="Error_Handler" />
+      </Then>
+   <Else>
+      <Call ref="Success_Handler" />
+   </Else>
+   </If>
+</Subroutine>
+
+<Subroutine name="fio_fiod_channel_reservation_get" description="Call fio_fiod_channel_reservation_get()" >
+   <Function funcName="fio_fiod_channel_reservation_get" 
+             return="$returnCode"
+             errno="$errno"
+             p1="$fio_handle"
+             p2="$fiod_handle"
+			    p3="$fio_view"
+			    p4="$chan_res"
+             p5="!sizeof($chan_res)" />
+   <If expression="$returnCode EQ %-1">
+      <Then>
+      <Print>Function fio_fiod_channel_reservation_get() failed</Print>
+      <Call ref="Error_Handler" />
+      </Then>
+   <Else>
+      <Call ref="Success_Handler" />
+   </Else>
+   </If>
+</Subroutine>
+
+<Subroutine name="fio_fiod_channel_reservation_set" description="Call fio_fiod_channel_reservation_set()" >
+   <Function funcName="fio_fiod_channel_reservation_set" 
+             return="$returnCode"
+             errno="$errno"
+             p1="$fio_handle"
+             p2="$fiod_handle"
+			    p3="$chan_res"
+             p4="!sizeof($chan_res)" />
+   <If expression="$returnCode EQ %-1">
+      <Then>
+      <Print>Function fio_fiod_channel_reservation_set() failed</Print>
+      <Call ref="Error_Handler" />
+      </Then>
+   <Else>
+      <Call ref="Success_Handler" />
+   </Else>
+   </If>
+</Subroutine>
+
+<Subroutine name="fio_fiod_cmu_config_change_count" description="Call fio_fiod_cmu_config_change_count()" >
+   <Function funcName="fio_fiod_cmu_config_change_count"
+             return="$config_chg"
+             errno="$errno"
+             p1="$fio_handle"
+             p2="$fiod_handle" />
+   <If expression="$config_chg EQ %-1">
+      <Then>
+      <Print>Function fio_fiod_cmu_config_change_count() failed</Print>
+      <Call ref="Error_Handler" />
+      </Then>
+   <Else>
+      <Format var="$config_chg" />
+      <Call ref="Success_Handler" />
+   </Else>
+   </If>
+</Subroutine>
+
+<Subroutine name="fio_fiod_cmu_dark_channel_get" description="Call fio_fiod_cmu_dark_channel_get()" >
+   <Function funcName="fio_fiod_cmu_dark_channel_get"
+             return="$returnCode"
+             errno="$errno"
+             p1="$fio_handle"
+             p2="$fiod_handle"
+			    p3="$fio_view"
+			    p4="$dark_mask" />
+   <If expression="$returnCode EQ %-1">
+      <Then>
+      <Print>Function fio_fiod_cmu_dark_channel_get() failed</Print>
+      <Call ref="Error_Handler" />
+      </Then>
+   <Else>
+      <Call ref="Success_Handler" />
+   </Else>
+   </If>
+</Subroutine>
+
+<Subroutine name="fio_fiod_cmu_dark_channel_set" description="Call fio_fiod_cmu_dark_channel_set()" >
+   <Function funcName="fio_fiod_cmu_dark_channel_set"
+             return="$returnCode"
+             errno="$errno"
+             p1="$fio_handle"
+             p2="$fiod_handle"
+			    p3="$dark_mask" />
+   <If expression="$returnCode EQ %-1">
+      <Then>
+      <Print>Function fio_fiod_cmu_dark_channel_set() failed</Print>
+      <Call ref="Error_Handler" />
+      </Then>
+   <Else>
+      <Call ref="Success_Handler" />
+   </Else>
+   </If>
+</Subroutine>
+
+<Subroutine name="fio_fiod_cmu_fault_get" description="Call fio_fiod_cmu_fault_get()" >
+   <Function funcName="fio_fiod_cmu_fault_get"
+             return="$returnCode"
+             errno="$errno"
+             p1="$fio_handle"
+             p2="$fiod_handle"
+			    p3="$fio_view"
+			    p4="$cmu_fsa" />
+   <If expression="$returnCode EQ %-1">
+      <Then>
+      <Print>Function fio_fiod_cmu_fault_get() failed</Print>
+      <Call ref="Error_Handler" />
+      </Then>
+   <Else>
+      <Call ref="Success_Handler" />
+   </Else>
+   </If>
+</Subroutine>
+
+<Subroutine name="fio_fiod_cmu_fault_set" description="Call fio_fiod_cmu_fault_set()" >
+   <Function funcName="fio_fiod_cmu_fault_set"
+             return="$returnCode"
+             errno="$errno"
+             p1="$fio_handle"
+             p2="$fiod_handle"
+			    p3="$cmu_fsa" />
+   <If expression="$returnCode EQ %-1">
+      <Then>
+      <Print>Function fio_fiod_cmu_fault_set() failed</Print>
+      <Call ref="Error_Handler" />
+      </Then>
+   <Else>
+      <Call ref="Success_Handler" />
+   </Else>
+   </If>
+</Subroutine>
+
+<Subroutine name="fio_fiod_commit_outputs_set" description="Call fio_fiod_commit_outputs_set()" >
+   <Function funcName="fio_fiod_commit_outputs_set"
+             return="$returnCode"
+             errno="$errno"
+             p1="$fio_handle" />
+   <If expression="$returnCode EQ %-1">
+      <Then>
+      <Print>Function fio_fiod_commit_outputs_set() failed</Print>
+      <Call ref="Error_Handler" />
+      </Then>
+   <Else>
+      <Call ref="Success_Handler" />
+   </Else>
+   </If>
+</Subroutine>
+
+<Subroutine name="fio_fiod_deregister" description="Call fio_fiod_deregister()" >
+   <Function funcName="fio_fiod_deregister"
+             return="$returnCode"
+             errno="$errno"
+             p1="$fio_handle"
+             p2="$fiod_handle" />
+   <If expression="$returnCode EQ %-1">
+      <Then>
+      <Print>Function fio_fiod_deregister() failed</Print>
+      <Call ref="Error_Handler" />
+      </Then>
+   <Else>
+      <Call ref="Success_Handler" />
+   </Else>
+   </If>
+</Subroutine>
+
+<Subroutine name="fio_fiod_disable" description="Call fio_fiod_disable()" >
+   <Function funcName="fio_fiod_disable"
+             return="$returnCode"
+             errno="$errno"
+             p1="$fio_handle"
+             p2="$fiod_handle" />
+   <If expression="$returnCode EQ %-1">
+      <Then>
+      <Print>Function fio_fiod_disable() failed</Print>
+      <Call ref="Error_Handler" />
+      </Then>
+   <Else>
+      <Call ref="Success_Handler" />
+   </Else>
+   </If>
+</Subroutine>
+
+<Subroutine name="fio_fiod_enable" description="Call fio_fiod_enable()" >
+   <Function funcName="fio_fiod_enable"
+             return="$returnCode"
+             errno="$errno"
+             p1="$fio_handle"
+             p2="$fiod_handle" />
+   <If expression="$returnCode EQ %-1">
+      <Then>
+      <Print>Function fio_fiod_enable() failed</Print>
+      <Call ref="Error_Handler" />
+      </Then>
+   <Else>
+      <Call ref="Success_Handler" />
+   </Else>
+   </If>
+</Subroutine>
+
+<Subroutine name="fio_fiod_frame_notify_deregister" description="Call fio_fiod_frame_notify_deregister()" >
+   <Function funcName="fio_fiod_frame_notify_deregister"
+             return="$returnCode"
+             errno="$errno"
+             p1="$fio_handle"
+             p2="$fiod_handle"
+             p3="$frame_number" />
+   <If expression="$returnCode EQ %-1">
+      <Then>
+      <Print>Function fio_fiod_frame_notify_deregister() failed</Print>
+      <Call ref="Error_Handler" />
+      </Then>
+   <Else>
+      <Call ref="Success_Handler" />
+   </Else>
+   </If>
+</Subroutine>
+
+<Subroutine name="fio_fiod_frame_notify_register" description="Call fio_fiod_frame_notify_register()" >
+   <Function funcName="fio_fiod_frame_notify_register"
+             return="$returnCode"
+             errno="$errno"
+             p1="$fio_handle"
+             p2="$fiod_handle"
+             p3="$frame_number"
+             p4="$notify_freq" />
+   <If expression="$returnCode EQ %-1">
+      <Then>
+      <Print>Function fio_fiod_frame_notify_register() failed</Print>
+      <Call ref="Error_Handler" />
+      </Then>
+   <Else>
+      <Call ref="Success_Handler" />
+   </Else>
+   </If>
+</Subroutine>
+
+<Subroutine name="fio_fiod_frame_read" description="Call fio_fiod_frame_read()" >
+   <Function funcName="fio_fiod_frame_read"
+             return="$bytes_read"
+             errno="$errno"
+             p1="$fio_handle"
+             p2="$fiod_handle"
+             p3="$frame_number"
+             p4="$seq_number"
+             p5="$read_buffer"
+             p6="!sizeof($read_buffer)"
+             p7="$timeout" />
+   <If expression="$bytes_read EQ %-1">
+      <Then>
+      <Print>Function fio_fiod_frame_read() failed</Print>
+      <Call ref="Error_Handler" />
+      </Then>
+   <Else>
+      <Format var="$frame_number" />
+      <Format var="$bytes_read" />
+      <Format var="$read_buffer" />
+      <Format var="$seq_number" />
+      <Call ref="Success_Handler" />
+   </Else>
+   </If>
+</Subroutine>
+
+<Subroutine name="fio_fiod_frame_schedule_get" description="Call fio_fiod_frame_schedule_get()" >
+   <Function funcName="fio_fiod_frame_schedule_get"
+             return="$returnCode"
+             errno="$errno"
+             p1="$fio_handle"
+             p2="$fiod_handle"
+			    p3="$fio_view"
+             p4="$frame_sched"
+             p5="!sizeof($frame_sched)" />
+   <If expression="$returnCode EQ %-1">
+      <Then>
+      <Print>Function fio_fiod_frame_schedule_get() failed</Print>
+      <Call ref="Error_Handler" />
+      </Then>
+   <Else>
+      <Format var="$frame_sched" />
+      <Call ref="Success_Handler" />
+   </Else>
+   </If>
+</Subroutine>
+
+<Subroutine name="fio_fiod_frame_schedule_set" description="Call fio_fiod_frame_schedule_set()" >
+   <Function funcName="fio_fiod_frame_schedule_set"
+             return="$returnCode"
+             errno="$errno"
+             p1="$fio_handle"
+             p2="$fiod_handle"
+             p3="$frame_sched"
+             p4="!sizeof($frame_sched)" />
+   <If expression="$returnCode EQ %-1">
+      <Then>
+      <Print>Function fio_fiod_frame_schedule_set() failed</Print>
+      <Call ref="Error_Handler" />
+      </Then>
+   <Else>
+      <Call ref="Success_Handler" />
+   </Else>
+   </If>
+</Subroutine>
+
+<Subroutine name="fio_fiod_frame_size" description="Call fio_fiod_frame_size()" >
+   <Function funcName="fio_fiod_frame_size"
+             return="$frame_size"
+             errno="$errno"
+             p1="$fio_handle"
+             p2="$fiod_handle"
+             p3="$frame_number"
+             p4="$seq_number" />
+   <If expression="$frame_size EQ %-1">
+      <Then>
+      <Print>Function fio_fiod_frame_size() failed</Print>
+      <Call ref="Error_Handler" />
+      </Then>
+   <Else>
+      <Format var="$frame_size" />
+      <Format var="$seq_number" />
+      <Call ref="Success_Handler" />
+   </Else>
+   </If>
+</Subroutine>
+
+<Subroutine name="fio_fiod_frame_write" description="Call fio_fiod_frame_write()" >
+   <Function funcName="fio_fiod_frame_write"
+             return="$returnCode"
+             errno="$errno"
+             p1="$fio_handle"
+             p2="$fiod_handle"
+             p3="$frame_number"
+             p4="$write_buffer"
+             p5="$write_count" />
+   <If expression="$returnCode EQ %-1">
+      <Then>
+      <Print>Function fio_fiod_frame_write() failed</Print>
+      <Call ref="Error_Handler" />
+      </Then>
+   <Else>
+      <Call ref="Success_Handler" />
+   </Else>
+   </If>
+</Subroutine>
+
+<Subroutine name="fio_fiod_inputs_filter_get" description="Call fio_fiod_inputs_filter_get()" >
+   <Function funcName="fio_fiod_inputs_filter_get"
+             return="$returnCode"
+             errno="$errno"
+             p1="$fio_handle"
+             p2="$fiod_handle"
+			    p3="$fio_view"
+             p4="$input_filter"
+             p5="!sizeof($input_filter)" />
+   <If expression="$returnCode EQ %-1">
+      <Then>
+      <Print>Function fio_fiod_inputs_filter_get() failed</Print>
+      <Call ref="Error_Handler" />
+      </Then>
+   <Else>
+      <Format var="$input_filter" />
+      <Call ref="Success_Handler" />
+   </Else>
+   </If>
+</Subroutine>
+
+<Subroutine name="fio_fiod_inputs_filter_set" description="Call fio_fiod_inputs_filter_set()" >
+   <Function funcName="fio_fiod_inputs_filter_set"
+             return="$returnCode"
+             errno="$errno"
+             p1="$fio_handle"
+             p2="$fiod_handle"
+             p3="$input_filter"
+             p4="!sizeof($input_filter)" />
+   <If expression="$returnCode EQ %-1">
+      <Then>
+      <Print>Function fio_fiod_inputs_filter_set() failed</Print>
+      <Call ref="Error_Handler" />
+      </Then>
+   <Else>
+      <Format var="$input_filter" />
+      <Call ref="Success_Handler" />
+   </Else>
+   </If>
+</Subroutine>
+
+<Subroutine name="fio_fiod_inputs_get" description="Call fio_fiod_inputs_get()" >
+   <Function funcName="fio_fiod_inputs_get"
+             return="$returnCode"
+             errno="$errno"
+             p1="$fio_handle"
+             p2="$fiod_handle"
+			    p3="$input_type"
+             p4="$inputs"
+             p5="!sizeof($inputs)" />
+   <If expression="$returnCode EQ %-1">
+      <Then>
+      <Print>Function fio_fiod_inputs_get() failed</Print>
+      <Call ref="Error_Handler" />
+      </Then>
+   <Else>
+      <Format var="$input_type" />
+      <Format var="$inputs" />
+      <Call ref="Success_Handler" />
+   </Else>
+   </If>
+</Subroutine>
+
+<Subroutine name="fio_fiod_inputs_trans_get" description="Call fio_fiod_inputs_trans_get()" >
+   <Function funcName="fio_fiod_inputs_trans_get"
+             return="$returnCode"
+             errno="$errno"
+             p1="$fio_handle"
+             p2="$fiod_handle"
+			    p3="$fio_view"
+             p4="$inputs"
+             p5="!sizeof($inputs)" />
+   <If expression="$returnCode EQ %-1">
+      <Then>
+      <Print>Function fio_fiod_inputs_trans_get() failed</Print>
+      <Call ref="Error_Handler" />
+      </Then>
+   <Else>
+      <Format var="$input_type" />
+      <Call ref="Success_Handler" />
+   </Else>
+   </If>
+</Subroutine>
+
+<Subroutine name="fio_fiod_inputs_trans_read" description="Call fio_fiod_inputs_trans_read()" >
+   <Function funcName="fio_fiod_inputs_trans_read"
+             return="$trans_count"
+             errno="$errno"
+             p1="$fio_handle"
+             p2="$fiod_handle"
+			    p3="$trans_status"
+             p4="$trans_buf"
+             p5="!sizeof($trans_buf)" />
+   <If expression="$trans_count EQ %-1">
+      <Then>
+      <Print>Function fio_fiod_inputs_trans_read() failed</Print>
+      <Call ref="Error_Handler" />
+      </Then>
+   <Else>
+      <Format var="$trans_status" />
+      <Format var="$trans_buf" />
+      <Format var="$trans_count" />
+      <Call ref="Success_Handler" />
+   </Else>
+   </If>
+</Subroutine>
+
+<Subroutine name="fio_fiod_inputs_trans_set" description="Call fio_fiod_inputs_trans_set()" >
+   <Function funcName="fio_fiod_inputs_trans_set"
+             return="$returnCode"
+             errno="$errno"
+             p1="$fio_handle"
+             p2="$fiod_handle"
+             p3="$inputs"
+             p4="!sizeof($inputs)" />
+   <If expression="$returnCode EQ %-1">
+      <Then>
+      <Print>Function fio_fiod_inputs_trans_set() failed</Print>
+      <Call ref="Error_Handler" />
+      </Then>
+   <Else>
+      <Format var="$inputs" />
+      <Call ref="Success_Handler" />
+   </Else>
+   </If>
+</Subroutine>
+
+<Subroutine name="fio_fiod_mmu_flash_bit_get" description="Call fio_fiod_mmu_flash_bit_get()" >
+   <Function funcName="fio_fiod_mmu_flash_bit_get"
+             return="$returnCode"
+             errno="$errno"
+             p1="$fio_handle"
+             p2="$fiod_handle"
+             p3="$fio_view"
+             p4="$flash_bit" />
+   <If expression="$returnCode EQ %-1">
+      <Then>
+      <Print>Function fio_fiod_mmu_flash_bit_get() failed</Print>
+      <Call ref="Error_Handler" />
+      </Then>
+   <Else>
+      <Format var="$flash_bit" />
+      <Call ref="Success_Handler" />
+   </Else>
+   </If>
+</Subroutine>
+
+<Subroutine name="fio_fiod_mmu_flash_bit_set" description="Call fio_fiod_mmu_flash_bit_set()" >
+   <Function funcName="fio_fiod_mmu_flash_bit_set"
+             return="$returnCode"
+             errno="$errno"
+             p1="$fio_handle"
+             p2="$fiod_handle"
+             p3="$flash_bit" />
+   <If expression="$returnCode EQ %-1">
+      <Then>
+      <Print>Function fio_fiod_mmu_flash_bit_set() failed</Print>
+      <Call ref="Error_Handler" />
+      </Then>
+   <Else>
+      <Call ref="Success_Handler" />
+   </Else>
+   </If>
+</Subroutine>
+
+<Subroutine name="fio_fiod_outputs_get" description="Call fio_fiod_outputs_get()" >
+   <Function funcName="fio_fiod_outputs_get"
+             return="$returnCode"
+             errno="$errno"
+             p1="$fio_handle"
+             p2="$fiod_handle"
+             p3="$fio_view"
+             p4="$ls_plus"
+             p5="$ls_minus"
+             p6="!sizeof($ls_plus)" />
+   <If expression="$returnCode EQ %-1">
+      <Then>
+      <Print>Function fio_fiod_outputs_get() failed</Print>
+      <Call ref="Error_Handler" />
+      </Then>
+   <Else>
+      <Format var="$ls_plus" />
+      <Format var="$ls_minus" />
+      <Call ref="Success_Handler" />
+   </Else>
+   </If>
+</Subroutine>
+
+<Subroutine name="fio_fiod_outputs_reservation_get" description="Call fio_fiod_outputs_reservation_get()" >
+   <Function funcName="fio_fiod_outputs_reservation_get"
+             return="$returnCode"
+             errno="$errno"
+             p1="$fio_handle"
+             p2="$fiod_handle"
+             p3="$fio_view"
+             p4="$outputs"
+             p5="!sizeof($outputs)" />
+   <If expression="$returnCode EQ %-1">
+      <Then>
+      <Print>Function fio_fiod_outputs_reservation_get() failed</Print>
+      <Call ref="Error_Handler" />
+      </Then>
+   <Else>
+      <Format var="$outputs" />
+      <Call ref="Success_Handler" />
+   </Else>
+   </If>
+</Subroutine>
+
+<Subroutine name="fio_fiod_outputs_reservation_set" description="Call fio_fiod_outputs_reservation_set()" >
+   <Function funcName="fio_fiod_outputs_reservation_set"
+             return="$returnCode"
+             errno="$errno"
+             p1="$fio_handle"
+             p2="$fiod_handle"
+             p3="$outputs"
+             p4="!sizeof($outputs)" />
+   <If expression="$returnCode EQ %-1">
+      <Then>
+      <Print>Function fio_fiod_outputs_reservation_set() failed</Print>
+      <Call ref="Error_Handler" />
+      </Then>
+   <Else>
+      <Call ref="Success_Handler" />
+   </Else>
+   </If>
+</Subroutine>
+
+<Subroutine name="fio_fiod_outputs_set" description="Call fio_fiod_outputs_set()" >
+   <Function funcName="fio_fiod_outputs_set"
+             return="$returnCode"
+             errno="$errno"
+             p1="$fio_handle"
+             p2="$fiod_handle"
+             p3="$ls_plus"
+             p4="$ls_minus"
+             p5="!sizeof($ls_plus)" />
+   <If expression="$returnCode EQ %-1">
+      <Then>
+      <Print>Function fio_fiod_outputs_set() failed</Print>
+      <Call ref="Error_Handler" />
+      </Then>
+   <Else>
+      <Call ref="Success_Handler" />
+   </Else>
+   </If>
+</Subroutine>
+
+<Subroutine name="fio_fiod_register" description="Call fio_fiod_register()" >
+   <Function funcName="fio_fiod_register"
+             return="$fiod_handle"
+             errno="$errno"
+             p1="$fio_handle"
+             p2="$fio_port"
+             p3="$fio_device" />
+   <If expression="$fiod_handle EQ %-1">
+      <Then>
+      <Print>Function fio_fiod_register() failed</Print>
+      <Call ref="Error_Handler" />
+      </Then>
+   <Else>
+      <Call ref="Success_Handler" />
+   </Else>
+   </If>
+</Subroutine>
+
+<Subroutine name="fio_fiod_status_get" description="Call fio_fiod_status_get()" >
+   <Function funcName="fio_fiod_status_get"
+             return="$returnCode"
+             errno="$errno"
+             p1="$fio_handle"
+             p2="$fiod_handle"
+             p3="$fiod_status" />
+   <If expression="$returnCode EQ %-1">
+      <Then>
+      <Print>Function fio_fiod_status_get() failed</Print>
+      <Call ref="Error_Handler" />
+      </Then>
+   <Else>
+      <Format var="$fiod_status" />
+      <Call ref="Success_Handler" />
+   </Else>
+   </If>
+</Subroutine>
+
+<Subroutine name="fio_fiod_status_reset" description="Call fio_fiod_status_reset()" >
+   <Function funcName="fio_fiod_status_reset"
+             return="$returnCode"
+             errno="$errno"
+             p1="$fio_handle"
+             p2="$fiod_handle" />
+   <If expression="$returnCode EQ %-1">
+      <Then>
+      <Print>Function fio_fiod_status_reset() failed</Print>
+      <Call ref="Error_Handler" />
+      </Then>
+   <Else>
+      <Call ref="Success_Handler" />
+   </Else>
+   </If>
+</Subroutine>
+
+<Subroutine name="fio_fiod_ts_fault_monitor_get" description="Call fio_fiod_ts_fault_monitor_get()" >
+   <Function funcName="fio_fiod_ts_fault_monitor_get"
+             return="$returnCode"
+             errno="$errno"
+             p1="$fio_handle"
+             p2="$fiod_handle"
+             p3="$fio_view"
+             p4="$fm_state" />
+   <If expression="$returnCode EQ %-1">
+      <Then>
+      <Print>Function fio_fiod_ts_fault_monitor_get() failed</Print>
+      <Call ref="Error_Handler" />
+      </Then>
+   <Else>
+      <Format var="$fm_state" />
+      <Call ref="Success_Handler" />
+   </Else>
+   </If>
+</Subroutine>
+
+<Subroutine name="fio_fiod_ts_fault_monitor_set" description="Call fio_fiod_ts_fault_monitor_set()" >
+   <Function funcName="fio_fiod_ts_fault_monitor_set"
+             return="$returnCode"
+             errno="$errno"
+             p1="$fio_handle"
+             p2="$fiod_handle"
+             p3="$fm_state" />
+   <If expression="$returnCode EQ %-1">
+      <Then>
+      <Print>Function fio_fiod_ts_fault_monitor_set() failed</Print>
+      <Call ref="Error_Handler" />
+      </Then>
+   <Else>
+      <Call ref="Success_Handler" />
+   </Else>
+   </If>
+</Subroutine>
+
+<Subroutine name="fio_fiod_ts1_volt_monitor_get" description="Call fio_fiod_ts1_volt_monitor_get()" >
+   <Function funcName="fio_fiod_ts1_volt_monitor_get"
+             return="$returnCode"
+             errno="$errno"
+             p1="$fio_handle"
+             p2="$fiod_handle"
+             p3="$fio_view"
+             p4="$vm_state" />
+   <If expression="$returnCode EQ %-1">
+      <Then>
+      <Print>Function fio_fiod_ts1_volt_monitor_get() failed</Print>
+      <Call ref="Error_Handler" />
+      </Then>
+   <Else>
+      <Format var="$vm_state" />
+      <Call ref="Success_Handler" />
+   </Else>
+   </If>
+</Subroutine>
+
+<Subroutine name="fio_fiod_ts1_volt_monitor_set" description="Call fio_fiod_ts1_volt_monitor_set()" >
+   <Function funcName="fio_fiod_ts1_volt_monitor_set"
+             return="$returnCode"
+             errno="$errno"
+             p1="$fio_handle"
+             p2="$fiod_handle"
+             p3="$vm_state" />
+   <If expression="$returnCode EQ %-1">
+      <Then>
+      <Print>Function fio_fiod_ts1_volt_monitor_set() failed</Print>
+      <Call ref="Error_Handler" />
+      </Then>
+   <Else>
+      <Call ref="Success_Handler" />
+   </Else>
+   </If>
+</Subroutine>
+
+<Subroutine name="fio_fiod_wd_deregister" description="Call fio_fiod_wd_deregister()" >
+   <Function funcName="fio_fiod_wd_deregister"
+             return="$returnCode"
+             errno="$errno"
+             p1="$fio_handle"
+             p2="$fiod_handle" />
+   <If expression="$returnCode EQ %-1">
+      <Then>
+      <Print>Function fio_fiod_wd_deregister() failed</Print>
+      <Call ref="Error_Handler" />
+      </Then>
+   <Else>
+      <Call ref="Success_Handler" />
+   </Else>
+   </If>
+</Subroutine>
+
+<Subroutine name="fio_fiod_wd_heartbeat" description="Call fio_fiod_wd_heartbeat()" >
+   <Function funcName="fio_fiod_wd_heartbeat"
+             return="$returnCode"
+             errno="$errno"
+             p1="$fio_handle"
+             p2="$fiod_handle" />
+   <If expression="$returnCode EQ %-1">
+      <Then>
+      <Print>Function fio_fiod_wd_heartbeat() failed</Print>
+      <Call ref="Error_Handler" />
+      </Then>
+   <Else>
+      <Call ref="Success_Handler" />
+   </Else>
+   </If>
+</Subroutine>
+
+<Subroutine name="fio_fiod_wd_register" description="Call fio_fiod_wd_register()" >
+   <Function funcName="fio_fiod_wd_register"
+             return="$returnCode"
+             errno="$errno"
+             p1="$fio_handle"
+             p2="$fiod_handle" />
+   <If expression="$returnCode EQ %-1">
+      <Then>
+      <Print>Function fio_fiod_wd_register() failed</Print>
+      <Call ref="Error_Handler" />
+      </Then>
+   <Else>
+      <Call ref="Success_Handler" />
+   </Else>
+   </If>
+</Subroutine>
+
+<Subroutine name="fio_fiod_wd_reservation_get" description="Call fio_fiod_wd_reservation_get()" >
+   <Function funcName="fio_fiod_wd_reservation_get"
+             return="$returnCode"
+             errno="$errno"
+             p1="$fio_handle"
+             p2="$fiod_handle"
+             p3="$output_point" />
+   <If expression="$returnCode EQ %-1">
+      <Then>
+      <Print>Function fio_fiod_wd_reservation_get() failed</Print>
+      <Call ref="Error_Handler" />
+      </Then>
+   <Else>
+      <Format var="$output_point" />
+      <Call ref="Success_Handler" />
+   </Else>
+   </If>
+</Subroutine>
+
+<Subroutine name="fio_fiod_wd_reservation_set" description="Call fio_fiod_wd_reservation_set()" >
+   <Function funcName="fio_fiod_wd_reservation_set"
+             return="$returnCode"
+             errno="$errno"
+             p1="$fio_handle"
+             p2="$fiod_handle"
+             p3="$output_point" />
+   <If expression="$returnCode EQ %-1">
+      <Then>
+      <Print>Function fio_fiod_wd_reservation_set() failed</Print>
+      <Call ref="Error_Handler" />
+      </Then>
+   <Else>
+      <Call ref="Success_Handler" />
+   </Else>
+   </If>
+</Subroutine>
+
+<Subroutine name="fio_hm_deregister" description="Call fio_hm_deregister()" >
+   <Function funcName="fio_hm_deregister"
+             return="$returnCode"
+             errno="$errno"
+             p1="$fio_handle" />
+   <If expression="$returnCode EQ %-1">
+      <Then>
+      <Print>Function fio_hm_deregister() failed</Print>
+      <Call ref="Error_Handler" />
+      </Then>
+   <Else>
+      <Call ref="Success_Handler" />
+   </Else>
+   </If>
+</Subroutine>
+
+<Subroutine name="fio_hm_fault_reset" description="Call fio_hm_fault_reset()" >
+   <Function funcName="fio_hm_fault_reset"
+             return="$returnCode"
+             errno="$errno"
+             p1="$fio_handle" />
+   <If expression="$returnCode EQ %-1">
+      <Then>
+      <Print>Function fio_hm_fault_reset() failed</Print>
+      <Call ref="Error_Handler" />
+      </Then>
+   <Else>
+      <Call ref="Success_Handler" />
+   </Else>
+   </If>
+</Subroutine>
+
+<Subroutine name="fio_hm_heartbeat" description="Call fio_hm_heartbeat()" >
+   <Function funcName="fio_hm_heartbeat"
+             return="$returnCode"
+             errno="$errno"
+             p1="$fio_handle" />
+   <If expression="$returnCode EQ %-1">
+      <Then>
+      <Print>Function fio_hm_heartbeat() failed</Print>
+      <Call ref="Error_Handler" />
+      </Then>
+   <Else>
+      <Call ref="Success_Handler" />
+   </Else>
+   </If>
+</Subroutine>
+
+<Subroutine name="fio_hm_register" description="Call fio_hm_register()" >
+   <Function funcName="fio_hm_register"
+             return="$returnCode"
+             errno="$errno"
+             p1="$fio_handle"
+             p2="$hm_timeout" />
+   <If expression="$returnCode EQ %-1">
+      <Then>
+      <Print>Function fio_hm_register() failed</Print>
+      <Call ref="Error_Handler" />
+      </Then>
+   <Else>
+      <Call ref="Success_Handler" />
+   </Else>
+   </If>
+</Subroutine>
+
+<Subroutine name="fio_query_fiod" description="Call fio_query_fiod()" >
+   <Function funcName="fio_query_fiod"
+             return="$fiod_query"
+             errno="$errno"
+             p1="$fio_handle"
+             p2="$fio_port"
+             p3="$fio_device" />
+   <If expression="$fiod_query EQ %-1">
+      <Then>
+      <Print>Function fio_query_fiod() failed</Print>
+      <Call ref="Error_Handler" />
+      </Then>
+   <Else>
+      <Format var="$fiod_query" />
+      <Call ref="Success_Handler" />
+   </Else>
+   </If>
+</Subroutine>
+
+<Subroutine name="fio_query_frame_notify_status" description="Call fio_query_frame_notify_status()" >
+   <Function funcName="fio_query_frame_notify_status"
+             return="$returnCode"
+             errno="$errno"
+             p1="$fio_handle"
+             p2="$notify_info" />
+   <If expression="$returnCode EQ %-1">
+      <Then>
+      <Print>Function fio_query_frame_notify_status() failed</Print>
+      <Call ref="Error_Handler" />
+      </Then>
+   <Else>
+      <Format var="$notify_info" />
+      <Call ref="Success_Handler" />
+   </Else>
+   </If>
+</Subroutine>
+
+<Subroutine name="fio_register" description="Call fio_register()" >
+   <Function funcName="fio_register"
+             return="$fio_handle"
+             errno="$errno" />
+   <If expression="$fio_handle EQ %-1">
+      <Then>
+      <Print>Function fio_register() failed</Print>
+      <Call ref="Error_Handler" />
+      </Then>
+   <Else>
+      <Call ref="Success_Handler" />
+   </Else>
+   </If>
+</Subroutine>
+
+<Subroutine name="fio_set_local_time_offset" description="Call fio_set_local_time_offset()" >
+   <Function funcName="fio_set_local_time_offset"
+             return="$returnCode"
+             errno="$errno"
+             p1="$fio_handle"
+             p2="$time_offset" />
+   <If expression="$returnCode EQ %-1">
+      <Then>
+      <Print>Function fio_set_local_time_offset() failed</Print>
+      <Call ref="Error_Handler" />
+      </Then>
+   <Else>
+      <Call ref="Success_Handler" />
+   </Else>
+   </If>
+</Subroutine>
+
+<!--
+ test case(s)
+-->
+<TestCase name="Case_C3010" description="C3010: General FIO Operations">
+   <!-- set abort_mode to FALSE to attempt 'invalid' API function operations;
+        script will proceed (not abort) in these cases to allow validation
+        of the (forced) error -->
+   <!-- when abort_mode is TRUE, script operates normally (abort on error) -->
+   <Set var="$abort_mode" value="#TRUE"/>
+   <Set var="$failed"     value="#FALSE"/>
+   
+   <Set var="$fio_view"   value="#FIO_VIEW_SYSTEM"/>
+   <Set var="$input_type" value="#FIO_INPUTS_RAW"/>
+
+   <!-- FIO 332 testing: register with the FIO API -->
+   <Call ref="fio_register" setup="API_Init_Variables"/>
+   
+   <!-- query a 332-type FIO on SP5 -->
+   <Set var="$fio_port"   value="#FIO_SP5"/>
+   <Set var="$fio_device" value="#FIO332"/>
+   <Call ref="fio_query_fiod" setup="API_Init_Variables"/>
+   <If expression="$fiod_query NE %1">
+      <Then>
+      <Print >FIO332 not available on SP5</Print>
+      <Abort status="FAIL" />
+      </Then>
+   </If>
+   
+   <!-- register a 332-type FIO on SP5 -->
+   <Set var="$fio_port"   value="#FIO_SP5"/>
+   <Set var="$fio_device" value="#FIO332"/>
+   <Call ref="fio_fiod_register" setup="API_Init_Variables"/>
+   
+   <!-- confirm that no communications are occuring yet -->
+   <Call ref="fio_fiod_status_reset" setup="API_Init_Variables"/>
+   <Sleep time="%5"/>
+   <Call ref="fio_fiod_status_get" setup="API_Init_Variables"/>
+   <If expression="$fiod_status.success_rx NE %0">
+      <Then>
+      <Print >Comm prior to enable (332-1)</Print>
+      <Abort status="FAIL" />
+      </Then>
+   </If>
+   <If expression="$fiod_status.error_rx NE %0">
+      <Then>
+      <Print >Comm prior to enable (332-2)</Print>
+      <Abort status="FAIL" />
+      </Then>
+   </If>
+   
+   <!-- attempt to register an incompatible device on SP5 (NEMA DR BIU)-->
+   <Set var="$abort_mode" value="#FALSE"/>
+   <Set var="$fio_port"   value="#FIO_SP5"/>
+   <Set var="$fio_device" value="#FIODR1"/>
+   <Call ref="fio_fiod_register" setup="API_Init_Variables"/>
+   <If expression="$errno NE %61"> <!-- ECONNREFUSED -->
+      <Then>
+      <Print >Incompatible assignment succeeded</Print>
+      <Abort status="FAIL" />
+      </Then>
+   </If>
+   <Set var="$abort_mode" value="#TRUE"/>
+   
+   <!-- setup FIO332 SDLC response messages -->
+   <FIOResponse file="@FIO_r177" frame="%177" description="(FIO C49->R177)"/>
+   <FIOResponse file="@FIO_r180" frame="%180" description="(FIO C52->R180)"/>
+   <FIOResponse file="@FIO_r183" frame="%183" description="(FIO C55->R183)"/>
+  
+   <!-- enable comm -->
+   <Call ref="fio_fiod_enable" setup="API_Init_Variables"/>
+   <Sleep time="%1"/>
+   
+   <!-- validate command messages -->
+   <Dump dump="CMDMSG" file="@FIO_c49" frame="%49"/> 
+   <Dump dump="CMDMSG" file="@FIO_c52" frame="%52"/> 
+   <Dump dump="CMDMSG" file="@FIO_c55" frame="%55"/> 
+   <If expression="!CMDMSGCompare(@FIO_c49,%49) EQ #FALSE">
+      <Then>
+      <Print>CMDMSG 49 incorrect</Print>
+      <Dump dump="CMDMSG" force="#TRUE" file="@FIO_c49_err" frame="%49"/>
+      <Abort status="FAIL" />
+      </Then>
+   </If>
+   <If expression="!CMDMSGCompare(@FIO_c52,%52) EQ #FALSE">
+      <Then>
+      <Print>CMDMSG 52 incorrect</Print>
+      <Dump dump="CMDMSG" force="#TRUE" file="@FIO_c52_err" frame="%52"/>
+      <Abort status="FAIL" />
+      </Then>
+   </If>
+   <If expression="!CMDMSGCompare(@FIO_c55,%55) EQ #FALSE">
+      <Then>
+      <Print>CMDMSG 55 incorrect</Print>
+      <Dump dump="CMDMSG" force="#TRUE" file="@FIO_c55_err" frame="%55"/>
+      <Abort status="FAIL" />
+      </Then>
+   </If>
+
+   <!-- check comm status -->
+   <Sleep time="%10"/>
+   <Call ref="fio_fiod_status_get" setUp="API_Init_Variables"/>
+   <If expression="$fiod_status.success_rx EQ %0">
+      <Then>
+      <Print >No comm (332)</Print>
+      <Abort status="FAIL" />
+      </Then>
+   </If>
+   <If expression="$fiod_status.error_rx NE %0">
+      <Then>
+      <Print >Comm errors (332)</Print>
+      <Abort status="FAIL" />
+      </Then>
+   </If>
+   
+   <!-- disable comm and verify -->
+   <Call ref="fio_fiod_disable"      setUp="API_Init_Variables"/>
+   <Call ref="fio_fiod_status_reset" setUp="API_Init_Variables"/>
+   <Call ref="fio_fiod_status_get"   setUp="API_Init_Variables"/>
+   <If expression="$fiod_status.success_rx NE %0">
+      <Then>
+      <Print >Comm not disabled (332-1)</Print>
+      <Abort status="FAIL" />
+      </Then>
+   </If>
+   <If expression="$fiod_status.error_rx NE %0">
+      <Then>
+      <Print >Comm not disabled (332-2)</Print>
+      <Abort status="FAIL" />
+      </Then>
+   </If>
+
+   <!-- deregister device and confirm no connection -->
+   <Call ref="fio_fiod_deregister" setUp="API_Init_Variables"/>
+   <Set var="$abort_mode" value="#FALSE"/>
+   <!-- (call to fio_fiod_status_get should fail) -->
+   <Call ref="fio_fiod_status_get" setUp="API_Init_Variables"/>
+   <Set var="$abort_mode" value="#TRUE"/>
+   
+   <!-- disconnect from FIO API -->
+   <Call ref="fio_deregister" setUp="API_Init_Variables"/>
+   
+</TestCase>
+
+<!--
+ test suite(s)
+-->
+<TestSuite name="All_Test_Cases" description="Run All Test Cases" >
+  <TestCaseRef ref="Case_C3010" />
+</TestSuite>
+
+</APIVSXML>
+
