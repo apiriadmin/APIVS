@@ -55,6 +55,8 @@ APIR3.1.1.2[26]	The API shall allow application programs to illuminate or
    
  Date      Revision    Description
  2/22/16   1.0         initial release
+ 2/24/16   1.1         second release
+ 5/10/16   1.2         third release (JMG)
 -->
 
 <Define var="$fpui_handle"  type="fpui_handle" />
@@ -75,8 +77,6 @@ APIR3.1.1.2[26]	The API shall allow application programs to illuminate or
 <Define var="$fpui_hdl_14"  type="fpui_handle" />
 <Define var="$fpui_hdl_15"  type="fpui_handle" />
 <Define var="$aux_handle"   type="fpui_aux_handle" />
-<Define var="$ver_string"   type="char []" size="%64" />
-<Define var="$fpui_ver"     type="int" />
 <Define var="$errno"        type="int" />
 <Define var="$returnCode"   type="int" />
 <Define var="$tab_clear"    type="int" />
@@ -217,32 +217,13 @@ APIR3.1.1.2[26]	The API shall allow application programs to illuminate or
 <Subroutine name="Return_To_FPM">
    <FPUIInput file="@Cxxxx_keyStar.txt" description="Provide keypresses for return to FPM" />
    <FPUIInput file="@Cxxxx_keyStar.txt" />
-   <FPUIInput file="@Cxxxx_keyEsc.txt" />
+   <FPUIInput file="@Cxxxx_keyESC.txt" />
    <Sleep time="%1" />
 </Subroutine>
 
 <!--
  subroutines to call API functions and verify return status
 -->
-<Subroutine name="fpui_apiver" description="Call fpui_apiver()" >
-   <Function funcName="fpui_apiver"
-             return="$ver_string"
-             errno="$errno"
-             p1="$fpui_handle"
-             p2="$fpui_ver" />
-   <If expression="$ver_string EQ $null_string" >
-      <Then>
-      <Print>Function fpui_apiver() failed</Print>
-      <Call ref="Error_Handler" />
-      </Then>
-   <Else>
-      <Format var="$fpui_ver" />
-      <Format var="$ver_string" />
-      <Call ref="Success_Handler" />
-   </Else>
-   </If>
-</Subroutine>
-
 <Subroutine name="fpui_clear" description="Call fpui_clear()" >
    <Function funcName="fpui_clear"
              return="$returnCode"
@@ -1208,11 +1189,11 @@ APIR3.1.1.2[26]	The API shall allow application programs to illuminate or
    <Set var="$flags"       value="#O_RDWR"/>
    
    <!-- check default FPM screen -->
-   <Dump dump="VD" file="@C2010_fpm_clr" /> 
-   <If expression="!VDCompare(@C2010_fpm_clr) EQ #FALSE">
+   <Dump dump="VD" file="@C2010_vd_fpm_default.txt" />
+   <If expression="!VDCompare(@C2010_vd_fpm_default.txt) EQ #FALSE">
       <Then>
       <Print>Default FPM screen incorrect</Print>
-      <Dump dump="VD" force="#TRUE" file="@C2010_fpm_clr_err" />
+      <Dump dump="VD" force="#TRUE" file="@C2010_vd_fpm_default_err.txt" />
       <Abort status="FAIL" />
       </Then>
    </If>
@@ -1320,11 +1301,11 @@ APIR3.1.1.2[26]	The API shall allow application programs to illuminate or
    <!-- select 'app' (0) and verify proper VD -->
    <FPUIInput file="@Cxxxx_key0.txt" description="Provide keypress [0] input" />
    <Sleep time="%1" />
-   <Dump dump="VD" file="@C2010_vd_00" /> 
-   <If expression="!VDCompare(@C2010_vd_00) EQ #FALSE">
+   <Dump dump="VD" file="@C2010_vd_00.txt" />
+   <If expression="!VDCompare(@C2010_vd_00.txt) EQ #FALSE">
       <Then>
       <Print>App (0) screen incorrect</Print>
-      <Dump dump="VD" force="#TRUE" file="@C2010_vd_00_err" />
+      <Dump dump="VD" force="#TRUE" file="@C2010_vd_00_err.txt" />
       <Abort status="FAIL" />
       </Then>
    </If>
@@ -1335,11 +1316,11 @@ APIR3.1.1.2[26]	The API shall allow application programs to illuminate or
    <!-- select 'app' (1) and verify proper VD -->
    <FPUIInput file="@Cxxxx_key1.txt" description="Provide keypress [1] input" />
    <Sleep time="%1" />
-   <Dump dump="VD" file="@C2010_vd_01" /> 
-   <If expression="!VDCompare(@C2010_vd_01) EQ #FALSE">
+   <Dump dump="VD" file="@C2010_vd_01.txt" />
+   <If expression="!VDCompare(@C2010_vd_01.txt) EQ #FALSE">
       <Then>
       <Print>App (1) screen incorrect</Print>
-      <Dump dump="VD" force="#TRUE" file="@C2010_vd_01_err" />
+      <Dump dump="VD" force="#TRUE" file="@C2010_vd_01_err.txt" />
       <Abort status="FAIL" />
       </Then>
    </If>
@@ -1350,11 +1331,11 @@ APIR3.1.1.2[26]	The API shall allow application programs to illuminate or
    <!-- select 'app' (2) and verify proper VD -->
    <FPUIInput file="@Cxxxx_key2.txt" description="Provide keypress [2] input" />
    <Sleep time="%1" />
-   <Dump dump="VD" file="@C2010_vd_02" /> 
-   <If expression="!VDCompare(@C2010_vd_02) EQ #FALSE">
+   <Dump dump="VD" file="@C2010_vd_02.txt" />
+   <If expression="!VDCompare(@C2010_vd_02.txt) EQ #FALSE">
       <Then>
       <Print>App (2) screen incorrect</Print>
-      <Dump dump="VD" force="#TRUE" file="@C2010_vd_02_err" />
+      <Dump dump="VD" force="#TRUE" file="@C2010_vd_02_err.txt" />
       <Abort status="FAIL" />
       </Then>
    </If>
@@ -1365,11 +1346,11 @@ APIR3.1.1.2[26]	The API shall allow application programs to illuminate or
    <!-- select 'app' (3) and verify proper VD -->
    <FPUIInput file="@Cxxxx_key3.txt" description="Provide keypress [3] input" />
    <Sleep time="%1" />
-   <Dump dump="VD" file="@C2010_vd_03" /> 
-   <If expression="!VDCompare(@C2010_vd_03) EQ #FALSE">
+   <Dump dump="VD" file="@C2010_vd_03.txt" />
+   <If expression="!VDCompare(@C2010_vd_03.txt) EQ #FALSE">
       <Then>
       <Print>App (3) screen incorrect</Print>
-      <Dump dump="VD" force="#TRUE" file="@C2010_vd_03_err" />
+      <Dump dump="VD" force="#TRUE" file="@C2010_vd_03_err.txt" />
       <Abort status="FAIL" />
       </Then>
    </If>
@@ -1380,11 +1361,11 @@ APIR3.1.1.2[26]	The API shall allow application programs to illuminate or
    <!-- select 'app' (4) and verify proper VD -->
    <FPUIInput file="@Cxxxx_key4.txt" description="Provide keypress [4] input" />
    <Sleep time="%1" />
-   <Dump dump="VD" file="@C2010_vd_04" /> 
-   <If expression="!VDCompare(@C2010_vd_04) EQ #FALSE">
+   <Dump dump="VD" file="@C2010_vd_04.txt" />
+   <If expression="!VDCompare(@C2010_vd_04.txt) EQ #FALSE">
       <Then>
       <Print>App (4) screen incorrect</Print>
-      <Dump dump="VD" force="#TRUE" file="@C2010_vd_04_err" />
+      <Dump dump="VD" force="#TRUE" file="@C2010_vd_04_err.txt" />
       <Abort status="FAIL" />
       </Then>
    </If>
@@ -1395,11 +1376,11 @@ APIR3.1.1.2[26]	The API shall allow application programs to illuminate or
    <!-- select 'app' (5) and verify proper VD -->
    <FPUIInput file="@Cxxxx_key5.txt" description="Provide keypress [5] input" />
    <Sleep time="%1" />
-   <Dump dump="VD" file="@C2010_vd_05" /> 
-   <If expression="!VDCompare(@C2010_vd_05) EQ #FALSE">
+   <Dump dump="VD" file="@C2010_vd_05.txt" />
+   <If expression="!VDCompare(@C2010_vd_05.txt) EQ #FALSE">
       <Then>
       <Print>App (5) screen incorrect</Print>
-      <Dump dump="VD" force="#TRUE" file="@C2010_vd_05_err" />
+      <Dump dump="VD" force="#TRUE" file="@C2010_vd_05_err.txt" />
       <Abort status="FAIL" />
       </Then>
    </If>
@@ -1410,11 +1391,11 @@ APIR3.1.1.2[26]	The API shall allow application programs to illuminate or
    <!-- select 'app' (6) and verify proper VD -->
    <FPUIInput file="@Cxxxx_key6.txt" description="Provide keypress [6] input" />
    <Sleep time="%1" />
-   <Dump dump="VD" file="@C2010_vd_06" /> 
-   <If expression="!VDCompare(@C2010_vd_06) EQ #FALSE">
+   <Dump dump="VD" file="@C2010_vd_06.txt" />
+   <If expression="!VDCompare(@C2010_vd_06.txt) EQ #FALSE">
       <Then>
       <Print>App (6) screen incorrect</Print>
-      <Dump dump="VD" force="#TRUE" file="@C2010_vd_06_err" />
+      <Dump dump="VD" force="#TRUE" file="@C2010_vd_06_err.txt" />
       <Abort status="FAIL" />
       </Then>
    </If>
@@ -1425,11 +1406,11 @@ APIR3.1.1.2[26]	The API shall allow application programs to illuminate or
    <!-- select 'app' (7) and verify proper VD -->
    <FPUIInput file="@Cxxxx_key7.txt" description="Provide keypress [7] input" />
    <Sleep time="%1" />
-   <Dump dump="VD" file="@C2010_vd_07" /> 
-   <If expression="!VDCompare(@C2010_vd_07) EQ #FALSE">
+   <Dump dump="VD" file="@C2010_vd_07.txt" />
+   <If expression="!VDCompare(@C2010_vd_07.txt) EQ #FALSE">
       <Then>
       <Print>App (7) screen incorrect</Print>
-      <Dump dump="VD" force="#TRUE" file="@C2010_vd_07_err" />
+      <Dump dump="VD" force="#TRUE" file="@C2010_vd_07_err.txt" />
       <Abort status="FAIL" />
       </Then>
    </If>
@@ -1440,11 +1421,11 @@ APIR3.1.1.2[26]	The API shall allow application programs to illuminate or
    <!-- select 'app' (8) and verify proper VD -->
    <FPUIInput file="@Cxxxx_key8.txt" description="Provide keypress [8] input" />
    <Sleep time="%1" />
-   <Dump dump="VD" file="@C2010_vd_08" /> 
-   <If expression="!VDCompare(@C2010_vd_08) EQ #FALSE">
+   <Dump dump="VD" file="@C2010_vd_08.txt" />
+   <If expression="!VDCompare(@C2010_vd_08.txt) EQ #FALSE">
       <Then>
       <Print>App (8) screen incorrect</Print>
-      <Dump dump="VD" force="#TRUE" file="@C2010_vd_08_err" />
+      <Dump dump="VD" force="#TRUE" file="@C2010_vd_08_err.txt" />
       <Abort status="FAIL" />
       </Then>
    </If>
@@ -1455,11 +1436,11 @@ APIR3.1.1.2[26]	The API shall allow application programs to illuminate or
    <!-- select 'app' (9) and verify proper VD -->
    <FPUIInput file="@Cxxxx_key9.txt" description="Provide keypress [9] input" />
    <Sleep time="%1" />
-   <Dump dump="VD" file="@C2010_vd_09" /> 
-   <If expression="!VDCompare(@C2010_vd_09) EQ #FALSE">
+   <Dump dump="VD" file="@C2010_vd_09.txt" />
+   <If expression="!VDCompare(@C2010_vd_09.txt) EQ #FALSE">
       <Then>
       <Print>App (9) screen incorrect</Print>
-      <Dump dump="VD" force="#TRUE" file="@C2010_vd_09_err" />
+      <Dump dump="VD" force="#TRUE" file="@C2010_vd_09_err.txt" />
       <Abort status="FAIL" />
       </Then>
    </If>
@@ -1470,11 +1451,11 @@ APIR3.1.1.2[26]	The API shall allow application programs to illuminate or
    <!-- select 'app' (10) and verify proper VD -->
    <FPUIInput file="@Cxxxx_keyA.txt" description="Provide keypress [A] input" />
    <Sleep time="%1" />
-   <Dump dump="VD" file="@C2010_vd_10" /> 
-   <If expression="!VDCompare(@C2010_vd_10) EQ #FALSE">
+   <Dump dump="VD" file="@C2010_vd_10.txt" />
+   <If expression="!VDCompare(@C2010_vd_10.txt) EQ #FALSE">
       <Then>
       <Print>App (10) screen incorrect</Print>
-      <Dump dump="VD" force="#TRUE" file="@C2010_vd_10_err" />
+      <Dump dump="VD" force="#TRUE" file="@C2010_vd_10_err.txt" />
       <Abort status="FAIL" />
       </Then>
    </If>
@@ -1485,11 +1466,11 @@ APIR3.1.1.2[26]	The API shall allow application programs to illuminate or
    <!-- select 'app' (11) and verify proper VD -->
    <FPUIInput file="@Cxxxx_keyB.txt" description="Provide keypress [B] input" />
    <Sleep time="%1" />
-   <Dump dump="VD" file="@C2010_vd_11" /> 
-   <If expression="!VDCompare(@C2010_vd_11) EQ #FALSE">
+   <Dump dump="VD" file="@C2010_vd_11.txt" />
+   <If expression="!VDCompare(@C2010_vd_11.txt) EQ #FALSE">
       <Then>
       <Print>App (11) screen incorrect</Print>
-      <Dump dump="VD" force="#TRUE" file="@C2010_vd_11_err" />
+      <Dump dump="VD" force="#TRUE" file="@C2010_vd_11_err.txt" />
       <Abort status="FAIL" />
       </Then>
    </If>
@@ -1500,11 +1481,11 @@ APIR3.1.1.2[26]	The API shall allow application programs to illuminate or
    <!-- select 'app' (12) and verify proper VD -->
    <FPUIInput file="@Cxxxx_keyC.txt" description="Provide keypress [C] input" />
    <Sleep time="%1" />
-   <Dump dump="VD" file="@C2010_vd_12" /> 
-   <If expression="!VDCompare(@C2010_vd_12) EQ #FALSE">
+   <Dump dump="VD" file="@C2010_vd_12.txt" />
+   <If expression="!VDCompare(@C2010_vd_12.txt) EQ #FALSE">
       <Then>
       <Print>App (12) screen incorrect</Print>
-      <Dump dump="VD" force="#TRUE" file="@C2010_vd_12_err" />
+      <Dump dump="VD" force="#TRUE" file="@C2010_vd_12_err.txt" />
       <Abort status="FAIL" />
       </Then>
    </If>
@@ -1515,11 +1496,11 @@ APIR3.1.1.2[26]	The API shall allow application programs to illuminate or
    <!-- select 'app' (13) and verify proper VD -->
    <FPUIInput file="@Cxxxx_keyD.txt" description="Provide keypress [D] input" />
    <Sleep time="%1" />
-   <Dump dump="VD" file="@C2010_vd_13" /> 
-   <If expression="!VDCompare(@C2010_vd_13) EQ #FALSE">
+   <Dump dump="VD" file="@C2010_vd_13.txt" />
+   <If expression="!VDCompare(@C2010_vd_13.txt) EQ #FALSE">
       <Then>
       <Print>App (13) screen incorrect</Print>
-      <Dump dump="VD" force="#TRUE" file="@C2010_vd_13_err" />
+      <Dump dump="VD" force="#TRUE" file="@C2010_vd_13_err.txt" />
       <Abort status="FAIL" />
       </Then>
    </If>
@@ -1530,11 +1511,11 @@ APIR3.1.1.2[26]	The API shall allow application programs to illuminate or
    <!-- select 'app' (14) and verify proper VD -->
    <FPUIInput file="@Cxxxx_keyE.txt" description="Provide keypress [E] input" />
    <Sleep time="%1" />
-   <Dump dump="VD" file="@C2010_vd_14" /> 
-   <If expression="!VDCompare(@C2010_vd_14) EQ #FALSE">
+   <Dump dump="VD" file="@C2010_vd_14.txt" />
+   <If expression="!VDCompare(@C2010_vd_14.txt) EQ #FALSE">
       <Then>
       <Print>App (14) screen incorrect</Print>
-      <Dump dump="VD" force="#TRUE" file="@C2010_vd_14_err" />
+      <Dump dump="VD" force="#TRUE" file="@C2010_vd_14_err.txt" />
       <Abort status="FAIL" />
       </Then>
    </If>
@@ -1545,20 +1526,20 @@ APIR3.1.1.2[26]	The API shall allow application programs to illuminate or
    <!-- select 'app' (15) and verify proper VD -->
    <FPUIInput file="@Cxxxx_keyF.txt" description="Provide keypress [F] input" />
    <Sleep time="%1" />
-   <Dump dump="VD" file="@C2010_vd_15" /> 
-   <If expression="!VDCompare(@C2010_vd_15) EQ #FALSE">
+   <Dump dump="VD" file="@C2010_vd_15.txt" />
+   <If expression="!VDCompare(@C2010_vd_15.txt) EQ #FALSE">
       <Then>
       <Print>App (15) screen incorrect</Print>
-      <Dump dump="VD" force="#TRUE" file="@C2010_vd_15_err" />
+      <Dump dump="VD" force="#TRUE" file="@C2010_vd_15_err.txt" />
       <Abort status="FAIL" />
       </Then>
    </If>
    
    <!-- input a keypress and read on 'app' (15) -->
-   <FPUIInput file="@Cxxxx_key7.txt" description="Provide keypress [7] input" />
+   <FPUIInput file="@Cxxxx_key1.txt" description="Provide keypress [1] input" />
    <Sleep time="%1" />
    <Call ref="fpui_read_char" setUp="API_Init_Variables" />
-   <If expression="$read_chr NE %7">
+   <If expression="$read_chr NE @1">
       <Then>
       <Print>Function fpui_read_char() failed: incorrect key value</Print>
       <Abort status="FAIL" />
@@ -1583,8 +1564,21 @@ APIR3.1.1.2[26]	The API shall allow application programs to illuminate or
    <!-- turn on backlight -->
    <Set var="$backlight" value="#TRUE"/>
    <Call ref="fpui_set_backlight" setUp="API_Init_Variables" />
-   <Dump dump="VD" file="@C2010_vd_bltest" /> 
-   <If expression="!VDCompare(@C2010_vd_bltest) EQ #FALSE">
+   <Sleep time="%1" />
+   <Dump dump="VD" file="@C2010_vd_bl_on.txt" />
+   <If expression="!VDCompare(@C2010_vd_bl_on.txt) EQ #FALSE">
+      <Then>
+      <Print>Backlight ON failed</Print>
+      <Abort status="FAIL" />
+      </Then>
+   </If>
+   
+   <!-- turn off backlight -->
+   <Set var="$backlight" value="#FALSE"/>
+   <Call ref="fpui_set_backlight" setUp="API_Init_Variables" />
+   <Sleep time="%1" />
+   <Dump dump="VD" file="@C2010_vd_bl_off.txt" />
+   <If expression="!VDCompare(@C2010_vd_bl_off.txt) EQ #FALSE">
       <Then>
       <Print>Backlight ON failed</Print>
       <Abort status="FAIL" />
@@ -1594,8 +1588,9 @@ APIR3.1.1.2[26]	The API shall allow application programs to illuminate or
    <!-- refresh and clear screen and confirm -->
    <Call ref="fpui_refresh" setUp="API_Init_Variables" />
    <Call ref="fpui_clear"   setUp="API_Init_Variables" />
-   <Dump dump="VD" file="@Cxxxx_vd_clr" /> 
-   <If expression="!VDCompare(@Cxxxx_vd_clr) EQ #FALSE">
+   <Sleep time="%1" />
+   <Dump dump="VD" file="@C2010_vd_clr.txt" />
+   <If expression="!VDCompare(@C2010_vd_clr.txt) EQ #FALSE">
       <Then>
       <Print>Clear VD in-focus failed</Print>
       <Abort status="FAIL" />
@@ -1606,8 +1601,15 @@ APIR3.1.1.2[26]	The API shall allow application programs to illuminate or
    <Set var="$fpui_handle"  value="$fpui_hdl_01"/> 
    <Call ref="fpui_refresh" setUp="API_Init_Variables" />
    <Call ref="fpui_clear"   setUp="API_Init_Variables" />
-   <Dump dump="VD" file="@Cxxxx_vd_clr" /> 
-   <If expression="!VDCompare(@Cxxxx_vd_clr) EQ #FALSE">
+
+   <!-- return to FPM -->
+   <Call ref="Return_To_FPM" />
+   
+   <!-- select 'app' (1) and verify proper VD -->
+   <FPUIInput file="@Cxxxx_key1.txt" description="Provide keypress [1] input" />
+   <Sleep time="%1" />
+   <Dump dump="VD" file="@C2010_vd_clr.txt" />
+   <If expression="!VDCompare(@C2010_vd_clr.txt) EQ #FALSE">
       <Then>
       <Print>Clear VD non-focus failed</Print>
       <Abort status="FAIL" />
