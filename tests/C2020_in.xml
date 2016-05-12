@@ -73,13 +73,12 @@ APIR3.1.1.1[20]	The Operational User shall have the capability to put a
 
  Date      Revision    Description
  2/22/16   1.0         initial release
+ 2/24/16   1.1         second release
+ 5/10/16   1.2         third release (JMG)
 -->
 
 <Define var="$fpui_handle"  type="fpui_handle" />
 <Define var="$aux_handle"   type="fpui_aux_handle" />
-<Define var="$ver_string"   type="char []" size="%64" />
-<Define var="$null_string"  type="char []" size="%64" />
-<Define var="$fpui_ver"     type="int" />
 <Define var="$errno"        type="int" />
 <Define var="$returnCode"   type="int" />
 <Define var="$tab_clear"    type="int" />
@@ -227,25 +226,6 @@ APIR3.1.1.1[20]	The Operational User shall have the capability to put a
 <!--
  subroutines to call API functions and verify return status
 -->
-<Subroutine name="fpui_apiver" description="Call fpui_apiver()" >
-   <Function funcName="fpui_apiver"
-             return="$ver_string"
-             errno="$errno"
-             p1="$fpui_handle"
-             p2="$fpui_ver" />
-   <If expression="$ver_string EQ $null_string" >
-      <Then>
-      <Print>Function fpui_apiver() failed</Print>
-      <Call ref="Error_Handler" />
-      </Then>
-   <Else>
-      <Format var="$fpui_ver" />
-      <Format var="$ver_string" />
-      <Call ref="Success_Handler" />
-   </Else>
-   </If>
-</Subroutine>
-
 <Subroutine name="fpui_clear" description="Call fpui_clear()" >
    <Function funcName="fpui_clear"
              return="$returnCode"
@@ -1211,11 +1191,11 @@ APIR3.1.1.1[20]	The Operational User shall have the capability to put a
    <Set var="$flags"       value="#O_RDWR"/>
    
    <!-- check default FPM screen -->
-   <Dump dump="VD" force="#TRUE" file="@C2020_fpm_clr" /> 
-   <If expression="!VDCompare(@C2020_fpm_clr) EQ #FALSE">
+   <Dump dump="VD" file="@C2020_vd_fpm_clr.txt" />
+   <If expression="!VDCompare(@C2020_vd_fpm_clr.txt) EQ #FALSE">
       <Then>
       <Print>Default FPM screen incorrect</Print>
-      <Dump dump="VD" force="#TRUE" file="@C2020_fpm_clr_err" />
+      <Dump dump="VD" force="#TRUE" file="@C2020_vd_fpm_clr_err.txt" />
       <Abort status="FAIL" />
       </Then>
    </If>
@@ -1305,29 +1285,29 @@ APIR3.1.1.1[20]	The Operational User shall have the capability to put a
    <Call ref="fpui_write_string_at" setUp="API_Init_Variables" />
    
    <!-- verify FPM screen with 16 'apps' -->
-   <Dump dump="VD" file="@C2020_fpm_x16_1" /> 
-   <If expression="!VDCompare(@C2020_fpm_x16_1) EQ #FALSE">
+   <Dump dump="VD" file="@C2020_vd_fpm_1.txt" />
+   <If expression="!VDCompare(@C2020_vd_fpm_1.txt) EQ #FALSE">
       <Then>
       <Print>FPM screen (16 apps #1) incorrect</Print>
-      <Dump dump="VD" force="#TRUE" file="@C2020_fpm_x16_1_err" />
+      <Dump dump="VD" force="#TRUE" file="@C2020_vd_fpm_1_err.txt" />
       <Abort status="FAIL" />
       </Then>
    </If>
 
    <!-- scroll down three rows to see last six 'apps' -->
-   <FPUIInput file="@Cxxxx_keyDown.txt" description="Provide keypress [DOWN] input to FPM" />
+   <FPUIInput file="@Cxxxx_keyDN.txt" description="Provide keypress [DN] input to FPM" />
    <Sleep time="%1" />
-   <FPUIInput file="@Cxxxx_keyDown.txt" description="Provide keypress [DOWN] input to FPM" />
+   <FPUIInput file="@Cxxxx_keyDN.txt" description="Provide keypress [DN] input to FPM" />
    <Sleep time="%1" />
-   <FPUIInput file="@Cxxxx_keyDown.txt" description="Provide keypress [DOWN] input to FPM" />
+   <FPUIInput file="@Cxxxx_keyDN.txt" description="Provide keypress [DN] input to FPM" />
    <Sleep time="%1" />
    
    <!-- verify second (scrolled) FPM screen with 16 'apps' -->
-   <Dump dump="VD" file="@C2020_fpm_x16_2" /> 
-   <If expression="!VDCompare(@C2020_fpm_x16_2) EQ #FALSE">
+   <Dump dump="VD" file="@C2020_vd_fpm_2.txt" />
+   <If expression="!VDCompare(@C2020_vd_fpm_2.txt) EQ #FALSE">
       <Then>
       <Print>FPM screen (16 apps #2) incorrect</Print>
-      <Dump dump="VD" force="#TRUE" file="@C2020_fpm_x16_2_err" />
+      <Dump dump="VD" force="#TRUE" file="@C2020_vd_fpm_2_err.txt" />
       <Abort status="FAIL" />
       </Then>
    </If>
@@ -1338,11 +1318,11 @@ APIR3.1.1.1[20]	The Operational User shall have the capability to put a
    <!-- select 'app' (0) and verify proper VD -->
    <FPUIInput file="@Cxxxx_key0.txt" description="Provide keypress [0] input" />
    <Sleep time="%1" />
-   <Dump dump="VD" file="@C2020_vd_00" /> 
-   <If expression="!VDCompare(@C2020_vd_00) EQ #FALSE">
+   <Dump dump="VD" file="@C2020_vd_00.txt" />
+   <If expression="!VDCompare(@C2020_vd_00.txt) EQ #FALSE">
       <Then>
       <Print>App (0) screen incorrect</Print>
-      <Dump dump="VD" force="#TRUE" file="@C2020_vd_00_err" />
+      <Dump dump="VD" force="#TRUE" file="@C2020_vd_00_err.txt" />
       <Abort status="FAIL" />
       </Then>
    </If>
@@ -1353,11 +1333,11 @@ APIR3.1.1.1[20]	The Operational User shall have the capability to put a
    <!-- select 'app' (1) and verify proper VD -->
    <FPUIInput file="@Cxxxx_key1.txt" description="Provide keypress [1] input" />
    <Sleep time="%1" />
-   <Dump dump="VD" file="@C2020_vd_01" /> 
-   <If expression="!VDCompare(@C2020_vd_01) EQ #FALSE">
+   <Dump dump="VD" file="@C2020_vd_01.txt" />
+   <If expression="!VDCompare(@C2020_vd_01.txt) EQ #FALSE">
       <Then>
       <Print>App (1) screen incorrect</Print>
-      <Dump dump="VD" force="#TRUE" file="@C2020_vd_01_err" />
+      <Dump dump="VD" force="#TRUE" file="@C2020_vd_01_err.txt" />
       <Abort status="FAIL" />
       </Then>
    </If>
@@ -1368,11 +1348,11 @@ APIR3.1.1.1[20]	The Operational User shall have the capability to put a
    <!-- select 'app' (2) and verify proper VD -->
    <FPUIInput file="@Cxxxx_key2.txt" description="Provide keypress [2] input" />
    <Sleep time="%1" />
-   <Dump dump="VD" file="@C2020_vd_02" /> 
-   <If expression="!VDCompare(@C2020_vd_02) EQ #FALSE">
+   <Dump dump="VD" file="@C2020_vd_02.txt" />
+   <If expression="!VDCompare(@C2020_vd_02.txt) EQ #FALSE">
       <Then>
       <Print>App (2) screen incorrect</Print>
-      <Dump dump="VD" force="#TRUE" file="@C2020_vd_02_err" />
+      <Dump dump="VD" force="#TRUE" file="@C2020_vd_02_err.txt" />
       <Abort status="FAIL" />
       </Then>
    </If>
@@ -1383,11 +1363,11 @@ APIR3.1.1.1[20]	The Operational User shall have the capability to put a
    <!-- select 'app' (3) and verify proper VD -->
    <FPUIInput file="@Cxxxx_key3.txt" description="Provide keypress [3] input" />
    <Sleep time="%1" />
-   <Dump dump="VD" file="@C2020_vd_03" /> 
-   <If expression="!VDCompare(@C2020_vd_03) EQ #FALSE">
+   <Dump dump="VD" file="@C2020_vd_03.txt" />
+   <If expression="!VDCompare(@C2020_vd_03.txt) EQ #FALSE">
       <Then>
       <Print>App (3) screen incorrect</Print>
-      <Dump dump="VD" force="#TRUE" file="@C2020_vd_03_err" />
+      <Dump dump="VD" force="#TRUE" file="@C2020_vd_03_err.txt" />
       <Abort status="FAIL" />
       </Then>
    </If>
@@ -1398,11 +1378,11 @@ APIR3.1.1.1[20]	The Operational User shall have the capability to put a
    <!-- select 'app' (4) and verify proper VD -->
    <FPUIInput file="@Cxxxx_key4.txt" description="Provide keypress [4] input" />
    <Sleep time="%1" />
-   <Dump dump="VD" file="@C2020_vd_04" /> 
-   <If expression="!VDCompare(@C2020_vd_04) EQ #FALSE">
+   <Dump dump="VD" file="@C2020_vd_04.txt" />
+   <If expression="!VDCompare(@C2020_vd_04.txt) EQ #FALSE">
       <Then>
       <Print>App (4) screen incorrect</Print>
-      <Dump dump="VD" force="#TRUE" file="@C2020_vd_04_err" />
+      <Dump dump="VD" force="#TRUE" file="@C2020_vd_04_err.txt" />
       <Abort status="FAIL" />
       </Then>
    </If>
@@ -1413,11 +1393,11 @@ APIR3.1.1.1[20]	The Operational User shall have the capability to put a
    <!-- select 'app' (5) and verify proper VD -->
    <FPUIInput file="@Cxxxx_key5.txt" description="Provide keypress [5] input" />
    <Sleep time="%1" />
-   <Dump dump="VD" file="@C2020_vd_05" /> 
-   <If expression="!VDCompare(@C2020_vd_05) EQ #FALSE">
+   <Dump dump="VD" file="@C2020_vd_05.txt" />
+   <If expression="!VDCompare(@C2020_vd_05.txt) EQ #FALSE">
       <Then>
       <Print>App (5) screen incorrect</Print>
-      <Dump dump="VD" force="#TRUE" file="@C2020_vd_05_err" />
+      <Dump dump="VD" force="#TRUE" file="@C2020_vd_05_err.txt" />
       <Abort status="FAIL" />
       </Then>
    </If>
@@ -1428,11 +1408,11 @@ APIR3.1.1.1[20]	The Operational User shall have the capability to put a
    <!-- select 'app' (6) and verify proper VD -->
    <FPUIInput file="@Cxxxx_key6.txt" description="Provide keypress [6] input" />
    <Sleep time="%1" />
-   <Dump dump="VD" file="@C2020_vd_06" /> 
-   <If expression="!VDCompare(@C2020_vd_06) EQ #FALSE">
+   <Dump dump="VD" file="@C2020_vd_06.txt" />
+   <If expression="!VDCompare(@C2020_vd_06.txt) EQ #FALSE">
       <Then>
       <Print>App (6) screen incorrect</Print>
-      <Dump dump="VD" force="#TRUE" file="@C2020_vd_06_err" />
+      <Dump dump="VD" force="#TRUE" file="@C2020_vd_06_err.txt" />
       <Abort status="FAIL" />
       </Then>
    </If>
@@ -1443,11 +1423,11 @@ APIR3.1.1.1[20]	The Operational User shall have the capability to put a
    <!-- select 'app' (7) and verify proper VD -->
    <FPUIInput file="@Cxxxx_key7.txt" description="Provide keypress [7] input" />
    <Sleep time="%1" />
-   <Dump dump="VD" file="@C2020_vd_07" /> 
-   <If expression="!VDCompare(@C2020_vd_07) EQ #FALSE">
+   <Dump dump="VD" file="@C2020_vd_07.txt" />
+   <If expression="!VDCompare(@C2020_vd_07.txt) EQ #FALSE">
       <Then>
       <Print>App (7) screen incorrect</Print>
-      <Dump dump="VD" force="#TRUE" file="@C2020_vd_07_err" />
+      <Dump dump="VD" force="#TRUE" file="@C2020_vd_07_err.txt" />
       <Abort status="FAIL" />
       </Then>
    </If>
@@ -1458,11 +1438,11 @@ APIR3.1.1.1[20]	The Operational User shall have the capability to put a
    <!-- select 'app' (8) and verify proper VD -->
    <FPUIInput file="@Cxxxx_key8.txt" description="Provide keypress [8] input" />
    <Sleep time="%1" />
-   <Dump dump="VD" file="@C2020_vd_08" /> 
-   <If expression="!VDCompare(@C2020_vd_08) EQ #FALSE">
+   <Dump dump="VD" file="@C2020_vd_08.txt" />
+   <If expression="!VDCompare(@C2020_vd_08.txt) EQ #FALSE">
       <Then>
       <Print>App (8) screen incorrect</Print>
-      <Dump dump="VD" force="#TRUE" file="@C2020_vd_08_err" />
+      <Dump dump="VD" force="#TRUE" file="@C2020_vd_08_err.txt" />
       <Abort status="FAIL" />
       </Then>
    </If>
@@ -1473,11 +1453,11 @@ APIR3.1.1.1[20]	The Operational User shall have the capability to put a
    <!-- select 'app' (9) and verify proper VD -->
    <FPUIInput file="@Cxxxx_key9.txt" description="Provide keypress [9] input" />
    <Sleep time="%1" />
-   <Dump dump="VD" file="@C2020_vd_09" /> 
-   <If expression="!VDCompare(@C2020_vd_09) EQ #FALSE">
+   <Dump dump="VD" file="@C2020_vd_09.txt" />
+   <If expression="!VDCompare(@C2020_vd_09.txt) EQ #FALSE">
       <Then>
       <Print>App (9) screen incorrect</Print>
-      <Dump dump="VD" force="#TRUE" file="@C2020_vd_09_err" />
+      <Dump dump="VD" force="#TRUE" file="@C2020_vd_09_err.txt" />
       <Abort status="FAIL" />
       </Then>
    </If>
@@ -1488,11 +1468,11 @@ APIR3.1.1.1[20]	The Operational User shall have the capability to put a
    <!-- select 'app' (10) and verify proper VD -->
    <FPUIInput file="@Cxxxx_keyA.txt" description="Provide keypress [A] input" />
    <Sleep time="%1" />
-   <Dump dump="VD" file="@C2020_vd_10" /> 
-   <If expression="!VDCompare(@C2020_vd_10) EQ #FALSE">
+   <Dump dump="VD" file="@C2020_vd_10.txt" />
+   <If expression="!VDCompare(@C2020_vd_10.txt) EQ #FALSE">
       <Then>
       <Print>App (10) screen incorrect</Print>
-      <Dump dump="VD" force="#TRUE" file="@C2020_vd_10_err" />
+      <Dump dump="VD" force="#TRUE" file="@C2020_vd_10_err.txt" />
       <Abort status="FAIL" />
       </Then>
    </If>
@@ -1503,11 +1483,11 @@ APIR3.1.1.1[20]	The Operational User shall have the capability to put a
    <!-- select 'app' (11) and verify proper VD -->
    <FPUIInput file="@Cxxxx_keyB.txt" description="Provide keypress [B] input" />
    <Sleep time="%1" />
-   <Dump dump="VD" file="@C2020_vd_11" /> 
-   <If expression="!VDCompare(@C2020_vd_11) EQ #FALSE">
+   <Dump dump="VD" file="@C2020_vd_11.txt" />
+   <If expression="!VDCompare(@C2020_vd_11.txt) EQ #FALSE">
       <Then>
       <Print>App (11) screen incorrect</Print>
-      <Dump dump="VD" force="#TRUE" file="@C2020_vd_11_err" />
+      <Dump dump="VD" force="#TRUE" file="@C2020_vd_11_err.txt" />
       <Abort status="FAIL" />
       </Then>
    </If>
@@ -1518,11 +1498,11 @@ APIR3.1.1.1[20]	The Operational User shall have the capability to put a
    <!-- select 'app' (12) and verify proper VD -->
    <FPUIInput file="@Cxxxx_keyC.txt" description="Provide keypress [C] input" />
    <Sleep time="%1" />
-   <Dump dump="VD" file="@C2020_vd_12" /> 
-   <If expression="!VDCompare(@C2020_vd_12) EQ #FALSE">
+   <Dump dump="VD" file="@C2020_vd_12.txt" />
+   <If expression="!VDCompare(@C2020_vd_12.txt) EQ #FALSE">
       <Then>
       <Print>App (12) screen incorrect</Print>
-      <Dump dump="VD" force="#TRUE" file="@C2020_vd_12_err" />
+      <Dump dump="VD" force="#TRUE" file="@C2020_vd_12_err.txt" />
       <Abort status="FAIL" />
       </Then>
    </If>
@@ -1533,11 +1513,11 @@ APIR3.1.1.1[20]	The Operational User shall have the capability to put a
    <!-- select 'app' (13) and verify proper VD -->
    <FPUIInput file="@Cxxxx_keyD.txt" description="Provide keypress [D] input" />
    <Sleep time="%1" />
-   <Dump dump="VD" file="@C2020_vd_13" /> 
-   <If expression="!VDCompare(@C2020_vd_13) EQ #FALSE">
+   <Dump dump="VD" file="@C2020_vd_13.txt" />
+   <If expression="!VDCompare(@C2020_vd_13.txt) EQ #FALSE">
       <Then>
       <Print>App (13) screen incorrect</Print>
-      <Dump dump="VD" force="#TRUE" file="@C2020_vd_13_err" />
+      <Dump dump="VD" force="#TRUE" file="@C2020_vd_13_err.txt" />
       <Abort status="FAIL" />
       </Then>
    </If>
@@ -1548,11 +1528,11 @@ APIR3.1.1.1[20]	The Operational User shall have the capability to put a
    <!-- select 'app' (14) and verify proper VD -->
    <FPUIInput file="@Cxxxx_keyE.txt" description="Provide keypress [E] input" />
    <Sleep time="%1" />
-   <Dump dump="VD" file="@C2020_vd_14" /> 
-   <If expression="!VDCompare(@C2020_vd_14) EQ #FALSE">
+   <Dump dump="VD" file="@C2020_vd_14.txt" />
+   <If expression="!VDCompare(@C2020_vd_14.txt) EQ #FALSE">
       <Then>
       <Print>App (14) screen incorrect</Print>
-      <Dump dump="VD" force="#TRUE" file="@C2020_vd_14_err" />
+      <Dump dump="VD" force="#TRUE" file="@C2020_vd_14_err.txt" />
       <Abort status="FAIL" />
       </Then>
    </If>
@@ -1563,11 +1543,11 @@ APIR3.1.1.1[20]	The Operational User shall have the capability to put a
    <!-- select 'app' (15) and verify proper VD -->
    <FPUIInput file="@Cxxxx_keyF.txt" description="Provide keypress [F] input" />
    <Sleep time="%1" />
-   <Dump dump="VD" file="@C2020_vd_15" /> 
-   <If expression="!VDCompare(@C2020_vd_15) EQ #FALSE">
+   <Dump dump="VD" file="@C2020_vd_15.txt" />
+   <If expression="!VDCompare(@C2020_vd_15.txt) EQ #FALSE">
       <Then>
       <Print>App (15) screen incorrect</Print>
-      <Dump dump="VD" force="#TRUE" file="@C2020_vd_15_err" />
+      <Dump dump="VD" force="#TRUE" file="@C2020_vd_15_err.txt" />
       <Abort status="FAIL" />
       </Then>
    </If>
