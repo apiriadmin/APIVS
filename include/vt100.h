@@ -135,6 +135,7 @@
 #define SAVE_CURSOR_POS     17
 #define REST_CURSOR_POS     18
 #define HOME_CURSOR         19
+#define PANEL_TYPE          20
 
 
 // Special Characters Constants 
