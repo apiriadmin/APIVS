@@ -41,12 +41,16 @@ APIR3.1.1.2[19]	If a window was registered with access to the Aux Switch, the AP
 
  Date      Revision    Description
  2/22/16   1.0         initial release
+ 2/24/16   1.1         second release
+ 5/16/16   1.2         third release (JMG)
 -->
 
 <Define var="$fpui_handle"  type="fpui_handle" />
 <Define var="$fpui_hdl_00"  type="fpui_handle" />
 <Define var="$fpui_hdl_01"  type="fpui_handle" />
 <Define var="$aux_handle"   type="fpui_aux_handle" />
+<Define var="$aux_hdl_00"   type="fpui_aux_handle" />
+<Define var="$aux_hdl_01"   type="fpui_aux_handle" />
 <Define var="$errno"        type="int" />
 <Define var="$returnCode"   type="int" />
 <Define var="$tab_clear"    type="int" />
@@ -68,6 +72,8 @@ APIR3.1.1.2[19]	If a window was registered with access to the Aux Switch, the AP
 <Define var="$rev_video"    type="boolean" />
 <Define var="$uline"        type="boolean" />
 <Define var="$w_attr"       type="int" />
+<Define var="$attr_default" type="int" />
+<Define var="$attr_test"    type="int" />
 <Define var="$flags"        type="int" />
 <Define var="$regname"      type="char []" size="%16" />
 <Define var="$poll_data"    type="int" />
@@ -182,6 +188,13 @@ APIR3.1.1.2[19]	If a window was registered with access to the Aux Switch, the AP
       <Abort status="FAIL" />
       </Then>
    </If>
+</Subroutine>
+
+<Subroutine name="Return_To_FPM">
+   <FPUIInput file="@Cxxxx_keyStar.txt" description="Provide keypresses for return to FPM" />
+   <FPUIInput file="@Cxxxx_keyStar.txt" />
+   <FPUIInput file="@Cxxxx_keyEsc.txt" />
+   <Sleep time="%1" />
 </Subroutine>
 
 <!--
@@ -1170,29 +1183,19 @@ APIR3.1.1.2[19]	If a window was registered with access to the Aux Switch, the AP
 
    <!-- put the first app in focus, wait for confirmation -->
    <FPUIInput file="@Cxxxx_key0.txt" description="Provide keypress [0] input" />
-   <Set var="$fpui_hdl" value="$fpui_handle_00"/>
+   <Set var="$fpui_handle" value="$fpui_hdl_00"/>
    <Set var="$focus" value="%0"/>
    <While expression="$focus NE %1">
       <Sleep time="%1"/>
       <Call ref="fpui_get_focus" setUp="API_Init_Variables"/>
    </While>
 
-   <!--  verify attributes match defaults -->
-   <Call ref="fpui_get_window_attr" setUp="API_Init_Variables"/>
-   <If expression="$w_attr EQ %0">
-      <Then>
-      <Print>Window attributes do not match defaults</Print>
-      <Abort status="FAIL" />
-      </Then>
-   </If>
-   <Call ref="fpui_set_window_attr" setUp="API_Init_Variables"/>
-
    <!--  verify VD attributes of first app match defaults -->
-   <Dump dump="VD" file="@C2030_vd_default"/> 
-   <If expression="!VDCompare(@C2030_vd_default) EQ #FALSE">
+   <Dump dump="VD" file="@C2030_vd_default.txt"/>
+   <If expression="!VDCompare(@C2030_vd_default.txt) EQ #FALSE">
       <Then>
       <Print>Initial VD attributes incorrect</Print>
-      <Dump dump="VD" force="#TRUE" file="@C2030_vd_default_err"/>
+      <Dump dump="VD" force="#TRUE" file="@C2030_vd_default_err.txt"/>
       <Abort status="FAIL"/>
       </Then>
    </If>
@@ -1219,30 +1222,67 @@ APIR3.1.1.2[19]	If a window was registered with access to the Aux Switch, the AP
       </Then>
    </If>
 
+   <!--  set display for auto-repeat and confirm -->
+   <Set var="$auto_rpt" value="#TRUE"/>
+   <Call ref="fpui_set_auto_repeat" setUp="API_Init_Variables"/>
+   <Call ref="fpui_get_auto_repeat" setUp="API_Init_Variables"/>
+   <If expression="$auto_rpt NE #TRUE">
+      <Then>
+      <Print>Set auto repeat failed</Print>
+      <Abort status="FAIL" />
+      </Then>
+   </If>
+
    <!-- turn on backlight for 120 seconds -->
-   <Set var="$backlight" value="#TRUE"/>
-   <Call ref="fpui_set_backlight" setUp="API_Init_Variables"/>
    <Set var="$timeout" value="%120"/>
    <Call ref="fpui_set_backlight_timeout" setUp="API_Init_Variables"/>
-   
-   <!--  write full character set at 0,0 -->
-   <Set var="$row"       value="%0"/>
-   <Set var="$column"    value="%0"/>
-   <Set var="$write_buf" file="@Cxxxx_allchar.txt"/>
-   <Call ref="fpui_write_string_at" setUp="API_Init_Variables"/>
-   
-   <!-- set the cursor (blinking and visible at 4,0) -->
-   <Set var="$row"    value="%4"/>
-   <Set var="$column" value="%0"/>
+   <Set var="$backlight" value="#TRUE"/>
+   <Call ref="fpui_set_backlight" setUp="API_Init_Variables"/>
+   <Call ref="fpui_get_backlight" setUp="API_Init_Variables"/>
+   <If expression="$backlight NE #TRUE">
+      <Then>
+      <Print>Set backlight failed</Print>
+      <Abort status="FAIL" />
+      </Then>
+   </If>
+
+   <!-- verify test attributes: auto_wrap, auto_scroll, auto_repeat,
+        backlight, backlight timeout 120s (0xf00c0000) -->
+   <Set var="$attr_test" value="%-267649024"/>
+   <Call ref="fpui_get_window_attr" setUp="API_Init_Variables"/>
+   <If expression="$w_attr NE $attr_test">
+      <Then>
+      <Print>Window attributes do not match test settings</Print>
+      <Format var="$w_attr" />
+      <Abort status="FAIL" />
+      </Then>
+   </If>
+
+   <!-- reset to defaults (0x00060000) -->
+   <Set var="$attr_default" value="%393216"/>
+   <Set var="$w_attr" value="$attr_default"/>
+   <Call ref="fpui_set_window_attr" setUp="API_Init_Variables"/>
+   <Call ref="fpui_get_window_attr" setUp="API_Init_Variables"/>
+   <If expression="$w_attr NE $attr_default">
+      <Then>
+      <Print>Window attributes do not match defaults</Print>
+      <Format var="$w_attr" />
+      <Abort status="FAIL" />
+      </Then>
+   </If>
+
+   <!-- set the cursor (blinking and visible at 5,1) -->
+   <Set var="$row"    value="%5"/>
+   <Set var="$column" value="%1"/>
    <Call ref="fpui_set_cursor_pos" setUp="API_Init_Variables"/>
    <Call ref="fpui_get_cursor_pos" setUp="API_Init_Variables"/>
-   <If expression="$row NE %4">
+   <If expression="$row NE %5">
       <Then>
       <Print>Set cursor position failed (row)</Print>
       <Abort status="FAIL" />
       </Then>
    </If>
-   <If expression="$column NE %0">
+   <If expression="$column NE %1">
       <Then>
       <Print>Set cursor position failed (column)</Print>
       <Abort status="FAIL" />
@@ -1272,6 +1312,11 @@ APIR3.1.1.2[19]	If a window was registered with access to the Aux Switch, the AP
    <!-- set and confirm various text attributes -->
    <Set var="$blink" value="#TRUE"/>
    <Call ref="fpui_set_character_blink" setUp="API_Init_Variables"/>
+   <Set var="$row"    value="%5"/>
+   <Set var="$column" value="%1"/>
+   <Set var="$write_chr" value="@A"/>
+   <Call ref="fpui_write_char_at" setUp="API_Init_Variables"/>
+   <Call ref="fpui_set_cursor_pos" setUp="API_Init_Variables"/>
    <Call ref="fpui_get_character_blink" setUp="API_Init_Variables"/>
    <If expression="$blink NE #TRUE">
       <Then>
@@ -1282,6 +1327,11 @@ APIR3.1.1.2[19]	If a window was registered with access to the Aux Switch, the AP
 
    <Set var="$rev_video" value="#TRUE"/>
    <Call ref="fpui_set_reverse_video" setUp="API_Init_Variables"/>
+   <Set var="$row"    value="%5"/>
+   <Set var="$column" value="%2"/>
+   <Set var="$write_chr" value="@B"/>
+   <Call ref="fpui_write_char_at" setUp="API_Init_Variables"/>
+   <Call ref="fpui_set_cursor_pos" setUp="API_Init_Variables"/>
    <Call ref="fpui_get_reverse_video" setUp="API_Init_Variables"/>
    <If expression="$rev_video NE #TRUE">
       <Then>
@@ -1292,6 +1342,11 @@ APIR3.1.1.2[19]	If a window was registered with access to the Aux Switch, the AP
 
    <Set var="$uline" value="#TRUE"/>
    <Call ref="fpui_set_underline" setUp="API_Init_Variables"/>
+   <Set var="$row"    value="%5"/>
+   <Set var="$column" value="%3"/>
+   <Set var="$write_chr" value="@C"/>
+   <Call ref="fpui_write_char_at" setUp="API_Init_Variables"/>
+   <Call ref="fpui_set_cursor_pos" setUp="API_Init_Variables"/>
    <Call ref="fpui_get_underline" setUp="API_Init_Variables"/>
    <If expression="$uline NE #TRUE">
       <Then>
@@ -1300,30 +1355,72 @@ APIR3.1.1.2[19]	If a window was registered with access to the Aux Switch, the AP
       </Then>
    </If>
 
-   <!--  write full character set with attributes at 4,0 -->
-   <Set var="$row"       value="%4"/>
-   <Set var="$column"    value="%0"/>
-   <Set var="$write_buf" file="@Cxxxx_allchar.txt"/>
+   <!--  write full character set with attributes at 5,1 -->
+   <Set var="$row"       value="%5"/>
+   <Set var="$column"    value="%1"/>
+   <Set var="$write_buf" file="@C2030_allchar.txt"/>
    <Call ref="fpui_write_string_at" setUp="API_Init_Variables"/>
 
-   <!--  verify correct VD contents with attributes -->
-   <Dump dump="VD" file="@C2030_vd_all"/> 
-   <If expression="!VDCompare(@C2030_vd_all) EQ #FALSE">
+   <!--  reset character attributes  -->
+   <Call ref="fpui_reset_all_attributes" setUp="API_Init_Variables"/>
+   
+   <!--  write full character set at 1,1 -->
+   <Set var="$row"       value="%1"/>
+   <Set var="$column"    value="%1"/>
+   <Set var="$write_buf" file="@C2030_allchar.txt"/>
+   <Call ref="fpui_write_string_at" setUp="API_Init_Variables"/>
+   <Set var="$write_buf" file="@C2030_allchar.txt"/>
+   <Call ref="fpui_write_string_at" setUp="API_Init_Variables"/>
+   
+   <!--  verify correct VD contents  -->
+   <Dump dump="VD" file="@C2030_vd_all.txt"/>
+   <If expression="!VDCompare(@C2030_vd_all.txt) EQ #FALSE">
       <Then>
       <Print>Display attributes incorrect</Print>
-      <Dump dump="VD" force="#TRUE" file="@C2030_vd_all_err"/>
+      <Dump dump="VD" force="#TRUE" file="@C2030_vd_all_err.txt"/>
+      <Abort status="FAIL"/>
+      </Then>
+   </If>
+
+   <!-- return to FPM -->
+   <Call ref="Return_To_FPM" />
+   
+   <!-- put the second app in focus, wait for confirmation -->
+   <FPUIInput file="@Cxxxx_key1.txt" description="Provide keypress [1] input" />
+   <Set var="$fpui_handle" value="$fpui_hdl_01"/>
+   <Set var="$focus" value="%0"/>
+   <While expression="$focus NE %1">
+      <Sleep time="%1"/>
+      <Call ref="fpui_get_focus" setUp="API_Init_Variables"/>
+   </While>
+
+   <!--  verify attributes match defaults (and not any prior changes) -->
+   <Call ref="fpui_get_window_attr" setUp="API_Init_Variables"/>
+   <If expression="$w_attr NE $attr_default">
+      <Then>
+      <Print>Window attributes do not match defaults</Print>
+      <Abort status="FAIL" />
+      </Then>
+   </If>
+
+   <!--  verify VD attributes of second app match defaults -->
+   <Dump dump="VD" file="@C2030_vd_default.txt"/>
+   <If expression="!VDCompare(@C2030_vd_default.txt) EQ #FALSE">
+      <Then>
+      <Print>Initial VD attributes incorrect</Print>
+      <Dump dump="VD" force="#TRUE" file="@C2030_vd_default_err.txt"/>
       <Abort status="FAIL"/>
       </Then>
    </If>
 
    <!-- AUX switch -->
-   <!-- have second app (non-focus) reserve switch -->
-   <Set var="$fpui_hdl" value="$fpui_handle_01"/>
+   <!-- have first app (non-focus) reserve switch -->
    <Call ref="fpui_open_aux_switch" setUp="API_Init_Variables"/>
+   <Set var="$aux_hdl_00" value="$aux_handle"/>
    
    <!-- set the switch to ON, read and confirm -->
    <Aux flip="#ON"/>
-   <Call ref="fpui_read_aux_switch"setUp="API_Init_Variables" />
+   <Call ref="fpui_read_aux_switch" setUp="API_Init_Variables" />
    <If expression="$aux_sw EQ #OFF">
       <Then>
       <Print>AUX switch failed (ON test)</Print>
@@ -1333,7 +1430,7 @@ APIR3.1.1.2[19]	If a window was registered with access to the Aux Switch, the AP
    
    <!-- set the switch to OFF, read and confirm -->
    <Aux flip="#OFF"/>
-   <Call ref="fpui_read_aux_switch"setUp="API_Init_Variables" />
+   <Call ref="fpui_read_aux_switch" setUp="API_Init_Variables" />
    <If expression="$aux_sw EQ #ON">
       <Then>
       <Print>AUX switch failed (OFF test)</Print>
@@ -1341,20 +1438,19 @@ APIR3.1.1.2[19]	If a window was registered with access to the Aux Switch, the AP
       </Then>
    </If>
 
-   <!-- have first app attempt to reserve AUX switch (should FAIL) -->
-   <Set var="$fpui_hdl" value="$fpui_handle_01"/>
+   <!-- have second app attempt to reserve AUX switch (should FAIL) -->
    <Set var="$abort_mode" value="#FALSE"/> <!-- allow failure confirmation -->
    <Call ref="fpui_open_aux_switch" setUp="API_Init_Variables"/>
    <Set var="$abort_mode" value="#TRUE"/> <!-- restore normal failure mode -->
    
    <!-- release AUX switch reservation -->
-   <Set var="$fpui_hdl" value="$fpui_handle_01"/>
+   <Set var="$aux_handle" value="$aux_hdl_00"/>
    <Call ref="fpui_close_aux_switch" setUp="API_Init_Variables" />
 
    <!-- close both apps -->
-   <Set var="$fpui_hdl" value="$fpui_handle_01"/>
+   <Set var="$fpui_handle" value="$fpui_hdl_01"/>
    <Call ref="fpui_close" setUp="API_Init_Variables"/>
-   <Set var="$fpui_hdl" value="$fpui_handle_00"/>
+   <Set var="$fpui_handle" value="$fpui_hdl_00"/>
    <Call ref="fpui_close" setUp="API_Init_Variables"/>
 </TestCase>
 
