@@ -16,11 +16,14 @@ APIR3.1.1.2[33]	The API shall provide a function which application programs
   
  Date      Revision    Description
  2/22/16   1.0         initial release
+ 2/24/16   1.1         second release
+ 5/18/16   1.2         third release (JMG)
 -->
 
 <Define var="$fpui_handle"  type="fpui_handle" />
 <Define var="$fpui_hdl_00"  type="fpui_handle" />
 <Define var="$fpui_hdl_01"  type="fpui_handle" />
+<Define var="$aux_handle"   type="fpui_aux_handle" />
 <Define var="$errno"        type="int" />
 <Define var="$returnCode"   type="int" />
 <Define var="$tab_clear"    type="int" />
@@ -160,7 +163,6 @@ APIR3.1.1.2[33]	The API shall provide a function which application programs
 </Subroutine>
 
 <SignalHandler name="SigHandler" description="Signal handler for SIGWINCH">
-	<Print>SIGWINCH occurred</Print>
 	<Set var="$panel_change" value="#TRUE"/>
 </SignalHandler>
 
@@ -1144,7 +1146,11 @@ APIR3.1.1.2[33]	The API shall provide a function which application programs
    <Set var="$abort_mode" value="#TRUE"/>
    <Set var="$failed"     value="#FALSE"/>
 
-   <!-- setup two FPUI spplications -->
+   <!-- enable signal handler on panel changes -->
+   <Signal ref="SigHandler" signal="#SIGWINCH" action="enable"/>
+   <Set var="$panel_change" value="#FALSE"/>
+
+   <!-- setUp two FPUI spplications -->
    <Set var="$flags"       value="#O_RDWR"/>
    <Set var="$regname"     value="@C2080_00"/>
    <Call ref="fpui_open"   setUp="API_Init_Variables"/>
@@ -1155,12 +1161,8 @@ APIR3.1.1.2[33]	The API shall provide a function which application programs
    <Call ref="fpui_open"   setUp="API_Init_Variables"/>
    <Set var="$fpui_hdl_01" value="$fpui_handle"/>
 
-   <!-- enable signal handler on panel changes -->
-   <Signal ref="SigHandler" signal="#SIGWINCH" action="enable"/>
-   <Set var="$panel_change" value="#FALSE"/>
-
    <!-- put the first app in focus, wait for confirmation -->
-   <Set var="$fpui_hdl" value="$fpui_handle_00"/>
+   <Set var="$fpui_handle" value="$fpui_hdl_00"/>
    <FPUIInput file="@Cxxxx_key0.txt" description="Provide keypress [0] input" />
    <Set var="$focus" value="%0"/>
    <While expression="$focus NE %1">
@@ -1179,9 +1181,23 @@ APIR3.1.1.2[33]	The API shall provide a function which application programs
    
    <!-- return to FPM -->
    <Call ref="Return_To_FPM" />
+   <Set var="$focus" value="%1"/>
+   <While expression="$focus NE %0">
+      <Sleep time="%1"/>
+      <Call ref="fpui_get_focus" setUp="API_Init_Variables"/>
+   </While>
+
+   <!-- confirm async notification of first app 'lost focus' -->
+   <If expression="$panel_change NE #TRUE">
+      <Then>
+      <Print>SIGWINCH signal failed (2)</Print>
+      <Abort status="FAIL" />
+      </Then>
+   </If>
+   <Set var="$panel_change" value="#FALSE"/>
 
    <!-- put the second app in focus, wait for confirmation -->
-   <Set var="$fpui_hdl" value="$fpui_handle_01"/>
+   <Set var="$fpui_handle" value="$fpui_hdl_01"/>
    <FPUIInput file="@Cxxxx_key1.txt" description="Provide keypress [1] input" />
    <Set var="$focus" value="%0"/>
    <While expression="$focus NE %1">
@@ -1192,15 +1208,15 @@ APIR3.1.1.2[33]	The API shall provide a function which application programs
    <!-- confirm async notification of second app 'in focus' -->
    <If expression="$panel_change NE #TRUE">
       <Then>
-      <Print>SIGWINCH signal failed (2)</Print>
+      <Print>SIGWINCH signal failed (3)</Print>
       <Abort status="FAIL" />
       </Then>
    </If>
    
    <!-- close both apps -->
-   <Set var="$fpui_hdl" value="$fpui_handle_01"/>
+   <Set var="$fpui_handle" value="$fpui_hdl_01"/>
    <Call ref="fpui_close" setUp="API_Init_Variables"/>
-   <Set var="$fpui_hdl" value="$fpui_handle_00"/>
+   <Set var="$fpui_handle" value="$fpui_hdl_00"/>
    <Call ref="fpui_close" setUp="API_Init_Variables"/>
 </TestCase>
 
