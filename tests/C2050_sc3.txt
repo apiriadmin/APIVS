@@ -1,0 +1,10 @@
+# ATC 5401 API Reference Implementation Project 
+# 
+#     Filename: C2050_sc3.txt
+#    File Type: APIVS flat file (text format)
+#    Test Case: APIVS.TCS.2050
+#  Description: special bit-mapped character (3)
+# 
+# Date      Revision    Description
+# 2/24/16   1.0         initial release
+0x31 0x32 0x33 0x34 0x35 0x36 0x37 0x38
