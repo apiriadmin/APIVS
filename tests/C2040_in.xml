@@ -42,6 +42,8 @@ APIR3.1.1.2[18]	The API shall provide a function to return the cursor
  
  Date      Revision    Description
  2/22/16   1.0         initial release
+ 2/24/16   1.1         second release
+ 5/18/16   1.2         third release (JMG)
 -->
 
 <Define var="$fpui_handle"  type="fpui_handle" />
@@ -1176,6 +1178,14 @@ APIR3.1.1.2[18]	The API shall provide a function to return the cursor
    <Set var="$regname" value="@C2040"/>
    <Call ref="fpui_open" setUp="API_Init_Variables"/>
 
+   <!-- put the app in focus, wait for confirmation -->
+   <FPUIInput file="@Cxxxx_key0.txt" description="Provide keypress [0] input" />
+   <Set var="$focus" value="%0"/>
+   <While expression="$focus NE %1">
+      <Sleep time="%1"/>
+      <Call ref="fpui_get_focus" setUp="API_Init_Variables"/>
+   </While>
+
    <!-- write to the VD using all write methods -->
    <Set var="$write_buf" value="@C2040"/>
    <Set var="$write_chr" value="@J"/>
@@ -1189,26 +1199,37 @@ APIR3.1.1.2[18]	The API shall provide a function to return the cursor
    <Call ref="fpui_write_string"    setUp="API_Init_Variables"/>
    <Call ref="fpui_write_string_at" setUp="API_Init_Variables"/>
 
+   <!-- re-position the cursor and confirm -->>
+   <Set var="$row"    value="%5"/>
+   <Set var="$column" value="%1"/>
+   <Call ref="fpui_set_cursor_pos" setUp="API_Init_Variables"/>
+   <Call ref="fpui_get_cursor_pos" setUp="API_Init_Variables"/>
+   <If expression="$row NE %5">
+      <Then>
+      <Print>Set cursor position failed (row)</Print>
+      <Abort status="FAIL" />
+      </Then>
+   </If>
+   <If expression="$column NE %1">
+      <Then>
+      <Print>Set cursor position failed (column)</Print>
+      <Abort status="FAIL" />
+      </Then>
+   </If>
+
    <!--  verify VD content -->
-   <Dump dump="VD" file="@C2040_vd"/> 
-   <If expression="!VDCompare(@C2040_vd) EQ #FALSE">
+   <Dump dump="VD" file="@C2040_vd_1.txt"/>
+   <If expression="!VDCompare(@C2040_vd_1.txt) EQ #FALSE">
       <Then>
       <Print>VD content incorrect</Print>
-      <Dump dump="VD" force="#TRUE" file="@C2040_vd_err"/>
+      <Dump dump="VD" force="#TRUE" file="@C2040_vd_1_err.txt"/>
       <Abort status="FAIL"/>
       </Then>
    </If>
-   <Call ref="fpui_close" setUp="API_Init_Variables" />
-
-   <!-- open a new FPUI connection (use O_NONBLOCK) -->
-   <Set var="$flags"   value="#O_RDWR"/>
-   <Set var="$flags"   value="#O_NONBLOCK" operation="add" />
-   <Set var="$regname" value="@C2040"/>
-   <Call ref="fpui_open" setUp="API_Init_Variables"/>
 
    <!-- read and validate keystrokes using all read methods -->
    <FPUIInput file="@Cxxxx_key0.txt" description="Provide keypress [0] input"/>
-   <Sleep time="%1" />
+   <Sleep time="%1"/>
    <Call ref="fpui_poll" setUp="API_Init_Variables"/>
    <If expression="$poll_data NE %1">
       <Then>
@@ -1217,8 +1238,6 @@ APIR3.1.1.2[18]	The API shall provide a function to return the cursor
       </Then>
    </If>
 
-   <FPUIInput file="@Cxxxx_key1.txt" description="Provide keypress [1] input"/>
-   <Sleep time="%1" />
    <Call ref="fpui_read" setUp="API_Init_Variables"/>
    <If expression="$read_cnt NE %1">
       <Then>
@@ -1226,23 +1245,38 @@ APIR3.1.1.2[18]	The API shall provide a function to return the cursor
       <Abort status="FAIL"/>
       </Then>
    </If>
-   
-   <FPUIInput file="@Cxxxx_key2.txt" description="Provide keypress [2] input"/>
+   <If expression="$read_buf NE @0">
+      <Then>
+      <Print>Function fpui_read() failed</Print>
+      <Format var="$read_buf" />
+      <Abort status="FAIL"/>
+      </Then>
+   </If>
+
+   <FPUIInput file="@Cxxxx_key1.txt" description="Provide keypress [1] input"/>
    <Sleep time="%1" />
    <Call ref="fpui_read_char" setUp="API_Init_Variables"/>
-   <If expression="$read_chr NE %2">
+   <If expression="$read_chr NE @1">
       <Then>
       <Print>Function fpui_read_char() failed</Print>
       <Abort status="FAIL"/>
       </Then>
    </If>
 
-   <FPUIInput file="@Cxxxx_key3.txt" description="Provide keypress [3] input"/>
+   <Set var="$key_str" file="@Cxxxx_keyESC.txt"/>
+   <FPUIInput file="@Cxxxx_keyESC.txt" description="Provide keypress [ESC] input"/>
    <Sleep time="%1" />
    <Call ref="fpui_read_string" setUp="API_Init_Variables"/>
-   <If expression="$read_cnt NE %1">
+   <If expression="$read_cnt NE %3">
       <Then>
       <Print>Function fpui_read_string() failed</Print>
+      <Abort status="FAIL"/>
+      </Then>
+   </If>
+   <If expression="$read_buf NE $key_str">
+      <Then>
+      <Print>Function fpui_read_string() failed</Print>
+      <Format var="$read_buf" />
       <Abort status="FAIL"/>
       </Then>
    </If>
