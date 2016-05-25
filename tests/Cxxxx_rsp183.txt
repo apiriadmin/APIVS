@@ -1,0 +1,11 @@
+# ATC 5401 API Reference Implementation Project 
+# 
+#     Filename: C3020_r183_a.txt
+#    File Type: APIVS flat file (text format)
+#    Test Case: APIRI.TCS.3020
+#  Description: file load of Response Frame 183
+#               (CF 55: Set Outputs)
+# 
+# Date      Revision    Description
+# 2/24/16   1.0         initial release
+0xB7 0x00

@@ -102,18 +102,37 @@ APIR3.1.2[27]	When the disable communications method is called, the API shall
  Date      Revision    Description
  2/22/16   1.0         initial release
  2/25/16   1.1         second release
+ 5/23/16   1.2         third release (JMG)
 -->
 
 <Define var="$returnCode"     type="int" />
 <Define var="$errno"          type="int" />
 <Define var="$fio_handle"     type="FIO_APP_HANDLE" />
 <Define var="$fiod_handle"    type="FIO_DEV_HANDLE" />
+<Define var="$fiod_hdl_332"   type="FIO_DEV_HANDLE" />
+<Define var="$fiod_hdl_TS1"   type="FIO_DEV_HANDLE" />
+<Define var="$fiod_hdl_TS2"   type="FIO_DEV_HANDLE" />
 <Define var="$fiod_hdl_CMU"   type="FIO_DEV_HANDLE" />
-<Define var="$fiod_hdl_ISIU"  type="FIO_DEV_HANDLE" />
-<Define var="$fiod_hdl_OSIU"  type="FIO_DEV_HANDLE" />
+<Define var="$fiod_hdl_IS1"   type="FIO_DEV_HANDLE" />
+<Define var="$fiod_hdl_IS2"   type="FIO_DEV_HANDLE" />
+<Define var="$fiod_hdl_IS3"   type="FIO_DEV_HANDLE" />
+<Define var="$fiod_hdl_IS4"   type="FIO_DEV_HANDLE" />
+<Define var="$fiod_hdl_IS5"   type="FIO_DEV_HANDLE" />
+<Define var="$fiod_hdl_O14S1" type="FIO_DEV_HANDLE" />
+<Define var="$fiod_hdl_O14S2" type="FIO_DEV_HANDLE" />
+<Define var="$fiod_hdl_O6S1"  type="FIO_DEV_HANDLE" />
+<Define var="$fiod_hdl_O6S2"  type="FIO_DEV_HANDLE" />
+<Define var="$fiod_hdl_O6S3"  type="FIO_DEV_HANDLE" />
+<Define var="$fiod_hdl_O6S4"  type="FIO_DEV_HANDLE" />
 <Define var="$fiod_hdl_MMU"   type="FIO_DEV_HANDLE" />
 <Define var="$fiod_hdl_TF1"   type="FIO_DEV_HANDLE" />
+<Define var="$fiod_hdl_TF2"   type="FIO_DEV_HANDLE" />
+<Define var="$fiod_hdl_TF3"   type="FIO_DEV_HANDLE" />
+<Define var="$fiod_hdl_TF4"   type="FIO_DEV_HANDLE" />
 <Define var="$fiod_hdl_DR1"   type="FIO_DEV_HANDLE" />
+<Define var="$fiod_hdl_DR2"   type="FIO_DEV_HANDLE" />
+<Define var="$fiod_hdl_DR3"   type="FIO_DEV_HANDLE" />
+<Define var="$fiod_hdl_DR4"   type="FIO_DEV_HANDLE" />
 <Define var="$fio_view"       type="FIO_VIEW" />
 <Define var="$map_count"      type="int" />
 <Define var="$channel_map"    type="FIO_CHANNEL_MAP" />
@@ -144,6 +163,8 @@ APIR3.1.2[27]	When the disable communications method is called, the API shall
 <Define var="$fio_port"       type="FIO_PORT" />
 <Define var="$fio_device"     type="FIO_DEVICE_TYPE" />
 <Define var="$fiod_status"    type="FIO_FIOD_STATUS" />
+<Define var="$success_rx"     type="unsigned int" />
+<Define var="$error_rx"       type="unsigned int" />
 <Define var="$fm_state"       type="FIO_TS_FM_STATE" />
 <Define var="$vm_state"       type="FIO_TS1_VM_STATE" />
 <Define var="$output_point"   type="unsigned int" />
@@ -235,10 +256,10 @@ APIR3.1.2[27]	When the disable communications method is called, the API shall
       <Then> <Print>EDOM: Math argument out of domain of func</Print> </Then> </If>
    <If expression="$errno EQ %34" >
       <Then> <Print>ERANGE: Math result not representable</Print> </Then> </If>
-   <If expression="$errno EQ %61" >
-      <Then> <Print>ECONNREFUSED: Incompatible device</Print> </Then> </If>
    <If expression="$errno EQ %110" >
       <Then> <Print>ETIMEDOUT: Connection timed out</Print> </Then> </If>
+   <If expression="$errno EQ %111" >
+      <Then> <Print>ECONNREFUSED: Incompatible device</Print> </Then> </If>
       
    <Format var="$errno" />
    <Set var="$failed" value="#TRUE"/>
@@ -1314,120 +1335,122 @@ APIR3.1.2[27]	When the disable communications method is called, the API shall
    
    <Set var="$fio_view"   value="#FIO_VIEW_SYSTEM"/>
    <Set var="$input_type" value="#FIO_INPUTS_RAW"/>
-
+   
+<!--#################################################################-->
    <!-- FIO 332 testing: register with the FIO API -->
-   <Call ref="fio_register" setup="API_Init_Variables"/>
+   <Call ref="fio_register" setUp="API_Init_Variables"/>
    
    <!-- query a 332-type FIO on SP5 -->
    <Set var="$fio_port"   value="#FIO_SP5"/>
    <Set var="$fio_device" value="#FIO332"/>
-   <Call ref="fio_query_fiod" setup="API_Init_Variables"/>
+   <Call ref="fio_query_fiod" setUp="API_Init_Variables"/>
    <If expression="$fiod_query NE %1">
       <Then>
       <Print >FIO332 not available on SP5</Print>
-      <Abort status="FAIL" />
       </Then>
    </If>
-   
+
    <!-- register a 332-type FIO on SP5 -->
    <Set var="$fio_port"   value="#FIO_SP5"/>
    <Set var="$fio_device" value="#FIO332"/>
-   <Call ref="fio_fiod_register" setup="API_Init_Variables"/>
-   
+   <Call ref="fio_fiod_register" setUp="API_Init_Variables"/>
+   <Set var="$fiod_hdl_332" value="$fiod_handle"/>
+
    <!-- confirm that no communications are occuring yet -->
-   <Call ref="fio_fiod_status_reset" setup="API_Init_Variables"/>
+   <Call ref="fio_fiod_status_reset" setUp="API_Init_Variables"/>
    <Sleep time="%5"/>
-   <Call ref="fio_fiod_status_get" setup="API_Init_Variables"/>
+   <Call ref="fio_fiod_status_get" setUp="API_Init_Variables"/>
    <If expression="$fiod_status.success_rx NE %0">
       <Then>
-      <Print >Comm prior to enable (332-1)</Print>
+      <Print>Comm prior to enable (332-1)</Print>
+      <Format var="$success_rx" />
       <Abort status="FAIL" />
       </Then>
    </If>
    <If expression="$fiod_status.error_rx NE %0">
       <Then>
-      <Print >Comm prior to enable (332-2)</Print>
+      <Print>Comm prior to enable (332-2)</Print>
+      <Format var="$error_rx" />
       <Abort status="FAIL" />
       </Then>
    </If>
    
-   <!-- attempt to register an incompatible device on SP5 (NEMA DR BIU)-->
+   <!-- attempt to register an incompatible device on SP5 (NEMA DR1 BIU)-->
    <Set var="$abort_mode" value="#FALSE"/>
    <Set var="$fio_port"   value="#FIO_SP5"/>
    <Set var="$fio_device" value="#FIODR1"/>
-   <Call ref="fio_fiod_register" setup="API_Init_Variables"/>
-   <If expression="$errno NE %61"> <!-- ECONNREFUSED -->
+   <Call ref="fio_fiod_register" setUp="API_Init_Variables"/>
+   <If expression="$errno NE %111"> <!-- ECONNREFUSED -->
       <Then>
-      <Print >Incompatible assignment succeeded</Print>
+      <Print>Incompatible assignment succeeded</Print>
       <Abort status="FAIL" />
       </Then>
    </If>
    <Set var="$abort_mode" value="#TRUE"/>
    
    <!-- setup FIO332 SDLC response messages -->
-   <FIOResponse file="@FIO_r177" frame="%177" description="(FIO C49->R177)"/>
-   <FIOResponse file="@FIO_r180" frame="%180" description="(FIO C52->R180)"/>
-   <FIOResponse file="@FIO_r183" frame="%183" description="(FIO C55->R183)"/>
+   <FIOResponse file="@Cxxxx_rsp177.txt" frame="%177" description="(FIO C49->R177)"/>
+   <FIOResponse file="@Cxxxx_rsp181a.txt" frame="%181" description="(FIO C53->R181)"/>
+   <FIOResponse file="@Cxxxx_rsp183.txt" frame="%183" description="(FIO C55->R183)"/>
   
    <!-- enable comm -->
-   <Call ref="fio_fiod_enable" setup="API_Init_Variables"/>
-   <Sleep time="%1"/>
+   <Set var="$fiod_handle" value="$fiod_hdl_332"/>
+   <Call ref="fio_fiod_enable" setUp="API_Init_Variables"/>
+   <Sleep time="%2"/>
    
    <!-- validate command messages -->
-   <Dump dump="CMDMSG" file="@FIO_c49" frame="%49"/> 
-   <Dump dump="CMDMSG" file="@FIO_c52" frame="%52"/> 
-   <Dump dump="CMDMSG" file="@FIO_c55" frame="%55"/> 
-   <If expression="!CMDMSGCompare(@FIO_c49,%49) EQ #FALSE">
+   <Dump dump="CMDMSG" file="@Cxxxx_cmd49.txt" frame="%49"/> 
+   <Dump dump="CMDMSG" file="@Cxxxx_cmd53.txt" frame="%53"/> 
+   <Dump dump="CMDMSG" file="@Cxxxx_cmd55a.txt" frame="%55"/> 
+   <If expression="!CMDMSGCompare(@Cxxxx_cmd49.txt,%49) EQ #FALSE">
       <Then>
       <Print>CMDMSG 49 incorrect</Print>
-      <Dump dump="CMDMSG" force="#TRUE" file="@FIO_c49_err" frame="%49"/>
+      <Dump dump="CMDMSG" force="#TRUE" file="@C3010_cmd49_err.txt" frame="%49"/>
       <Abort status="FAIL" />
       </Then>
    </If>
-   <If expression="!CMDMSGCompare(@FIO_c52,%52) EQ #FALSE">
+   <If expression="!CMDMSGCompare(@Cxxxx_cmd53.txt,%53) EQ #FALSE">
       <Then>
-      <Print>CMDMSG 52 incorrect</Print>
-      <Dump dump="CMDMSG" force="#TRUE" file="@FIO_c52_err" frame="%52"/>
+      <Print>CMDMSG 53 incorrect</Print>
+      <Dump dump="CMDMSG" force="#TRUE" file="@C3010_cmd53_err.txt" frame="%53"/>
       <Abort status="FAIL" />
       </Then>
    </If>
-   <If expression="!CMDMSGCompare(@FIO_c55,%55) EQ #FALSE">
+   <If expression="!CMDMSGCompare(@Cxxxx_cmd55a.txt,%55) EQ #FALSE">
       <Then>
       <Print>CMDMSG 55 incorrect</Print>
-      <Dump dump="CMDMSG" force="#TRUE" file="@FIO_c55_err" frame="%55"/>
+      <Dump dump="CMDMSG" force="#TRUE" file="@Cxxxx_cmd55a_err.txt" frame="%55"/>
       <Abort status="FAIL" />
       </Then>
    </If>
 
    <!-- check comm status -->
-   <Sleep time="%10"/>
+   <Sleep time="%5"/>
    <Call ref="fio_fiod_status_get" setUp="API_Init_Variables"/>
    <If expression="$fiod_status.success_rx EQ %0">
       <Then>
-      <Print >No comm (332)</Print>
+      <Print>No comm (332)</Print>
+      <Format var="$success_rx" />
       <Abort status="FAIL" />
       </Then>
    </If>
-   <If expression="$fiod_status.error_rx NE %0">
-      <Then>
-      <Print >Comm errors (332)</Print>
-      <Abort status="FAIL" />
-      </Then>
-   </If>
-   
+
    <!-- disable comm and verify -->
    <Call ref="fio_fiod_disable"      setUp="API_Init_Variables"/>
    <Call ref="fio_fiod_status_reset" setUp="API_Init_Variables"/>
-   <Call ref="fio_fiod_status_get"   setUp="API_Init_Variables"/>
+   <Sleep time="%5"/>   
+   <Call ref="fio_fiod_status_get" setUp="API_Init_Variables"/>
    <If expression="$fiod_status.success_rx NE %0">
       <Then>
-      <Print >Comm not disabled (332-1)</Print>
+      <Print>Comm not disabled (332-1)</Print>
+      <Format var="$success_rx" />
       <Abort status="FAIL" />
       </Then>
    </If>
    <If expression="$fiod_status.error_rx NE %0">
       <Then>
-      <Print >Comm not disabled (332-2)</Print>
+      <Print>Comm not disabled (332-2)</Print>
+      <Format var="$error_rx" />
       <Abort status="FAIL" />
       </Then>
    </If>
@@ -1441,7 +1464,900 @@ APIR3.1.2[27]	When the disable communications method is called, the API shall
    
    <!-- disconnect from FIO API -->
    <Call ref="fio_deregister" setUp="API_Init_Variables"/>
+
+   <Sleep time="%5"/>
+   <!--#################################################################-->
+   <!-- FIO NEMA TS1 testing: register with the FIO API -->
+   <Call ref="fio_register" setUp="API_Init_Variables"/>
    
+   <!-- register a  FIOTS1 on SP5 -->
+   <Set var="$fio_port"   value="#FIO_SP5"/>
+   <Set var="$fio_device" value="#FIOTS1"/>
+   <Call ref="fio_fiod_register" setUp="API_Init_Variables"/>
+   <Set var="$fiod_hdl_TS1" value="$fiod_handle"/>
+   
+   <!-- setup FIOTS1 SDLC response messages -->
+   <FIOResponse file="@Cxxxx_rsp177.txt" frame="%177" description="(FIO C49->R177)"/>
+   <FIOResponse file="@Cxxxx_rsp181b.txt" frame="%181" description="(FIO C53->R181)"/>
+   <FIOResponse file="@Cxxxx_rsp183.txt" frame="%183" description="(FIO C55->R183)"/>
+  
+   <!-- enable comm -->
+   <Call ref="fio_fiod_enable" setUp="API_Init_Variables"/>
+   <Sleep time="%2"/>
+   
+   <!-- validate command messages -->
+   <If expression="!CMDMSGCompare(@Cxxxx_cmd49a.txt,%49) EQ #FALSE">
+      <Then>
+      <If expression="!CMDMSGCompare(@Cxxxx_cmd49b.txt,%49) EQ #FALSE">
+         <Then>
+         <Print>CMDMSG 49 incorrect</Print>
+         <Dump dump="CMDMSG" force="#TRUE" file="@C3010_cmd49_err.txt" frame="%49"/>
+         <Abort status="FAIL" />
+         </Then>
+      </If>
+      </Then>
+   </If>
+   <If expression="!CMDMSGCompare(@Cxxxx_cmd53.txt,%53) EQ #FALSE">
+      <Then>
+      <Print>CMDMSG 53 incorrect</Print>
+      <Dump dump="CMDMSG" force="#TRUE" file="@C3010_cmd53_err.txt" frame="%53"/>
+      <Abort status="FAIL" />
+      </Then>
+   </If>
+   <If expression="!CMDMSGCompare(@Cxxxx_cmd55b.txt,%55) EQ #FALSE">
+      <Then>
+      <Print>CMDMSG 55 incorrect</Print>
+      <Dump dump="CMDMSG" force="#TRUE" file="@Cxxxx_cmd55b_err.txt" frame="%55"/>
+      <Abort status="FAIL" />
+      </Then>
+   </If>
+
+   <!-- check comm status -->
+   <Sleep time="%5"/>
+   <Call ref="fio_fiod_status_get" setUp="API_Init_Variables"/>
+   <If expression="$fiod_status.success_rx EQ %0">
+      <Then>
+      <Print>No comm (TS1)</Print>
+      <Format var="$success_rx" />
+      <Abort status="FAIL" />
+      </Then>
+   </If>
+
+   <!-- disable comm and verify -->
+   <Call ref="fio_fiod_disable"      setUp="API_Init_Variables"/>
+
+   <!-- deregister device and confirm no connection -->
+   <Call ref="fio_fiod_deregister" setUp="API_Init_Variables"/>
+   <Set var="$abort_mode" value="#FALSE"/>
+   <!-- (call to fio_fiod_status_get should fail) -->
+   <Call ref="fio_fiod_status_get" setUp="API_Init_Variables"/>
+   <Set var="$abort_mode" value="#TRUE"/>
+   
+   <!-- disconnect from FIO API -->
+   <Call ref="fio_deregister" setUp="API_Init_Variables"/>
+
+   <Sleep time="%5"/>
+<!--#################################################################-->
+   <!-- FIO NEMA TS2 testing: register with the FIO API -->
+   <Call ref="fio_register" setUp="API_Init_Variables"/>
+   
+   <!-- register a  FIOTS2 on SP5 -->
+   <Set var="$fio_port"   value="#FIO_SP5"/>
+   <Set var="$fio_device" value="#FIOTS2"/>
+   <Call ref="fio_fiod_register" setUp="API_Init_Variables"/>
+   <Set var="$fiod_hdl_TS2" value="$fiod_handle"/>
+
+   <!-- setup FIOTS2 SDLC response messages -->
+   <FIOResponse file="@Cxxxx_rsp177.txt" frame="%177" description="(FIO C49->R177)"/>
+   <FIOResponse file="@Cxxxx_rsp183.txt" frame="%183" description="(FIO C55->R183)"/>
+  
+   <!-- enable comm (TS2) -->
+   <Call ref="fio_fiod_enable" setUp="API_Init_Variables"/>
+   <Sleep time="%2"/>
+   
+   <!-- validate command messages (TS2) -->
+   <If expression="!CMDMSGCompare(@Cxxxx_cmd49a.txt,%49) EQ #FALSE">
+      <Then>
+      <If expression="!CMDMSGCompare(@Cxxxx_cmd49b.txt,%49) EQ #FALSE">
+         <Then>
+         <Print>CMDMSG 49 incorrect</Print>
+         <Dump dump="CMDMSG" force="#TRUE" file="@C3010_cmd49_err.txt" frame="%49"/>
+         <Abort status="FAIL" />
+         </Then>
+      </If>
+      </Then>
+   </If>
+   <If expression="!CMDMSGCompare(@Cxxxx_cmd55b.txt,%55) EQ #FALSE">
+      <Then>
+      <Print>CMDMSG 55 incorrect</Print>
+      <Dump dump="CMDMSG" force="#TRUE" file="@Cxxxx_cmd55b_err.txt" frame="%55"/>
+      <Abort status="FAIL" />
+      </Then>
+   </If>
+
+   <Sleep time="%10"/>
+
+   <!-- check comm status (TS2) -->
+   <Set var="$fiod_handle" value="$fiod_hdl_TS2"/>
+   <Call ref="fio_fiod_status_get" setUp="API_Init_Variables"/>
+   <If expression="$fiod_status.success_rx EQ %0">
+      <Then>
+      <Print>No comm (TS2)</Print>
+      <Format var="$success_rx" />
+      <Abort status="FAIL" />
+      </Then>
+   </If>
+   
+   <!-- disable FIOTS2 comm -->
+   <Set var="$fiod_handle" value="$fiod_hdl_TS2"/>
+   <Call ref="fio_fiod_disable"      setUp="API_Init_Variables"/>
+   <!-- deregister device and confirm no connection -->
+   <Call ref="fio_fiod_deregister" setUp="API_Init_Variables"/>
+   <Set var="$abort_mode" value="#FALSE"/>
+   <!-- (call to fio_fiod_status_get should fail) -->
+   <Call ref="fio_fiod_status_get" setUp="API_Init_Variables"/>
+   <Set var="$abort_mode" value="#TRUE"/>
+   
+
+   <!-- register a FIOMMU on SP5 -->
+   <Set var="$fio_device" value="#FIOMMU"/>
+   <Call ref="fio_fiod_register" setUp="API_Init_Variables"/>
+   <Set var="$fiod_hdl_MMU" value="$fiod_handle"/>
+
+   <!-- setup FIOMMU SDLC response messages -->
+   <FIOResponse file="@Cxxxx_rsp128.txt" frame="%128" description="(FIO C0->R128)"/>
+   <FIOResponse file="@Cxxxx_rsp129.txt" frame="%129" description="(FIO C1->R129)"/>
+   <FIOResponse file="@Cxxxx_rsp131.txt" frame="%131" description="(FIO C3->R131)"/>
+  
+   <!-- enable comm (MMU) -->
+   <Call ref="fio_fiod_enable" setUp="API_Init_Variables"/>
+
+   <!-- register a FIODR1 on SP5 -->
+   <Set var="$fio_device" value="#FIODR1"/>
+   <Call ref="fio_fiod_register" setUp="API_Init_Variables"/>
+   <Set var="$fiod_hdl_DR1" value="$fiod_handle"/>
+
+   <!-- setup FIODR1 SDLC response messages -->
+   <FIOResponse file="@Cxxxx_rsp148.txt" frame="%148" description="(FIO C20->R148)"/>
+
+   <!-- enable comm DR1 -->
+   <Call ref="fio_fiod_enable" setUp="API_Init_Variables"/>
+
+   <!-- register a FIODR2 on SP5 -->
+   <Set var="$fio_device" value="#FIODR2"/>
+   <Call ref="fio_fiod_register" setUp="API_Init_Variables"/>
+   <Set var="$fiod_hdl_DR2" value="$fiod_handle"/>
+
+   <!-- setup FIODR2 SDLC response messages -->
+   <FIOResponse file="@Cxxxx_rsp149.txt" frame="%149" description="(FIO C21->R149)"/>
+  
+   <!-- enable comm DR2 -->
+   <Call ref="fio_fiod_enable" setUp="API_Init_Variables"/>
+
+   <!-- register a FIODR3 on SP5 -->
+   <Set var="$fio_device" value="#FIODR3"/>
+   <Call ref="fio_fiod_register" setUp="API_Init_Variables"/>
+   <Set var="$fiod_hdl_DR3" value="$fiod_handle"/>
+
+   <!-- setup FIODR3 SDLC response messages -->
+   <FIOResponse file="@Cxxxx_rsp150.txt" frame="%150" description="(FIO C22->R150)"/>
+  
+   <!-- enable comm DR3 -->
+   <Call ref="fio_fiod_enable" setUp="API_Init_Variables"/>
+
+   <!-- register a FIODR4 on SP5 -->
+   <Set var="$fio_device" value="#FIODR4"/>
+   <Call ref="fio_fiod_register" setUp="API_Init_Variables"/>
+   <Set var="$fiod_hdl_DR4" value="$fiod_handle"/>
+
+   <!-- setup FIODR4 SDLC response messages -->
+   <FIOResponse file="@Cxxxx_rsp151.txt" frame="%151" description="(FIO C23->R151)"/>
+  
+   <!-- enable comm DR4 -->
+   <Call ref="fio_fiod_enable" setUp="API_Init_Variables"/>
+
+   <!-- register a FIOTF1 on SP5 -->
+   <Set var="$fio_device" value="#FIOTF1"/>
+   <Call ref="fio_fiod_register" setUp="API_Init_Variables"/>
+   <Set var="$fiod_hdl_TF1" value="$fiod_handle"/>
+
+   <!-- setup FIOTF1 SDLC response messages -->
+   <FIOResponse file="@Cxxxx_rsp138.txt" frame="%138" description="(FIO C10->R138)"/>
+  
+   <!-- enable comm TF1 -->
+   <Call ref="fio_fiod_enable" setUp="API_Init_Variables"/>
+
+   <Sleep time="%10"/>
+
+   <!-- check comm status (MMU) -->
+   <Set var="$fiod_handle" value="$fiod_hdl_MMU"/>
+   <Call ref="fio_fiod_status_get" setUp="API_Init_Variables"/>
+   <If expression="$fiod_status.success_rx EQ %0">
+      <Then>
+      <Print>No comm (MMU)</Print>
+      <Format var="$success_rx" />
+      <Abort status="FAIL" />
+      </Then>
+   </If>
+
+   <!-- check comm status (DR1) -->
+   <Set var="$fiod_handle" value="$fiod_hdl_DR1"/>
+   <Call ref="fio_fiod_status_get" setUp="API_Init_Variables"/>
+   <If expression="$fiod_status.success_rx EQ %0">
+      <Then>
+      <Print>No comm (DR1)</Print>
+      <Format var="$success_rx" />
+      <Abort status="FAIL" />
+      </Then>
+   </If>
+
+   <!-- check comm status (DR2) -->
+   <Set var="$fiod_handle" value="$fiod_hdl_DR2"/>
+   <Call ref="fio_fiod_status_get" setUp="API_Init_Variables"/>
+   <If expression="$fiod_status.success_rx EQ %0">
+      <Then>
+      <Print>No comm (DR2)</Print>
+      <Format var="$success_rx" />
+      <Abort status="FAIL" />
+      </Then>
+   </If>
+
+   <!-- check comm status (DR3) -->
+   <Set var="$fiod_handle" value="$fiod_hdl_DR3"/>
+   <Call ref="fio_fiod_status_get" setUp="API_Init_Variables"/>
+   <If expression="$fiod_status.success_rx EQ %0">
+      <Then>
+      <Print>No comm (DR3)</Print>
+      <Format var="$success_rx" />
+      <Abort status="FAIL" />
+      </Then>
+   </If>
+
+   <!-- check comm status (DR4) -->
+   <Set var="$fiod_handle" value="$fiod_hdl_DR4"/>
+   <Call ref="fio_fiod_status_get" setUp="API_Init_Variables"/>
+   <If expression="$fiod_status.success_rx EQ %0">
+      <Then>
+      <Print>No comm (DR4)</Print>
+      <Format var="$success_rx" />
+      <Abort status="FAIL" />
+      </Then>
+   </If>
+
+   <!-- check comm status (TF1) -->
+   <Set var="$fiod_handle" value="$fiod_hdl_TF1"/>
+   <Call ref="fio_fiod_status_get" setUp="API_Init_Variables"/>
+   <If expression="$fiod_status.success_rx EQ %0">
+      <Then>
+      <Print>No comm (TF1)</Print>
+      <Format var="$success_rx" />
+      <Abort status="FAIL" />
+      </Then>
+   </If>
+
+   <!-- disable FIOMMU comm -->
+   <Set var="$fiod_handle" value="$fiod_hdl_MMU"/>
+   <Call ref="fio_fiod_disable"      setUp="API_Init_Variables"/>
+   <!-- deregister device and confirm no connection -->
+   <Call ref="fio_fiod_deregister" setUp="API_Init_Variables"/>
+   <Set var="$abort_mode" value="#FALSE"/>
+   <!-- (call to fio_fiod_status_get should fail) -->
+   <Call ref="fio_fiod_status_get" setUp="API_Init_Variables"/>
+   <Set var="$abort_mode" value="#TRUE"/>
+
+   <!-- disable FIODR1 comm -->
+   <Set var="$fiod_handle" value="$fiod_hdl_DR1"/>
+   <Call ref="fio_fiod_disable"      setUp="API_Init_Variables"/>
+   <!-- deregister device and confirm no connection -->
+   <Call ref="fio_fiod_deregister" setUp="API_Init_Variables"/>
+   <Set var="$abort_mode" value="#FALSE"/>
+   <!-- (call to fio_fiod_status_get should fail) -->
+   <Call ref="fio_fiod_status_get" setUp="API_Init_Variables"/>
+   <Set var="$abort_mode" value="#TRUE"/>
+
+   <!-- disable FIODR2 comm -->
+   <Set var="$fiod_handle" value="$fiod_hdl_DR2"/>
+   <Call ref="fio_fiod_disable"      setUp="API_Init_Variables"/>
+   <!-- deregister device and confirm no connection -->
+   <Call ref="fio_fiod_deregister" setUp="API_Init_Variables"/>
+   <Set var="$abort_mode" value="#FALSE"/>
+   <!-- (call to fio_fiod_status_get should fail) -->
+   <Call ref="fio_fiod_status_get" setUp="API_Init_Variables"/>
+   <Set var="$abort_mode" value="#TRUE"/>
+
+   <!-- disable FIODR3 comm -->
+   <Set var="$fiod_handle" value="$fiod_hdl_DR3"/>
+   <Call ref="fio_fiod_disable"      setUp="API_Init_Variables"/>
+   <!-- deregister device and confirm no connection -->
+   <Call ref="fio_fiod_deregister" setUp="API_Init_Variables"/>
+   <Set var="$abort_mode" value="#FALSE"/>
+   <!-- (call to fio_fiod_status_get should fail) -->
+   <Call ref="fio_fiod_status_get" setUp="API_Init_Variables"/>
+   <Set var="$abort_mode" value="#TRUE"/>
+
+   <!-- disable FIODR4 comm -->
+   <Set var="$fiod_handle" value="$fiod_hdl_DR4"/>
+   <Call ref="fio_fiod_disable"      setUp="API_Init_Variables"/>
+   <!-- deregister device and confirm no connection -->
+   <Call ref="fio_fiod_deregister" setUp="API_Init_Variables"/>
+   <Set var="$abort_mode" value="#FALSE"/>
+   <!-- (call to fio_fiod_status_get should fail) -->
+   <Call ref="fio_fiod_status_get" setUp="API_Init_Variables"/>
+   <Set var="$abort_mode" value="#TRUE"/>
+
+   <!-- disable FIOTF1 comm -->
+   <Set var="$fiod_handle" value="$fiod_hdl_TF1"/>
+   <Call ref="fio_fiod_disable"      setUp="API_Init_Variables"/>
+   <!-- deregister device and confirm no connection -->
+   <Call ref="fio_fiod_deregister" setUp="API_Init_Variables"/>
+   <Set var="$abort_mode" value="#FALSE"/>
+   <!-- (call to fio_fiod_status_get should fail) -->
+   <Call ref="fio_fiod_status_get" setUp="API_Init_Variables"/>
+   <Set var="$abort_mode" value="#TRUE"/>
+
+   <!-- disconnect from FIO API -->
+   <Call ref="fio_deregister" setUp="API_Init_Variables"/>
+
+   <Sleep time="%5"/>
+<!--#################################################################-->
+   <!-- FIO ITS test: 2 14-Pack Output SIU, register with the FIO API -->
+   <Call ref="fio_register" setUp="API_Init_Variables"/>
+   
+   <!-- register a FIOCMU on SP5 -->
+   <Set var="$fio_port"   value="#FIO_SP5"/>
+   <Set var="$fio_device" value="#FIOCMU"/>
+   <Call ref="fio_fiod_register" setUp="API_Init_Variables"/>
+   <Set var="$fiod_hdl_CMU" value="$fiod_handle"/>
+
+   <!-- setup FIOCMU SDLC response messages -->
+   <FIOResponse file="@Cxxxx_rsp195.txt" frame="%195" description="(FIO C67->R195)"/>
+  
+   <!-- enable comm (CMU) -->
+   <Call ref="fio_fiod_enable" setUp="API_Init_Variables"/>
+
+   <!-- setup FIO SIU* SDLC response messages -->
+   <FIOResponse file="@Cxxxx_rsp177.txt" frame="%177" description="(FIO C49->R177)"/>
+   <FIOResponse file="@Cxxxx_rsp181a.txt" frame="%181" description="(FIO C53->R181)"/>
+   <FIOResponse file="@Cxxxx_rsp183.txt" frame="%183" description="(FIO C55->R183)"/>
+  
+   <!-- register a FIOINSIU1 on SP5 -->
+   <Set var="$fio_device" value="#FIOINSIU1"/>
+   <Call ref="fio_fiod_register" setUp="API_Init_Variables"/>
+   <Set var="$fiod_hdl_IS1" value="$fiod_handle"/>
+
+   <!-- enable comm INSIU1 -->
+   <Call ref="fio_fiod_enable" setUp="API_Init_Variables"/>
+
+   <!-- register a FIOINSIU2 on SP5 -->
+   <Set var="$fio_device" value="#FIOINSIU2"/>
+   <Call ref="fio_fiod_register" setUp="API_Init_Variables"/>
+   <Set var="$fiod_hdl_IS2" value="$fiod_handle"/>
+
+   <!-- enable comm INSIU2 -->
+   <Call ref="fio_fiod_enable" setUp="API_Init_Variables"/>
+
+   <!-- register a FIOINSIU3 on SP5 -->
+   <Set var="$fio_device" value="#FIOINSIU3"/>
+   <Call ref="fio_fiod_register" setUp="API_Init_Variables"/>
+   <Set var="$fiod_hdl_IS3" value="$fiod_handle"/>
+
+   <!-- enable comm INSIU3 -->
+   <Call ref="fio_fiod_enable" setUp="API_Init_Variables"/>
+
+   <!-- register a FIOINSIU4 on SP5 -->
+   <Set var="$fio_device" value="#FIOINSIU4"/>
+   <Call ref="fio_fiod_register" setUp="API_Init_Variables"/>
+   <Set var="$fiod_hdl_IS4" value="$fiod_handle"/>
+
+   <!-- enable comm INSIU4 -->
+   <Call ref="fio_fiod_enable" setUp="API_Init_Variables"/>
+
+   <!-- register a FIOINSIU5 on SP5 -->
+   <Set var="$fio_device" value="#FIOINSIU5"/>
+   <Call ref="fio_fiod_register" setUp="API_Init_Variables"/>
+   <Set var="$fiod_hdl_IS5" value="$fiod_handle"/>
+
+   <!-- enable comm INSIU5 -->
+   <Call ref="fio_fiod_enable" setUp="API_Init_Variables"/>
+
+   <!-- register a  FIOOUT14SIU1 on SP5 -->
+   <Set var="$fio_device" value="#FIOOUT14SIU1"/>
+   <Call ref="fio_fiod_register" setUp="API_Init_Variables"/>
+   <Set var="$fiod_hdl_O14S1" value="$fiod_handle"/>
+
+   <!-- enable comm OUT14SIU1 -->
+   <Call ref="fio_fiod_enable" setUp="API_Init_Variables"/>
+
+   <!-- register a  FIOOUT14SIU2 on SP5 -->
+   <Set var="$fio_device" value="#FIOOUT14SIU2"/>
+   <Call ref="fio_fiod_register" setUp="API_Init_Variables"/>
+   <Set var="$fiod_hdl_O14S2" value="$fiod_handle"/>
+
+   <!-- enable comm OUT14SIU2 -->
+   <Call ref="fio_fiod_enable" setUp="API_Init_Variables"/>
+
+   <Sleep time="%20"/>
+
+   <!-- check comm status (CMU) -->
+   <Set var="$fiod_handle" value="$fiod_hdl_CMU"/>
+   <Call ref="fio_fiod_status_get" setUp="API_Init_Variables"/>
+   <If expression="$fiod_status.success_rx EQ %0">
+      <Then>
+      <Print>No comm (CMU)</Print>
+      <Format var="$success_rx" />
+      <Abort status="FAIL" />
+      </Then>
+   </If>
+
+   <!-- check comm status (INSIU1) -->
+   <Set var="$fiod_handle" value="$fiod_hdl_IS1"/>
+   <Call ref="fio_fiod_status_get" setUp="API_Init_Variables"/>
+   <If expression="$fiod_status.success_rx EQ %0">
+      <Then>
+      <Print>No comm (INSIU1)</Print>
+      <Format var="$success_rx" />
+      <Abort status="FAIL" />
+      </Then>
+   </If>
+
+   <!-- check comm status (INSIU2) -->
+   <Set var="$fiod_handle" value="$fiod_hdl_IS2"/>
+   <Call ref="fio_fiod_status_get" setUp="API_Init_Variables"/>
+   <If expression="$fiod_status.success_rx EQ %0">
+      <Then>
+      <Print>No comm (INSIU2)</Print>
+      <Format var="$success_rx" />
+      <Abort status="FAIL" />
+      </Then>
+   </If>
+
+   <!-- check comm status (INSIU3) -->
+   <Set var="$fiod_handle" value="$fiod_hdl_IS3"/>
+   <Call ref="fio_fiod_status_get" setUp="API_Init_Variables"/>
+   <If expression="$fiod_status.success_rx EQ %0">
+      <Then>
+      <Print>No comm (INSIU3)</Print>
+      <Format var="$success_rx" />
+      <Abort status="FAIL" />
+      </Then>
+   </If>
+
+   <!-- check comm status (INSIU4) -->
+   <Set var="$fiod_handle" value="$fiod_hdl_IS4"/>
+   <Call ref="fio_fiod_status_get" setUp="API_Init_Variables"/>
+   <If expression="$fiod_status.success_rx EQ %0">
+      <Then>
+      <Print>No comm (INSIU4)</Print>
+      <Format var="$success_rx" />
+      <Abort status="FAIL" />
+      </Then>
+   </If>
+
+   <!-- check comm status (INSIU5) -->
+   <Set var="$fiod_handle" value="$fiod_hdl_IS5"/>
+   <Call ref="fio_fiod_status_get" setUp="API_Init_Variables"/>
+   <If expression="$fiod_status.success_rx EQ %0">
+      <Then>
+      <Print>No comm (INSIU5)</Print>
+      <Format var="$success_rx" />
+      <Abort status="FAIL" />
+      </Then>
+   </If>
+
+   <!-- check comm status (OUT14SIU1) -->
+   <Set var="$fiod_handle" value="$fiod_hdl_O14S1"/>
+   <Call ref="fio_fiod_status_get" setUp="API_Init_Variables"/>
+   <If expression="$fiod_status.success_rx EQ %0">
+      <Then>
+      <Print>No comm (OUT14SIU1)</Print>
+      <Format var="$success_rx" />
+      <Abort status="FAIL" />
+      </Then>
+   </If>
+
+   <!-- check comm status (OUT14SIU2) -->
+   <Set var="$fiod_handle" value="$fiod_hdl_O14S2"/>
+   <Call ref="fio_fiod_status_get" setUp="API_Init_Variables"/>
+   <If expression="$fiod_status.success_rx EQ %0">
+      <Then>
+      <Print>No comm (OUT14SIU2)</Print>
+      <Format var="$success_rx" />
+      <Abort status="FAIL" />
+      </Then>
+   </If>
+
+   <!-- disable FIOCMU comm -->
+   <Set var="$fiod_handle" value="$fiod_hdl_CMU"/>
+   <Call ref="fio_fiod_disable"      setUp="API_Init_Variables"/>
+   <!-- deregister device and confirm no connection -->
+   <Call ref="fio_fiod_deregister" setUp="API_Init_Variables"/>
+   <Set var="$abort_mode" value="#FALSE"/>
+   <!-- (call to fio_fiod_status_get should fail) -->
+   <Call ref="fio_fiod_status_get" setUp="API_Init_Variables"/>
+   <Set var="$abort_mode" value="#TRUE"/>
+
+   <!-- disable FIOINSIU1 comm -->
+   <Set var="$fiod_handle" value="$fiod_hdl_IS1"/>
+   <Call ref="fio_fiod_disable"      setUp="API_Init_Variables"/>
+   <!-- deregister device and confirm no connection -->
+   <Call ref="fio_fiod_deregister" setUp="API_Init_Variables"/>
+   <Set var="$abort_mode" value="#FALSE"/>
+   <!-- (call to fio_fiod_status_get should fail) -->
+   <Call ref="fio_fiod_status_get" setUp="API_Init_Variables"/>
+   <Set var="$abort_mode" value="#TRUE"/>
+
+   <!-- disable FIOINSIU2 comm -->
+   <Set var="$fiod_handle" value="$fiod_hdl_IS2"/>
+   <Call ref="fio_fiod_disable"      setUp="API_Init_Variables"/>
+   <!-- deregister device and confirm no connection -->
+   <Call ref="fio_fiod_deregister" setUp="API_Init_Variables"/>
+   <Set var="$abort_mode" value="#FALSE"/>
+   <!-- (call to fio_fiod_status_get should fail) -->
+   <Call ref="fio_fiod_status_get" setUp="API_Init_Variables"/>
+   <Set var="$abort_mode" value="#TRUE"/>
+
+   <!-- disable FIOINSIU3 comm -->
+   <Set var="$fiod_handle" value="$fiod_hdl_IS3"/>
+   <Call ref="fio_fiod_disable"      setUp="API_Init_Variables"/>
+   <!-- deregister device and confirm no connection -->
+   <Call ref="fio_fiod_deregister" setUp="API_Init_Variables"/>
+   <Set var="$abort_mode" value="#FALSE"/>
+   <!-- (call to fio_fiod_status_get should fail) -->
+   <Call ref="fio_fiod_status_get" setUp="API_Init_Variables"/>
+   <Set var="$abort_mode" value="#TRUE"/>
+
+   <!-- disable FIOINSIU4 comm -->
+   <Set var="$fiod_handle" value="$fiod_hdl_IS4"/>
+   <Call ref="fio_fiod_disable"      setUp="API_Init_Variables"/>
+   <!-- deregister device and confirm no connection -->
+   <Call ref="fio_fiod_deregister" setUp="API_Init_Variables"/>
+   <Set var="$abort_mode" value="#FALSE"/>
+   <!-- (call to fio_fiod_status_get should fail) -->
+   <Call ref="fio_fiod_status_get" setUp="API_Init_Variables"/>
+   <Set var="$abort_mode" value="#TRUE"/>
+
+   <!-- disable FIOINSIU5 comm -->
+   <Set var="$fiod_handle" value="$fiod_hdl_IS5"/>
+   <Call ref="fio_fiod_disable"      setUp="API_Init_Variables"/>
+   <!-- deregister device and confirm no connection -->
+   <Call ref="fio_fiod_deregister" setUp="API_Init_Variables"/>
+   <Set var="$abort_mode" value="#FALSE"/>
+   <!-- (call to fio_fiod_status_get should fail) -->
+   <Call ref="fio_fiod_status_get" setUp="API_Init_Variables"/>
+   <Set var="$abort_mode" value="#TRUE"/>
+
+   <!-- disable FIOOUT14SIU1 comm -->
+   <Set var="$fiod_handle" value="$fiod_hdl_O14S1"/>
+   <Call ref="fio_fiod_disable"      setUp="API_Init_Variables"/>
+   <!-- deregister device and confirm no connection -->
+   <Call ref="fio_fiod_deregister" setUp="API_Init_Variables"/>
+   <Set var="$abort_mode" value="#FALSE"/>
+   <!-- (call to fio_fiod_status_get should fail) -->
+   <Call ref="fio_fiod_status_get" setUp="API_Init_Variables"/>
+   <Set var="$abort_mode" value="#TRUE"/>
+
+   <!-- disable FIOOUT14SIU2 comm -->
+   <Set var="$fiod_handle" value="$fiod_hdl_O14S2"/>
+   <Call ref="fio_fiod_disable"      setUp="API_Init_Variables"/>
+   <!-- deregister device and confirm no connection -->
+   <Call ref="fio_fiod_deregister" setUp="API_Init_Variables"/>
+   <Set var="$abort_mode" value="#FALSE"/>
+   <!-- (call to fio_fiod_status_get should fail) -->
+   <Call ref="fio_fiod_status_get" setUp="API_Init_Variables"/>
+   <Set var="$abort_mode" value="#TRUE"/>
+
+   <!-- disconnect from FIO API -->
+   <Call ref="fio_deregister" setUp="API_Init_Variables"/>
+
+   <Sleep time="%5"/>
+<!--#################################################################-->
+   <!-- FIO ITS test: 4 6-Pack Output SIU, register with the FIO API -->
+   <Call ref="fio_register" setUp="API_Init_Variables"/>
+   
+   <!-- register a FIOCMU on SP5 -->
+   <Set var="$fio_port"   value="#FIO_SP5"/>
+   <Set var="$fio_device" value="#FIOCMU"/>
+   <Call ref="fio_fiod_register" setUp="API_Init_Variables"/>
+   <Set var="$fiod_hdl_CMU" value="$fiod_handle"/>
+
+   <!-- setup FIOCMU SDLC response messages -->
+   <FIOResponse file="@Cxxxx_rsp195.txt" frame="%195" description="(FIO C67->R195)"/>
+  
+   <!-- enable comm (CMU) -->
+   <Call ref="fio_fiod_enable" setUp="API_Init_Variables"/>
+
+   <!-- setup FIO SIU* SDLC response messages -->
+   <FIOResponse file="@Cxxxx_rsp177.txt" frame="%177" description="(FIO C49->R177)"/>
+   <FIOResponse file="@Cxxxx_rsp181a.txt" frame="%181" description="(FIO C53->R181)"/>
+   <FIOResponse file="@Cxxxx_rsp183.txt" frame="%183" description="(FIO C55->R183)"/>
+  
+   <!-- register a FIOINSIU1 on SP5 -->
+   <Set var="$fio_device" value="#FIOINSIU1"/>
+   <Call ref="fio_fiod_register" setUp="API_Init_Variables"/>
+   <Set var="$fiod_hdl_IS1" value="$fiod_handle"/>
+
+   <!-- enable comm INSIU1 -->
+   <Call ref="fio_fiod_enable" setUp="API_Init_Variables"/>
+
+   <!-- register a FIOINSIU2 on SP5 -->
+   <Set var="$fio_device" value="#FIOINSIU2"/>
+   <Call ref="fio_fiod_register" setUp="API_Init_Variables"/>
+   <Set var="$fiod_hdl_IS2" value="$fiod_handle"/>
+
+   <!-- enable comm INSIU2 -->
+   <Call ref="fio_fiod_enable" setUp="API_Init_Variables"/>
+
+   <!-- register a FIOINSIU3 on SP5 -->
+   <Set var="$fio_device" value="#FIOINSIU3"/>
+   <Call ref="fio_fiod_register" setUp="API_Init_Variables"/>
+   <Set var="$fiod_hdl_IS3" value="$fiod_handle"/>
+
+   <!-- enable comm INSIU3 -->
+   <Call ref="fio_fiod_enable" setUp="API_Init_Variables"/>
+
+   <!-- register a FIOINSIU4 on SP5 -->
+   <Set var="$fio_device" value="#FIOINSIU4"/>
+   <Call ref="fio_fiod_register" setUp="API_Init_Variables"/>
+   <Set var="$fiod_hdl_IS4" value="$fiod_handle"/>
+
+   <!-- enable comm INSIU4 -->
+   <Call ref="fio_fiod_enable" setUp="API_Init_Variables"/>
+
+   <!-- register a FIOINSIU5 on SP5 -->
+   <Set var="$fio_device" value="#FIOINSIU5"/>
+   <Call ref="fio_fiod_register" setUp="API_Init_Variables"/>
+   <Set var="$fiod_hdl_IS5" value="$fiod_handle"/>
+
+   <!-- enable comm INSIU5 -->
+   <Call ref="fio_fiod_enable" setUp="API_Init_Variables"/>
+
+   <!-- register a  FIOOUT6SIU1 on SP5 -->
+   <Set var="$fio_device" value="#FIOOUT6SIU1"/>
+   <Call ref="fio_fiod_register" setUp="API_Init_Variables"/>
+   <Set var="$fiod_hdl_O6S1" value="$fiod_handle"/>
+
+   <!-- enable comm OUT6SIU1 -->
+   <Call ref="fio_fiod_enable" setUp="API_Init_Variables"/>
+
+   <!-- register a  FIOOUT6SIU2 on SP5 -->
+   <Set var="$fio_device" value="#FIOOUT6SIU2"/>
+   <Call ref="fio_fiod_register" setUp="API_Init_Variables"/>
+   <Set var="$fiod_hdl_O6S2" value="$fiod_handle"/>
+
+   <!-- enable comm OUT6SIU2 -->
+   <Call ref="fio_fiod_enable" setUp="API_Init_Variables"/>
+
+   <!-- register a  FIOOUT6SIU3 on SP5 -->
+   <Set var="$fio_device" value="#FIOOUT6SIU3"/>
+   <Call ref="fio_fiod_register" setUp="API_Init_Variables"/>
+   <Set var="$fiod_hdl_O6S3" value="$fiod_handle"/>
+
+   <!-- enable comm OUT6SIU3 -->
+   <Call ref="fio_fiod_enable" setUp="API_Init_Variables"/>
+
+   <!-- register a  FIOOUT6SIU4 on SP5 -->
+   <Set var="$fio_device" value="#FIOOUT6SIU4"/>
+   <Call ref="fio_fiod_register" setUp="API_Init_Variables"/>
+   <Set var="$fiod_hdl_O6S4" value="$fiod_handle"/>
+
+   <!-- enable comm OUT6SIU4 -->
+   <Call ref="fio_fiod_enable" setUp="API_Init_Variables"/>
+
+   <Sleep time="%20"/>
+
+   <!-- check comm status (CMU) -->
+   <Set var="$fiod_handle" value="$fiod_hdl_CMU"/>
+   <Call ref="fio_fiod_status_get" setUp="API_Init_Variables"/>
+   <If expression="$fiod_status.success_rx EQ %0">
+      <Then>
+      <Print>No comm (CMU)</Print>
+      <Format var="$success_rx" />
+      <Abort status="FAIL" />
+      </Then>
+   </If>
+
+   <!-- check comm status (INSIU1) -->
+   <Set var="$fiod_handle" value="$fiod_hdl_IS1"/>
+   <Call ref="fio_fiod_status_get" setUp="API_Init_Variables"/>
+   <If expression="$fiod_status.success_rx EQ %0">
+      <Then>
+      <Print>No comm (INSIU1)</Print>
+      <Format var="$success_rx" />
+      <Abort status="FAIL" />
+      </Then>
+   </If>
+
+   <!-- check comm status (INSIU2) -->
+   <Set var="$fiod_handle" value="$fiod_hdl_IS2"/>
+   <Call ref="fio_fiod_status_get" setUp="API_Init_Variables"/>
+   <If expression="$fiod_status.success_rx EQ %0">
+      <Then>
+      <Print>No comm (INSIU2)</Print>
+      <Format var="$success_rx" />
+      <Abort status="FAIL" />
+      </Then>
+   </If>
+
+   <!-- check comm status (INSIU3) -->
+   <Set var="$fiod_handle" value="$fiod_hdl_IS3"/>
+   <Call ref="fio_fiod_status_get" setUp="API_Init_Variables"/>
+   <If expression="$fiod_status.success_rx EQ %0">
+      <Then>
+      <Print>No comm (INSIU3)</Print>
+      <Format var="$success_rx" />
+      <Abort status="FAIL" />
+      </Then>
+   </If>
+
+   <!-- check comm status (INSIU4) -->
+   <Set var="$fiod_handle" value="$fiod_hdl_IS4"/>
+   <Call ref="fio_fiod_status_get" setUp="API_Init_Variables"/>
+   <If expression="$fiod_status.success_rx EQ %0">
+      <Then>
+      <Print>No comm (INSIU4)</Print>
+      <Format var="$success_rx" />
+      <Abort status="FAIL" />
+      </Then>
+   </If>
+
+   <!-- check comm status (INSIU5) -->
+   <Set var="$fiod_handle" value="$fiod_hdl_IS5"/>
+   <Call ref="fio_fiod_status_get" setUp="API_Init_Variables"/>
+   <If expression="$fiod_status.success_rx EQ %0">
+      <Then>
+      <Print>No comm (INSIU5)</Print>
+      <Format var="$success_rx" />
+      <Abort status="FAIL" />
+      </Then>
+   </If>
+
+   <!-- check comm status (OUT6SIU1) -->
+   <Set var="$fiod_handle" value="$fiod_hdl_O6S1"/>
+   <Call ref="fio_fiod_status_get" setUp="API_Init_Variables"/>
+   <If expression="$fiod_status.success_rx EQ %0">
+      <Then>
+      <Print>No comm (OUT6SIU1)</Print>
+      <Format var="$success_rx" />
+      <Abort status="FAIL" />
+      </Then>
+   </If>
+
+   <!-- check comm status (OUT6SIU2) -->
+   <Set var="$fiod_handle" value="$fiod_hdl_O6S2"/>
+   <Call ref="fio_fiod_status_get" setUp="API_Init_Variables"/>
+   <If expression="$fiod_status.success_rx EQ %0">
+      <Then>
+      <Print>No comm (OUT6SIU2)</Print>
+      <Format var="$success_rx" />
+      <Abort status="FAIL" />
+      </Then>
+   </If>
+
+   <!-- check comm status (OUT6SIU3) -->
+   <Set var="$fiod_handle" value="$fiod_hdl_O6S3"/>
+   <Call ref="fio_fiod_status_get" setUp="API_Init_Variables"/>
+   <If expression="$fiod_status.success_rx EQ %0">
+      <Then>
+      <Print>No comm (OUT6SIU3)</Print>
+      <Format var="$success_rx" />
+      <Abort status="FAIL" />
+      </Then>
+   </If>
+
+   <!-- check comm status (OUT6SIU4) -->
+   <Set var="$fiod_handle" value="$fiod_hdl_O6S4"/>
+   <Call ref="fio_fiod_status_get" setUp="API_Init_Variables"/>
+   <If expression="$fiod_status.success_rx EQ %0">
+      <Then>
+      <Print>No comm (OUT6SIU4)</Print>
+      <Format var="$success_rx" />
+      <Abort status="FAIL" />
+      </Then>
+   </If>
+
+   <!-- disable FIOCMU comm -->
+   <Set var="$fiod_handle" value="$fiod_hdl_CMU"/>
+   <Call ref="fio_fiod_disable"      setUp="API_Init_Variables"/>
+   <!-- deregister device and confirm no connection -->
+   <Call ref="fio_fiod_deregister" setUp="API_Init_Variables"/>
+   <Set var="$abort_mode" value="#FALSE"/>
+   <!-- (call to fio_fiod_status_get should fail) -->
+   <Call ref="fio_fiod_status_get" setUp="API_Init_Variables"/>
+   <Set var="$abort_mode" value="#TRUE"/>
+
+   <!-- disable FIOINSIU1 comm -->
+   <Set var="$fiod_handle" value="$fiod_hdl_IS1"/>
+   <Call ref="fio_fiod_disable"      setUp="API_Init_Variables"/>
+   <!-- deregister device and confirm no connection -->
+   <Call ref="fio_fiod_deregister" setUp="API_Init_Variables"/>
+   <Set var="$abort_mode" value="#FALSE"/>
+   <!-- (call to fio_fiod_status_get should fail) -->
+   <Call ref="fio_fiod_status_get" setUp="API_Init_Variables"/>
+   <Set var="$abort_mode" value="#TRUE"/>
+
+   <!-- disable FIOINSIU2 comm -->
+   <Set var="$fiod_handle" value="$fiod_hdl_IS2"/>
+   <Call ref="fio_fiod_disable"      setUp="API_Init_Variables"/>
+   <!-- deregister device and confirm no connection -->
+   <Call ref="fio_fiod_deregister" setUp="API_Init_Variables"/>
+   <Set var="$abort_mode" value="#FALSE"/>
+   <!-- (call to fio_fiod_status_get should fail) -->
+   <Call ref="fio_fiod_status_get" setUp="API_Init_Variables"/>
+   <Set var="$abort_mode" value="#TRUE"/>
+
+   <!-- disable FIOINSIU3 comm -->
+   <Set var="$fiod_handle" value="$fiod_hdl_IS3"/>
+   <Call ref="fio_fiod_disable"      setUp="API_Init_Variables"/>
+   <!-- deregister device and confirm no connection -->
+   <Call ref="fio_fiod_deregister" setUp="API_Init_Variables"/>
+   <Set var="$abort_mode" value="#FALSE"/>
+   <!-- (call to fio_fiod_status_get should fail) -->
+   <Call ref="fio_fiod_status_get" setUp="API_Init_Variables"/>
+   <Set var="$abort_mode" value="#TRUE"/>
+
+   <!-- disable FIOINSIU4 comm -->
+   <Set var="$fiod_handle" value="$fiod_hdl_IS4"/>
+   <Call ref="fio_fiod_disable"      setUp="API_Init_Variables"/>
+   <!-- deregister device and confirm no connection -->
+   <Call ref="fio_fiod_deregister" setUp="API_Init_Variables"/>
+   <Set var="$abort_mode" value="#FALSE"/>
+   <!-- (call to fio_fiod_status_get should fail) -->
+   <Call ref="fio_fiod_status_get" setUp="API_Init_Variables"/>
+   <Set var="$abort_mode" value="#TRUE"/>
+
+   <!-- disable FIOINSIU5 comm -->
+   <Set var="$fiod_handle" value="$fiod_hdl_IS5"/>
+   <Call ref="fio_fiod_disable"      setUp="API_Init_Variables"/>
+   <!-- deregister device and confirm no connection -->
+   <Call ref="fio_fiod_deregister" setUp="API_Init_Variables"/>
+   <Set var="$abort_mode" value="#FALSE"/>
+   <!-- (call to fio_fiod_status_get should fail) -->
+   <Call ref="fio_fiod_status_get" setUp="API_Init_Variables"/>
+   <Set var="$abort_mode" value="#TRUE"/>
+
+   <!-- disable FIOOUT6SIU1 comm -->
+   <Set var="$fiod_handle" value="$fiod_hdl_O6S1"/>
+   <Call ref="fio_fiod_disable"      setUp="API_Init_Variables"/>
+   <!-- deregister device and confirm no connection -->
+   <Call ref="fio_fiod_deregister" setUp="API_Init_Variables"/>
+   <Set var="$abort_mode" value="#FALSE"/>
+   <!-- (call to fio_fiod_status_get should fail) -->
+   <Call ref="fio_fiod_status_get" setUp="API_Init_Variables"/>
+   <Set var="$abort_mode" value="#TRUE"/>
+
+   <!-- disable FIOOUT6SIU2 comm -->
+   <Set var="$fiod_handle" value="$fiod_hdl_O6S2"/>
+   <Call ref="fio_fiod_disable"      setUp="API_Init_Variables"/>
+   <!-- deregister device and confirm no connection -->
+   <Call ref="fio_fiod_deregister" setUp="API_Init_Variables"/>
+   <Set var="$abort_mode" value="#FALSE"/>
+   <!-- (call to fio_fiod_status_get should fail) -->
+   <Call ref="fio_fiod_status_get" setUp="API_Init_Variables"/>
+   <Set var="$abort_mode" value="#TRUE"/>
+
+   <!-- disable FIOOUT6SIU3 comm -->
+   <Set var="$fiod_handle" value="$fiod_hdl_O6S3"/>
+   <Call ref="fio_fiod_disable"      setUp="API_Init_Variables"/>
+   <!-- deregister device and confirm no connection -->
+   <Call ref="fio_fiod_deregister" setUp="API_Init_Variables"/>
+   <Set var="$abort_mode" value="#FALSE"/>
+   <!-- (call to fio_fiod_status_get should fail) -->
+   <Call ref="fio_fiod_status_get" setUp="API_Init_Variables"/>
+   <Set var="$abort_mode" value="#TRUE"/>
+
+   <!-- disable FIOOUT6SIU4 comm -->
+   <Set var="$fiod_handle" value="$fiod_hdl_O6S4"/>
+   <Call ref="fio_fiod_disable"      setUp="API_Init_Variables"/>
+   <!-- deregister device and confirm no connection -->
+   <Call ref="fio_fiod_deregister" setUp="API_Init_Variables"/>
+   <Set var="$abort_mode" value="#FALSE"/>
+   <!-- (call to fio_fiod_status_get should fail) -->
+   <Call ref="fio_fiod_status_get" setUp="API_Init_Variables"/>
+   <Set var="$abort_mode" value="#TRUE"/>
+
+   <!-- disconnect from FIO API -->
+   <Call ref="fio_deregister" setUp="API_Init_Variables"/>
+
 </TestCase>
 
 <!--
