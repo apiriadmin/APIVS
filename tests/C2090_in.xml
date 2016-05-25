@@ -27,7 +27,8 @@ APIR3.1.1.2[49]	This function shall return raw data from the input buffer
   
  Date      Revision    Description
  2/22/16   1.0         initial release
- 2/25/16   1.1         second release
+ 2/24/16   1.1         second release
+ 5/18/16   1.2         third release (JMG)
 -->
 
 <Define var="$fpui_handle"  type="fpui_handle" />
@@ -70,6 +71,7 @@ APIR3.1.1.2[49]	This function shall return raw data from the input buffer
 <Define var="$write_cnt"    type="ssize_t" />
 <Define var="$write_chr"    type="char" />
 <Define var="$panel"        type="int" />
+<Define var="$panel_change" type="boolean" />
 
 <Define var="$abort_mode"   type="boolean" />
 <Define var="$failed"       type="boolean" />
@@ -170,6 +172,10 @@ APIR3.1.1.2[49]	This function shall return raw data from the input buffer
       </Then>
    </If>
 </Subroutine>
+
+<SignalHandler name="SigHandler" description="Signal handler for SIGWINCH">
+	<Set var="$panel_change" value="#TRUE"/>
+</SignalHandler>
 
 <!--
  subroutines to call API functions and verify return status
@@ -1164,7 +1170,7 @@ APIR3.1.1.2[49]	This function shall return raw data from the input buffer
    </While>
 
    <!-- confirm that the display data was ignored (since the app was not in focus) -->
-   <!-- <Dump dump="VD" force="#TRUE" file="@C2090_vd_blank.txt"/> -->
+   <Dump dump="VD" file="@C2090_vd_blank.txt"/>
    <If expression="!VDCompare(@C2090_vd_blank.txt) EQ #FALSE">
       <Then>
       <Print>Raw VD display incorrect (non-focus)</Print>
@@ -1174,12 +1180,14 @@ APIR3.1.1.2[49]	This function shall return raw data from the input buffer
    </If>
 
    <!-- send raw data to the display (again) -->
+   <Call ref="fpui_clear" setUp="API_Init_Variables"/>
+   <Call ref="fpui_home" setUp="API_Init_Variables"/>
    <Set var="$write_buf" value="@C2090"/> 
    <Set var="$write_len" value="%5"/>
    <Call ref="fpui_write" setUp="API_Init_Variables"/>
 
    <!-- confirm that the data was displayed (since the app is now in focus) -->
-   <!-- <Dump dump="VD" force="#TRUE" file="@C2090_vd_raw.txt"/> -->
+   <Dump dump="VD" file="@C2090_vd_raw.txt"/>
    <If expression="!VDCompare(@C2090_vd_raw.txt) EQ #FALSE">
       <Then>
       <Print>Raw VD display incorrect (focus)</Print>
@@ -1189,27 +1197,31 @@ APIR3.1.1.2[49]	This function shall return raw data from the input buffer
    </If>
 
    <!-- attempt to read and verify a 'raw' keystroke -->
-   <!-- [YES] key: raw keycode is 0x1B 0x4F 0x53 or (27)(79)(81)-->
-   <FPUIInput file="@Cxxxx_keyYES_raw.txt" description="Provide keypress [YES] input"/>
+   <!-- [YES] key: raw keycode is 0x1B 0x4F 0x51 or (27)(79)(81)-->
+   <FPUIInput file="@Cxxxx_keyYES.txt" description="Provide keypress [YES] input"/>
    <Sleep time="%1"/>
+   <Set var="$key" value="%27"/>   
    <Call ref="fpui_read_char" setUp="API_Init_Variables"/>
-   <If expression="$read_chr NE %27">
+   <If expression="$read_chr NE $key">
       <Then>
       <Print>Raw keycode data incorrect (1)</Print>
       <Format var="$read_chr"/>
       <Abort status="FAIL"/>
       </Then>
    </If>
+   <Set var="$key" value="%79"/>   
    <Call ref="fpui_read_char" setUp="API_Init_Variables"/>
-   <If expression="$read_chr NE %79">
+   <If expression="$read_chr NE $key">
       <Then>
       <Print>Raw keycode data incorrect (2)</Print>
       <Format var="$read_chr"/>
+      <Format var="$key"/>
       <Abort status="FAIL"/>
       </Then>
    </If>
+   <Set var="$key" value="%81"/>   
    <Call ref="fpui_read_char" setUp="API_Init_Variables"/>
-   <If expression="$read_chr NE %81">
+   <If expression="$read_chr NE $key">
       <Then>
       <Print>Raw keycode data incorrect (3)</Print>
       <Format var="$read_chr"/>
