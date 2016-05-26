@@ -73,6 +73,7 @@ APIR3.1.2[43]	The API shall provide a method for application programs to query
  Date      Revision    Description
  2/22/16   1.0         initial release
  2/25/16   1.1         second release
+ 5/25/16   1.2         third release (JMG)
 -->
 
 <Define var="$returnCode"     type="int" />
@@ -715,7 +716,7 @@ APIR3.1.2[43]	The API shall provide a method for application programs to query
              errno="$errno"
              p1="$fio_handle"
              p2="$fiod_handle"
-			    p3="$input_type"
+             p3="$input_type"
              p4="$inputs"
              p5="!sizeof($inputs)" />
    <If expression="$returnCode EQ %-1">
@@ -1279,7 +1280,7 @@ APIR3.1.2[43]	The API shall provide a method for application programs to query
    <Set var="$abort_mode" value="#TRUE"/>
    <Set var="$failed"     value="#FALSE"/>
    <Set var="$fio_view"   value="#FIO_VIEW_SYSTEM"/>
-   <Set var="$input_type" value="#FIO_INPUTS_RAW"/>
+   <Set var="$input_type" value="#FIO_INPUTS_FILTERED"/>
 
    <!-- register two 'apps' with the FIO API -->
    <Call ref="fio_register" setUp="API_Init_Variables"/>
@@ -1297,11 +1298,17 @@ APIR3.1.2[43]	The API shall provide a method for application programs to query
    <Set var="$fiod_handle_1" value="$fiod_handle"/>
    
    <!-- setup SDLC response messages -->
-   <!-- (for this script the default schedule is OK) -->
-   <FIOResponse file="@C3020_r177_a.txt" frame="%177" description="(c49->r177)"/>
-   <FIOResponse file="@C3020_r180_a.txt" frame="%180" description="(c52->r180)"/>
-   <FIOResponse file="@C3020_r181_a.txt" frame="%181" description="(c53->r181)"/>
-   <FIOResponse file="@C3020_r183_a.txt" frame="%183" description="(c55->r183)"/>
+   <FIOResponse file="@Cxxxx_rsp177.txt" frame="%177" description="(FIO C49->R177)"/>
+   <!-- filtered inputs response frame (bits 1,3,13,15 set) -->  
+   <FIOResponse file="@C3020_rsp181a.txt" frame="%181" description="(FIO C53->R181)"/>
+   <!-- raw inputs response frame (bits 1,3,13,15 set) -->  
+   <FIOResponse file="@C3020_rsp180a.txt" frame="%180" description="(FIO C52->R180)"/>   
+   <FIOResponse file="@Cxxxx_rsp183.txt" frame="%183" description="(FIO C55->R183)"/>
+
+   <!-- schedule the raw inputs request frame 52 -->
+   <Set var="$frame_sched" index="%0" member="req_frame" value="%52"/>
+   <Set var="$frame_sched" index="%0" member="frequency" value="#FIO_HZ_10"/>
+   <Call ref="fio_fiod_frame_schedule_set" setUp="API_Init_Variables"/>
    
    <!-- start comm -->
    <Call ref="fio_fiod_enable" setUp="API_Init_Variables"/>
@@ -1310,10 +1317,10 @@ APIR3.1.2[43]	The API shall provide a method for application programs to query
    <!-- unreserve all outputs (App 1) -->
    <Set var="$fio_handle"  value="$fio_handle_1"/>
    <Set var="$fiod_handle" value="$fiod_handle_1"/>
-   <Set var="$outputs" file="@Cxxxx_null_x16.txt"/>
+   <Set var="$outputs" file="@C3020_outputs_null.txt"/>
    <Call ref="fio_fiod_outputs_reservation_set" setUp="API_Init_Variables" /> 
    <!-- unreserve all outputs again, should be no error -->
-   <Set var="$outputs" file="@Cxxxx_null_x16.txt"/>
+   <Set var="$outputs" file="@C3020_outputs_null.txt"/>
    <Call ref="fio_fiod_outputs_reservation_set" setUp="API_Init_Variables" /> 
    <!-- reserve select outputs -->
    <Set var="$outputs" file="@C3020_outputs_a.txt"/>
@@ -1322,7 +1329,7 @@ APIR3.1.2[43]	The API shall provide a method for application programs to query
    <Set var="$outputs" file="@C3020_outputs_a.txt"/>
    <Call ref="fio_fiod_outputs_reservation_set" setUp="API_Init_Variables" /> 
 
-   <!-- verify our output reservationss -->
+   <!-- verify our output reservations -->
    <!-- (bits 0,2,12,14 set) -->
    <Call ref="fio_fiod_outputs_reservation_get" setUp="API_Init_Variables" />
    <Format var="$outputs"/>
@@ -1351,7 +1358,8 @@ APIR3.1.2[43]	The API shall provide a method for application programs to query
       </Then>
    </If>
 
-   <!-- register select outputs IN CONFLICT (App 2) -->
+   <!-- attempt to reserve select outputs IN CONFLICT (App 2) -->
+   <!-- (bits 0,8,10 set) -->
    <!-- since we need this to fail, change abort_mode to FALSE -->
    <Set var="$fio_handle"  value="$fio_handle_2"/>
    <Set var="$fiod_handle" value="$fiod_handle_2"/>
@@ -1373,22 +1381,83 @@ APIR3.1.2[43]	The API shall provide a method for application programs to query
    </If>
    <!-- change abort_mode back to normal -->
    <Set var="$abort_mode" value="#TRUE"/>
-   
+
+   <!-- verify non-conflicting output points in reservation also failed (APIR3.1.2[35]) -->
+   <Call ref="fio_fiod_outputs_reservation_get" setUp="API_Init_Variables" />
+   <Format var="$outputs"/>
+   <If expression="!FIO_BIT_TEST($outputs,%8) EQ #TRUE">
+      <Then>
+      <Print>Output reservation (8) set in error</Print>
+      <Abort status="FAIL"/>
+      </Then>
+   </If>
+   <If expression="!FIO_BIT_TEST($outputs,%10) EQ #TRUE">
+      <Then>
+      <Print>Output reservation (10) set in error</Print>
+      <Abort status="FAIL"/>
+      </Then>
+   </If>
+       
    <!-- now register select outputs no conflict (App 2) -->
+   <!-- (bits 4,6,8,10 set) -->   
    <Set var="$outputs" file="@C3020_outputs_c.txt"/>
    <Call ref="fio_fiod_outputs_reservation_set" setUp="API_Init_Variables" /> 
 
-   <!-- set outputs (App 1) -->
+   <!-- set outputs on continuous (App 1) -->
    <Set var="$fio_handle"  value="$fio_handle_1"/>
    <Set var="$fiod_handle" value="$fiod_handle_1"/>
    <Call ref="fio_fiod_begin_outputs_set" setUp="API_Init_Variables" />
    <Set var="$ls_plus"  file="@C3020_outputs_a.txt"/>
-   <Set var="$ls_minus" file="@Cxxxx_null_x16.txt"/>
+   <Set var="$ls_minus" file="@C3020_outputs_a.txt"/>
    <Call ref="fio_fiod_outputs_set" setUp="API_Init_Variables" />
    <Call ref="fio_fiod_commit_outputs_set" setUp="API_Init_Variables" />
+
+   <Sleep time="%2"/>
+
+   <!-- verify outputs set correctly in frame 55 -->
+   <If expression="!CMDMSGCompare(@C3020_cmd55a.txt,%55) EQ #FALSE">
+      <Then>
+      <Format var="$ls_plus"/>
+      <Format var="$ls_minus"/>
+      <Print>CMDMSG 55 (set outputs) incorrect</Print>
+      <Dump dump="CMDMSG" force="#TRUE" file="@C3020_cmd55a_err.txt" frame="%55"/>
+      <Abort status="FAIL" />
+      </Then>
+   </If>
    
-   <!-- read inputs and verify (App 1) -->
+   <!-- read raw inputs and verify (App 1) -->
    <!-- (bits 1,3,13,15 set) -->
+   <Set var="$input_type" value="#FIO_INPUTS_RAW"/>
+   <Call ref="fio_fiod_inputs_get" setUp="API_Init_Variables" />
+   <Format var="$inputs"/>
+   <If expression="!FIO_BIT_TEST($inputs,%1) NE #TRUE">
+      <Then>
+      <Print>Input (1) not set</Print>
+      <Abort status="FAIL"/>
+      </Then>
+   </If>
+   <If expression="!FIO_BIT_TEST($inputs,%3) NE #TRUE">
+      <Then>
+      <Print>Input (3) not set</Print>
+      <Abort status="FAIL"/>
+      </Then>
+   </If>
+   <If expression="!FIO_BIT_TEST($inputs,%13) NE #TRUE">
+      <Then>
+      <Print>Input (13) not set</Print>
+      <Abort status="FAIL"/>
+      </Then>
+   </If>
+   <If expression="!FIO_BIT_TEST($inputs,%15) NE #TRUE">
+      <Then>
+      <Print>Input (15) not set</Print>
+      <Abort status="FAIL"/>
+      </Then>
+   </If>
+   
+   <!-- read filtered inputs and verify (App 1) -->
+   <!-- (bits 1,3,13,15 set) -->
+   <Set var="$input_type" value="#FIO_INPUTS_FILTERED"/>
    <Call ref="fio_fiod_inputs_get" setUp="API_Init_Variables" />
    <Format var="$inputs"/>
    <If expression="!FIO_BIT_TEST($inputs,%1) NE #TRUE">
@@ -1446,10 +1515,41 @@ APIR3.1.2[43]	The API shall provide a method for application programs to query
       </Then>
    </If>
    
-   <!-- read inputs and verify (App 2) -->
+   <!-- read raw inputs and verify (App 2) -->
    <!-- (bits 1,3,13,15 set) -->
    <Set var="$fio_handle"  value="$fio_handle_2"/>
    <Set var="$fiod_handle" value="$fiod_handle_2"/>
+   <Set var="$input_type" value="#FIO_INPUTS_RAW"/>
+   <Call ref="fio_fiod_inputs_get" setUp="API_Init_Variables" />
+   <Format var="$inputs"/>
+   <If expression="!FIO_BIT_TEST($inputs,%1) NE #TRUE">
+      <Then>
+      <Print>Input (1) not set</Print>
+      <Abort status="FAIL"/>
+      </Then>
+   </If>
+   <If expression="!FIO_BIT_TEST($inputs,%3) NE #TRUE">
+      <Then>
+      <Print>Input (3) not set</Print>
+      <Abort status="FAIL"/>
+      </Then>
+   </If>
+   <If expression="!FIO_BIT_TEST($inputs,%13) NE #TRUE">
+      <Then>
+      <Print>Input (13) not set</Print>
+      <Abort status="FAIL"/>
+      </Then>
+   </If>
+   <If expression="!FIO_BIT_TEST($inputs,%15) NE #TRUE">
+      <Then>
+      <Print>Input (15) not set</Print>
+      <Abort status="FAIL"/>
+      </Then>
+   </If>
+   
+   <!-- read filtered inputs and verify (App 2) -->
+   <!-- (bits 1,3,13,15 set) -->
+   <Set var="$input_type" value="#FIO_INPUTS_FILTERED"/>
    <Call ref="fio_fiod_inputs_get" setUp="API_Init_Variables" />
    <Format var="$inputs"/>
    <If expression="!FIO_BIT_TEST($inputs,%1) NE #TRUE">
@@ -1507,18 +1607,39 @@ APIR3.1.2[43]	The API shall provide a method for application programs to query
       </Then>
    </If>
    
-   <!-- set outputs (App 2) -->
+   <!-- set outputs on continuous (App 2) -->
+   <!-- (bits 4,6,8,10 set) -->   
+   <Call ref="fio_fiod_enable" setUp="API_Init_Variables"/>
    <Call ref="fio_fiod_begin_outputs_set" setUp="API_Init_Variables" />
    <Set var="$ls_plus"  file="@C3020_outputs_c.txt"/>
-   <Set var="$ls_minus" file="@Cxxxx_null_x16.txt"/>
+   <Set var="$ls_minus" file="@C3020_outputs_c.txt"/>
    <Call ref="fio_fiod_outputs_set" setUp="API_Init_Variables" />
    <Call ref="fio_fiod_commit_outputs_set" setUp="API_Init_Variables" />
+
+   <Sleep time="%2"/>
+
+   <!-- verify outputs set correctly in frame 55 -->
+   <If expression="!CMDMSGCompare(@C3020_cmd55b.txt,%55) EQ #FALSE">
+      <Then>
+      <Format var="$ls_plus"/>
+      <Format var="$ls_minus"/>
+      <Print>CMDMSG 55 (set outputs) incorrect</Print>
+      <Dump dump="CMDMSG" force="#TRUE" file="@C3020_cmd55b_err.txt" frame="%55"/>
+      <Abort status="FAIL" />
+      </Then>
+   </If>
    
    <!-- read outputs and verify (App 2) -->
-   <!-- (bits 2,4,6,8,10,12,14,16 all set now) -->
+   <!-- (bits 0,2,4,6,8,10,12,14 all set now) -->
    <Call ref="fio_fiod_outputs_get" setUp="API_Init_Variables" />
    <Format var="$ls_plus"/>
    <Format var="$ls_minus"/>
+   <If expression="!FIO_BIT_TEST($ls_plus,%0) NE #TRUE">
+      <Then>
+      <Print>Output (0) not set</Print>
+      <Abort status="FAIL"/>
+      </Then>
+   </If>
    <If expression="!FIO_BIT_TEST($ls_plus,%2) NE #TRUE">
       <Then>
       <Print>Output (2) not set</Print>
@@ -1561,75 +1682,76 @@ APIR3.1.2[43]	The API shall provide a method for application programs to query
       <Abort status="FAIL"/>
       </Then>
    </If>
-   <If expression="!FIO_BIT_TEST($ls_plus,%16) NE #TRUE">
-      <Then>
-      <Print>Output (16) not set</Print>
-      <Abort status="FAIL"/>
-      </Then>
-   </If>
    
-   <!-- disable FIO (both apps) -->
-   <Call ref="fio_fiod_disable" setUp="API_Init_Variables"/>
+   <!-- disable FIO app 1 -->
    <Set var="$fio_handle"  value="$fio_handle_1"/>
    <Set var="$fiod_handle" value="$fiod_handle_1"/>
    <Call ref="fio_fiod_disable" setUp="API_Init_Variables"/>
    
-   <!-- confirm that output points reservations are gone -->
-   <Call ref="fio_fiod_outputs_reservation_get" setUp="API_Init_Variables" />
-   <Format var="$outputs"/>
-   <If expression="!FIO_BIT_TEST($outputs,%2) NE #TRUE">
+   <!-- confirm that app 1 output points are off and app 2
+        output points remain on (APIR3.1.2[28])-->
+   <Call ref="fio_fiod_outputs_get" setUp="API_Init_Variables" />
+   <Format var="$ls_plus"/>
+   <Format var="$ls_minus"/>
+   <If expression="!FIO_BIT_TEST($ls_plus,%0) EQ #TRUE">
       <Then>
-      <Print>Output reservation (2) not cleared</Print>
+      <Print>Output (0) set in error</Print>
       <Abort status="FAIL"/>
       </Then>
    </If>
-   <If expression="!FIO_BIT_TEST($outputs,%4) NE #TRUE">
+   <If expression="!FIO_BIT_TEST($ls_plus,%2) EQ #TRUE">
       <Then>
-      <Print>Output reservation (4) not cleared</Print>
+      <Print>Output (2) set in error</Print>
       <Abort status="FAIL"/>
       </Then>
    </If>
-   <If expression="!FIO_BIT_TEST($outputs,%6) NE #TRUE">
+   <If expression="!FIO_BIT_TEST($ls_plus,%4) NE #TRUE">
       <Then>
-      <Print>Output reservation (6) not cleared</Print>
+      <Print>Output (4) not set</Print>
       <Abort status="FAIL"/>
       </Then>
    </If>
-   <If expression="!FIO_BIT_TEST($outputs,%8) NE #TRUE">
+   <If expression="!FIO_BIT_TEST($ls_plus,%6) NE #TRUE">
       <Then>
-      <Print>Output reservation (8) not cleared</Print>
+      <Print>Output (6) not set</Print>
       <Abort status="FAIL"/>
       </Then>
    </If>
-   <If expression="!FIO_BIT_TEST($outputs,%10) NE #TRUE">
+   <If expression="!FIO_BIT_TEST($ls_plus,%8) NE #TRUE">
       <Then>
-      <Print>Output reservation (10) not cleared</Print>
+      <Print>Output (8) not set</Print>
       <Abort status="FAIL"/>
       </Then>
    </If>
-   <If expression="!FIO_BIT_TEST($outputs,%12) NE #TRUE">
+   <If expression="!FIO_BIT_TEST($ls_plus,%10) NE #TRUE">
       <Then>
-      <Print>Output reservation (12) not cleared</Print>
+      <Print>Output (10) not set</Print>
       <Abort status="FAIL"/>
       </Then>
    </If>
-   <If expression="!FIO_BIT_TEST($outputs,%14) NE #TRUE">
+   <If expression="!FIO_BIT_TEST($ls_plus,%12) EQ #TRUE">
       <Then>
-      <Print>Output reservation (14) not cleared</Print>
+      <Print>Output (12) set in error</Print>
       <Abort status="FAIL"/>
       </Then>
    </If>
-   <If expression="!FIO_BIT_TEST($outputs,%16) NE #TRUE">
+   <If expression="!FIO_BIT_TEST($ls_plus,%14) EQ #TRUE">
       <Then>
-      <Print>Output reservation (16) not cleared</Print>
+      <Print>Output (14) set in error</Print>
       <Abort status="FAIL"/>
       </Then>
    </If>
+
+   <!-- disable FIO app 2 -->
+   <Set var="$fio_handle"  value="$fio_handle_2"/>
+   <Set var="$fiod_handle" value="$fiod_handle_2"/>
+   <Call ref="fio_fiod_disable" setUp="API_Init_Variables"/>
+
+   <!-- deregister both apps -->
+   <Call ref="fio_deregister" setUp="API_Init_Variables"/>
+   <Set var="$fio_handle" value="$fio_handle_1"/>
+   <Call ref="fio_deregister" setUp="API_Init_Variables"/>
    
-   <!-- close both apps -->
-   <Call ref="fio_deregister" setUp="API_Init_Variables"/>
-   <Set var="$fio_handle" value="$fio_handle_2"/>
-   <Call ref="fio_deregister" setUp="API_Init_Variables"/>
 </TestCase>
 
 <!--
