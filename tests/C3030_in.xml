@@ -69,7 +69,7 @@ APIR3.1.2[55]	Relinquishing a reserved output point or channel shall clear
 <Define var="$fiod_hCMU_2"    type="FIO_DEV_HANDLE" />
 <Define var="$fio_view"       type="FIO_VIEW" />
 <Define var="$map_count"      type="int" />
-<Define var="$channel_map"    type="FIO_CHANNEL_MAP" />
+<Define var="$channel_map"    type="FIO_CHANNEL_MAP" size="%8" />
 <Define var="$fill_count"     type="int" />
 <Define var="$chan_res"       type="unsigned char []" size="#FIO_CHANNEL_BYTES" />
 <Define var="$config_chg"     type="int" />
@@ -1255,7 +1255,7 @@ APIR3.1.2[55]	Relinquishing a reserved output point or channel shall clear
 <!--
  test case(s)
 -->
-<TestCase name="Case_C3030" description="C3030: FIO CHannel Mapping" >
+<TestCase name="Case_C3030" description="C3030: FIO Channel Mapping" >
    <!-- set abort_mode to FALSE to attempt 'invalid' API function operations;
         script will proceed (not abort) in these cases to allow validation
         of the (forced) error -->
@@ -1263,7 +1263,8 @@ APIR3.1.2[55]	Relinquishing a reserved output point or channel shall clear
    <Set var="$abort_mode" value="#TRUE"/>
    <Set var="$failed"     value="#FALSE"/>
    <Set var="$fio_view"   value="#FIO_VIEW_SYSTEM"/>
-   <Set var="$input_type" value="#FIO_INPUTS_RAW"/>
+   <Set var="$input_type" value="#FIO_INPUTS_FILTERED"/>
+   <Set var="$fio_port"   value="#FIO_SP5"/>
 
    <!-- register two 'apps' with the FIO API -->
    <Call ref="fio_register" setUp="API_Init_Variables"/>
@@ -1271,105 +1272,90 @@ APIR3.1.2[55]	Relinquishing a reserved output point or channel shall clear
    <Call ref="fio_register" setUp="API_Init_Variables"/>
    <Set var="$fio_handle_2" value="$fio_handle"/>
    
-   <!-- register a FIOINSIU1 on SP5 each app -->
-   <Set var="$fio_handle"    value="$fio_handle_1"/>
-   <Set var="$fio_port"      value="#FIO_SP5"/>
-   <Set var="$fio_device"    value="#FIOINSIU1"/>
-   <Call ref="fio_fiod_register" setUp="API_Init_Variables"/>
-   <Set var="$fiod_hIN_1"    value="$fiod_handle"/>
-   
-   <Set var="$fio_handle"    value="$fio_handle_2"/>
-   <Set var="$fio_port"      value="#FIO_SP5"/>
-   <Set var="$fio_device"    value="#FIOINSIU1"/>
-   <Call ref="fio_fiod_register" setUp="API_Init_Variables"/>
-   <Set var="$fiod_hIN_2"    value="$fiod_handle"/>
-
-   <!-- register a FIOOUT6SIU1 on SP5 each app -->
-   <Set var="$fio_handle"    value="$fio_handle_1"/>
-   <Set var="$fio_port"      value="#FIO_SP5"/>
-   <Set var="$fio_device"    value="#FIOOUT6SIU1"/>
-   <Call ref="fio_fiod_register" setUp="API_Init_Variables"/>
-   <Set var="$fiod_hOUT_1"   value="$fiod_handle"/>
-   
-   <Set var="$fio_handle"    value="$fio_handle_2"/>
-   <Set var="$fio_port"      value="#FIO_SP5"/>
-   <Set var="$fio_device"    value="#FIOOUT6SIU1"/>
-   <Call ref="fio_fiod_register" setUp="API_Init_Variables"/>
-   <Set var="$fiod_hOUT_2"   value="$fiod_handle"/>
-   
-   <!-- register a FIOCMU on SP5 each app -->
-   <Set var="$fio_handle"    value="$fio_handle_1"/>
-   <Set var="$fio_port"      value="#FIO_SP5"/>
-   <Set var="$fio_device"    value="#FIOCMU"/>
-   <Call ref="fio_fiod_register" setUp="API_Init_Variables"/>
-   <Set var="$fiod_hCMU_1"   value="$fiod_handle"/>
-   
-   <Set var="$fio_handle"    value="$fio_handle_2"/>
-   <Set var="$fio_port"      value="#FIO_SP5"/>
-   <Set var="$fio_device"    value="#FIOCMU"/>
-   <Call ref="fio_fiod_register" setUp="API_Init_Variables"/>
-   <Set var="$fiod_hCMU_2"   value="$fiod_handle"/>
-   
    <!-- setup SDLC response messages -->
    <!-- (for this script the default schedule is OK) -->
-   <FIOResponse file="@C3020_r177_a.txt" frame="%177" description="(c49->r177)"/>
-   <FIOResponse file="@C3020_r180_a.txt" frame="%180" description="(c52->r180)"/>
-   <FIOResponse file="@C3020_r183_a.txt" frame="%183" description="(c55->r183)"/>
-   <FIOResponse file="@C3030_r195_a.txt" frame="%195" description="(c67->r195)"/>
-   
-   <!-- start comm -->
+   <FIOResponse file="@Cxxxx_rsp177.txt" frame="%177" description="(FIO C49->R177)"/>
+   <FIOResponse file="@Cxxxx_rsp183.txt" frame="%183" description="(FIO C55->R183)"/>
+   <FIOResponse file="@Cxxxx_rsp195.txt" frame="%195" description="(FIO C67->R195)"/>
+
+   <!-- register a FIOOUT6SIU1 on SP5 each app -->
+   <Set var="$fio_device"    value="#FIOOUT6SIU1"/>
+   <Set var="$fio_handle"    value="$fio_handle_1"/>
+   <Call ref="fio_fiod_register" setUp="API_Init_Variables"/>
+   <Set var="$fiod_hOUT_1"   value="$fiod_handle"/>
+   <!-- enable OUT6SIU1 app 1 -->
+   <Call ref="fio_fiod_enable" setUp="API_Init_Variables"/>
+   <Set var="$fio_handle"    value="$fio_handle_2"/>
+   <Call ref="fio_fiod_register" setUp="API_Init_Variables"/>
+   <Set var="$fiod_hOUT_2"   value="$fiod_handle"/>
+   <!-- enable OUT6SIU1 app 2 -->
    <Call ref="fio_fiod_enable" setUp="API_Init_Variables"/>
    
-   <!-- output reservation handling -->
-   <!-- register select outputs (App 1) -->
+   <!-- register a FIOCMU on SP5 each app -->
+   <Set var="$fio_device"    value="#FIOCMU"/>
+   <Set var="$fio_handle"    value="$fio_handle_1"/>
+   <Call ref="fio_fiod_register" setUp="API_Init_Variables"/>
+   <Set var="$fiod_hCMU_1"   value="$fiod_handle"/>
+   <!-- enable CMU app 1 -->
+   <Call ref="fio_fiod_enable" setUp="API_Init_Variables"/>
+   <Set var="$fio_handle"    value="$fio_handle_2"/>
+   <Call ref="fio_fiod_register" setUp="API_Init_Variables"/>
+   <Set var="$fiod_hCMU_2"   value="$fiod_handle"/>
+   <!-- enable CMU app 2 -->
+   <Call ref="fio_fiod_enable" setUp="API_Init_Variables"/>
+
+
+   <!-- Output reservation handling -->
+   <!-- reserve select outputs (App 1) -->
    <Set var="$fio_handle"  value="$fio_handle_1"/>
    <Set var="$fiod_handle" value="$fiod_hOUT_1"/>
    <Set var="$outputs" file="@C3020_outputs_a.txt"/>
    <Call ref="fio_fiod_outputs_reservation_set" setUp="API_Init_Variables" /> 
+   <!-- reserve select outputs (App 2) -->
    <Set var="$fio_handle" value="$fio_handle_2"/>
    <Set var="$fiod_handle" value="$fiod_hOUT_2"/>
    <Set var="$outputs" file="@C3020_outputs_c.txt"/>
    <Call ref="fio_fiod_outputs_reservation_set" setUp="API_Init_Variables" /> 
 
-   <!-- channel reservation handling -->
+   <!-- Channel reservation handling -->
    <!-- unreserve all channels (App 1) -->
    <Set var="$fio_handle"  value="$fio_handle_1"/>
    <Set var="$fiod_handle" value="$fiod_hCMU_1"/>
-   <Set var="$chan_res" file="@Cxxxx_null_x16.txt"/>
+   <Set var="$chan_res" file="@C3030_channels_null.txt"/>
    <Call ref="fio_fiod_channel_reservation_set" setUp="API_Init_Variables" /> 
    <!-- unreserve all channels again, should be no error -->
-   <Set var="$chan_res" file="@Cxxxx_null_x16.txt"/>
+   <Set var="$chan_res" file="@C3030_channels_null.txt"/>
    <Call ref="fio_fiod_channel_reservation_set" setUp="API_Init_Variables" /> 
    <!-- reserve select channels -->
-   <Set var="$chan_res" file="@C3020_outputs_a.txt"/>
+   <Set var="$chan_res" file="@C3030_channels_a.txt"/>
    <Call ref="fio_fiod_channel_reservation_set" setUp="API_Init_Variables" /> 
    <!-- reserve select channels again, should be no error -->
-   <Set var="$chan_res" file="@C3020_outputs_a.txt"/>
+   <Set var="$chan_res" file="@C3030_channels_a.txt"/>
    <Call ref="fio_fiod_channel_reservation_set" setUp="API_Init_Variables" /> 
 
-   <!-- verify our channel reservationss -->
+   <!-- verify our channel reservations -->
    <!-- (bits 0,2,12,14 set) -->
    <Call ref="fio_fiod_channel_reservation_get" setUp="API_Init_Variables" />
    <Format var="$chan_res"/>
-   <If expression="!FIO_BIT_TEST($outputs,%0) NE #TRUE">
+   <If expression="!FIO_BIT_TEST($chan_res,%0) NE #TRUE">
       <Then>
       <Print>Channel reservation (0) not set</Print>
       <Abort status="FAIL"/>
       </Then>
    </If>
-   <If expression="!FIO_BIT_TEST($outputs,%2) NE #TRUE">
+   <If expression="!FIO_BIT_TEST($chan_res,%2) NE #TRUE">
       <Then>
       <Print>Channel reservation (2) not set</Print>
       <Abort status="FAIL"/>
       </Then>
    </If>
-   <If expression="!FIO_BIT_TEST($outputs,%12) NE #TRUE">
+   <If expression="!FIO_BIT_TEST($chan_res,%12) NE #TRUE">
       <Then>
       <Print>Channel reservation (12) not set</Print>
       <Abort status="FAIL"/>
       </Then>
    </If>
-   <If expression="!FIO_BIT_TEST($outputs,%14) NE #TRUE">
+   <If expression="!FIO_BIT_TEST($chan_res,%14) NE #TRUE">
       <Then>
       <Print>Channel reservation (14) not set</Print>
       <Abort status="FAIL"/>
@@ -1377,10 +1363,11 @@ APIR3.1.2[55]	Relinquishing a reserved output point or channel shall clear
    </If>
 
    <!-- register select channels IN CONFLICT (App 2) -->
+   <!-- (bits 0,8,10 set) -->
    <!-- since we need this to fail, change abort_mode to FALSE -->
    <Set var="$fio_handle"  value="$fio_handle_2"/>
    <Set var="$fiod_handle" value="$fiod_hCMU_2"/>
-   <Set var="$chan_res" file="@C3020_outputs_b.txt"/>
+   <Set var="$chan_res" file="@C3030_channels_b.txt"/>
    <Set var="$abort_mode" value="#FALSE"/>
    <Set var="$failed"     value="#FALSE"/>
    <Call ref="fio_fiod_channel_reservation_set" setUp="API_Init_Variables" /> 
@@ -1399,77 +1386,180 @@ APIR3.1.2[55]	Relinquishing a reserved output point or channel shall clear
    <!-- change abort_mode back to normal -->
    <Set var="$abort_mode" value="#TRUE"/>
    
-   <!-- now register select outputs no conflict (App 2) -->
-   <Set var="$chan_res" file="@C3020_outputs_c.txt"/>
+   <!-- verify non-conflicting channels in reservation also failed (APIR3.1.2[50]) -->
+   <Call ref="fio_fiod_channel_reservation_get" setUp="API_Init_Variables" />
+   <Format var="$chan_res"/>
+   <If expression="!FIO_BIT_TEST($chan_res,%8) EQ #TRUE">
+      <Then>
+      <Print>Channel reservation (8) set in error</Print>
+      <Abort status="FAIL"/>
+      </Then>
+   </If>
+   <If expression="!FIO_BIT_TEST($chan_res,%10) EQ #TRUE">
+      <Then>
+      <Print>Channel reservation (10) set in error</Print>
+      <Abort status="FAIL"/>
+      </Then>
+   </If>
+   
+   <!-- now register select channels no conflict (App 2) -->
+   <Set var="$chan_res" file="@C3030_channels_c.txt"/>
    <Call ref="fio_fiod_channel_reservation_set" setUp="API_Init_Variables" /> 
 
    <!-- verify channel reservationss (App 2) -->
    <!-- (bits 4,6,8,10 set) -->
    <Call ref="fio_fiod_channel_reservation_get" setUp="API_Init_Variables" />
    <Format var="$chan_res"/>
-   <If expression="!FIO_BIT_TEST($outputs,%4) NE #TRUE">
+   <If expression="!FIO_BIT_TEST($chan_res,%4) NE #TRUE">
       <Then>
       <Print>Channel reservation (4) not set</Print>
       <Abort status="FAIL"/>
       </Then>
    </If>
-   <If expression="!FIO_BIT_TEST($outputs,%6) NE #TRUE">
+   <If expression="!FIO_BIT_TEST($chan_res,%6) NE #TRUE">
       <Then>
       <Print>Channel reservation (6) not set</Print>
       <Abort status="FAIL"/>
       </Then>
    </If>
-   <If expression="!FIO_BIT_TEST($outputs,%8) NE #TRUE">
+   <If expression="!FIO_BIT_TEST($chan_res,%8) NE #TRUE">
       <Then>
       <Print>Channel reservation (8) not set</Print>
       <Abort status="FAIL"/>
       </Then>
    </If>
-   <If expression="!FIO_BIT_TEST($outputs,%10) NE #TRUE">
+   <If expression="!FIO_BIT_TEST($chan_res,%10) NE #TRUE">
       <Then>
       <Print>Channel reservation (10) not set</Print>
       <Abort status="FAIL"/>
       </Then>
    </If>
 
+   <!-- Setup test channel mappings app 1 -->
+   <Set var="$fio_handle"  value="$fio_handle_1"/>
+   <Set var="$fiod_handle" value="$fiod_hCMU_1"/>
+   <!-- map output 0 to channel 0 red -->
+   <Set var="$channel_map" index="%0" member="output_point" value="%0"/>
+   <Set var="$channel_map" index="%0" member="fiod" value="$fiod_hOUT_1"/>
+   <Set var="$channel_map" index="%0" member="channel" value="%0"/>
+   <Set var="$channel_map" index="%0" member="color" value="#FIO_RED"/>
+   <!-- map output 2 to channel 0 green -->
+   <Set var="$channel_map" index="%1" member="output_point" value="%2"/>
+   <Set var="$channel_map" index="%1" member="fiod" value="$fiod_hOUT_1"/>
+   <Set var="$channel_map" index="%1" member="channel" value="%0"/>
+   <Set var="$channel_map" index="%1" member="color" value="#FIO_GREEN"/>
+   <Set var="$map_count" value="%2"/>
+   <Call ref="fio_fiod_channel_map_set" setUp="API_Init_Variables" />
+   <Call ref="fio_fiod_channel_map_count" setUp="API_Init_Variables" />
+   <If expression="$map_count NE %2">
+      <Then>
+      <Format var="$map_count"/>
+      <Print>Channel map count incorrect (app 1)</Print>
+      <Abort status="FAIL"/>
+      </Then>
+   </If>
+   
+   <!-- set outputs on continuous (App 1) -->
+   <Set var="$fio_handle"  value="$fio_handle_1"/>
+   <Set var="$fiod_handle" value="$fiod_hOUT_1"/>
+   <Call ref="fio_fiod_begin_outputs_set" setUp="API_Init_Variables" />
+   <Set var="$ls_plus"  file="@C3020_outputs_a.txt"/>
+   <Set var="$ls_minus" file="@C3020_outputs_a.txt"/>
+   <Call ref="fio_fiod_outputs_set" setUp="API_Init_Variables" />
+   <Call ref="fio_fiod_commit_outputs_set" setUp="API_Init_Variables" />
+
+   <!-- Setup test channel mappings app 2 -->
+   <Set var="$fio_handle"  value="$fio_handle_2"/>
+   <Set var="$fiod_handle" value="$fiod_hCMU_2"/>
+   <!-- map output 4 to channel 4 yellow -->
+   <Set var="$channel_map" index="%0" member="output_point" value="%4"/>
+   <Set var="$channel_map" index="%0" member="fiod" value="$fiod_hOUT_2"/>
+   <Set var="$channel_map" index="%0" member="channel" value="%4"/>
+   <Set var="$channel_map" index="%0" member="color" value="#FIO_YELLOW"/>
+   <!-- map output 6 to channel 6 red -->
+   <Set var="$channel_map" index="%1" member="output_point" value="%6"/>
+   <Set var="$channel_map" index="%1" member="fiod" value="$fiod_hOUT_2"/>
+   <Set var="$channel_map" index="%1" member="channel" value="%6"/>
+   <Set var="$channel_map" index="%1" member="color" value="#FIO_RED"/>
+   <Set var="$map_count" value="%2"/>
+   <Call ref="fio_fiod_channel_map_set" setUp="API_Init_Variables" />
+   <Call ref="fio_fiod_channel_map_count" setUp="API_Init_Variables" />
+   <If expression="$map_count NE %4">
+      <Then>
+      <Format var="$map_count"/>
+      <Print>Channel map count incorrect (app 2)</Print>
+      <Abort status="FAIL"/>
+      </Then>
+   </If>
+
+   <!-- set outputs on continuous (App 2) -->
+   <Set var="$fio_handle"  value="$fio_handle_2"/>
+   <Set var="$fiod_handle" value="$fiod_hOUT_2"/>
+   <Call ref="fio_fiod_begin_outputs_set" setUp="API_Init_Variables" />
+   <Set var="$ls_plus"  file="@C3020_outputs_c.txt"/>
+   <Set var="$ls_minus" file="@C3020_outputs_c.txt"/>
+   <Call ref="fio_fiod_outputs_set" setUp="API_Init_Variables" />
+   <Call ref="fio_fiod_commit_outputs_set" setUp="API_Init_Variables" />
+
+   <Sleep time="%2"/>
+
+   <!-- verify outputs set correctly in frame 55 -->
+   <If expression="!CMDMSGCompare(@C3020_cmd55b.txt,%55) EQ #FALSE">
+      <Then>
+      <Format var="$ls_plus"/>
+      <Format var="$ls_minus"/>
+      <Print>CMDMSG 55 (set outputs) incorrect</Print>
+      <Dump dump="CMDMSG" force="#TRUE" file="@C3020_cmd55b_err.txt" frame="%55"/>
+      <Abort status="FAIL" />
+      </Then>
+   </If>
+
+   <!-- verify channels set correctly in frame 67 (APIR3.1.2[45]) -->
+   <If expression="!CMDMSGCompare(@C3030_cmd67a.txt,%67) EQ #FALSE">
+      <Then>
+      <Print>CMDMSG 67 (Switch Pack Drivers Short Status) incorrect</Print>
+      <Dump dump="CMDMSG" force="#TRUE" file="@C3030_cmd67a_err.txt" frame="%67"/>
+      <Abort status="FAIL" />
+      </Then>
+   </If>
+
    <!-- clear output reservations (App 1) -->
    <Set var="$fio_handle"  value="$fio_handle_1"/>
    <Set var="$fiod_handle" value="$fiod_hOUT_1"/>
-   <Set var="$outputs" file="@@Cxxxx_null_x16.txt"/>
+   <Set var="$outputs" file="@C3020_outputs_null.txt"/>
    <Call ref="fio_fiod_outputs_reservation_set" setUp="API_Init_Variables" /> 
    
-   <!-- confirm that channel reservations are also gone -->
+   <!-- confirm that app 1 channel mappings are also gone (APIR3.1.2[55]) -->
    <Set var="$fiod_handle" value="$fiod_hCMU_1"/>
-   <Call ref="fio_fiod_channel_reservation_get" setUp="API_Init_Variables" />
-   <Format var="$outputs"/>
-   <If expression="!FIO_BIT_TEST($outputs,%0) EQ #TRUE">
+   <Call ref="fio_fiod_channel_map_count" setUp="API_Init_Variables" />
+   <If expression="$map_count NE %2">
       <Then>
-      <Print>Channel reservation (0) not cleared</Print>
+      <Format var="$map_count"/>
+      <Print>Channel map count incorrect (app 1 clear)</Print>
       <Abort status="FAIL"/>
       </Then>
    </If>
-   <If expression="!FIO_BIT_TEST($outputs,%2) EQ #TRUE">
+
+   <!-- clear channel reservations (App 2) -->
+   <Set var="$fio_handle"  value="$fio_handle_2"/>
+   <Set var="$fiod_handle" value="$fiod_hCMU_2"/>
+   <Set var="$chan_res" file="@C3030_channels_null.txt"/>
+   <Call ref="fio_fiod_channel_reservation_set" setUp="API_Init_Variables" /> 
+
+   <!-- confirm that app 2 channel mappings are also gone (APIR3.1.2[55]) -->
+   <Set var="$fiod_handle" value="$fiod_hCMU_2"/>
+   <Call ref="fio_fiod_channel_map_count" setUp="API_Init_Variables" />
+   <If expression="$map_count NE %0">
       <Then>
-      <Print>Channel reservation (2) not cleared</Print>
+      <Format var="$map_count"/>
+      <Print>Channel map count incorrect (app 2 clear)</Print>
       <Abort status="FAIL"/>
       </Then>
    </If>
-   <If expression="!FIO_BIT_TEST($outputs,%12) EQ #TRUE">
-      <Then>
-      <Print>Channel reservation (12) not cleared</Print>
-      <Abort status="FAIL"/>
-      </Then>
-   </If>
-   <If expression="!FIO_BIT_TEST($outputs,%14) EQ #TRUE">
-      <Then>
-      <Print>Channel reservation (14) not cleared</Print>
-      <Abort status="FAIL"/>
-      </Then>
-   </If>
-   
+
    <!-- close both apps -->
    <Call ref="fio_deregister" setUp="API_Init_Variables"/>
-   <Set var="$fio_handle" value="$fio_handle_2"/>
+   <Set var="$fio_handle" value="$fio_handle_1"/>
    <Call ref="fio_deregister" setUp="API_Init_Variables"/>
 </TestCase>
 
