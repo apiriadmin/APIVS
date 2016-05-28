@@ -1,0 +1,11 @@
+# ATC 5401 API Reference Implementation Project 
+# 
+#     Filename: C3040_rsp182a.txt
+#    File Type: APIVS flat file (text format)
+#    Test Case: APIRI.TCS.3040
+#  Description: file load of Response Frame 182 (no transitions)
+#               (CF 54: Poll Input Transition Buffer)
+# 
+# Date      Revision    Description
+# 2/24/16   1.0         initial release
+0xB6 0x00 0x00 0x00 0x00 0x00 0x00 0x00

@@ -8,11 +8,6 @@
     Test Case: APIRI.TCS.3040
   Description: FIO Filtered Inputs and Transition Buffering
  
-APIR3.1.2[29]	The API shall provide a method for application programs to read
-               the states of the input and output points on registered Field
-               I/O Devices, including both filtered and non-filtered states for
-               the input points (depending on which input frames are scheduled).
-
 APIR3.1.2[56]	The API shall provide functions which allow application programs
                to set and get the leading and trailing edge filter values on a
                per input basis for all Field I/O Devices that support
@@ -75,6 +70,7 @@ APIR3.1.2[70]	If the transition buffer of the API overruns before the informatio
  Date      Revision    Description
  2/22/16   1.0         initial release
  2/25/16   1.1         second release
+ 5/31/16   1.2         third release (JMG)
 -->
 
 <Define var="$returnCode"     type="int" />
@@ -102,11 +98,14 @@ APIR3.1.2[70]	If the transition buffer of the API overruns before the informatio
 <Define var="$frame_size"     type="int" />
 <Define var="$write_buffer"   type="unsigned char []" size="%128" />
 <Define var="$write_count"    type="unsigned int" />
+<Define var="$input_filters"   type="FIO_INPUT_FILTER" size="%1" />
 <Define var="$input_filter"   type="FIO_INPUT_FILTER" size="%1" />
 <Define var="$input_type"     type="FIO_INPUTS_TYPE" />
 <Define var="$inputs"         type="unsigned char []" size="#FIO_INPUT_POINTS_BYTES" />
+<Define var="$input_number"   type="int" />
 <Define var="$trans_status"   type="FIO_TRANS_STATUS" size="%1" />
-<Define var="$trans_buf"      type="FIO_TRANS_BUFFER" size="%1" />
+<Define var="$trans_buf"      type="FIO_TRANS_BUFFER" size="%1024" />
+<Define var="$trans_entry"    type="FIO_TRANS_BUFFER" size="%1" />
 <Define var="$trans_count"    type="int" />
 <Define var="$flash_bit"      type="FIO_MMU_FLASH_BIT" />
 <Define var="$ls_plus"        type="unsigned char []" size="%16" />
@@ -125,6 +124,8 @@ APIR3.1.2[70]	If the transition buffer of the API overruns before the informatio
 <Define var="$num_bytes"      type="unsigned int" />
 <Define var="$timeout"        type="unsigned int" />
 <Define var="$FIO_asyncsig"   type="boolean" />
+<Define var="$loop_count"     type="int" />
+<Define var="$input_state"    type="int" />
 
 <Define var="$abort_mode"     type="boolean" />
 <Define var="$failed"         type="boolean" />
@@ -676,16 +677,16 @@ APIR3.1.2[70]	If the transition buffer of the API overruns before the informatio
              errno="$errno"
              p1="$fio_handle"
              p2="$fiod_handle"
-			    p3="$fio_view"
-             p4="$input_filter"
-             p5="!sizeof($input_filter)" />
+             p3="$fio_view"
+             p4="$input_filters"
+             p5="!sizeof($input_filters)" />
    <If expression="$returnCode EQ %-1">
       <Then>
       <Print>Function fio_fiod_inputs_filter_get() failed</Print>
       <Call ref="Error_Handler" />
       </Then>
    <Else>
-      <Format var="$input_filter" />
+      <Format var="$input_filters" />
       <Call ref="Success_Handler" />
    </Else>
    </If>
@@ -697,15 +698,15 @@ APIR3.1.2[70]	If the transition buffer of the API overruns before the informatio
              errno="$errno"
              p1="$fio_handle"
              p2="$fiod_handle"
-             p3="$input_filter"
-             p4="!sizeof($input_filter)" />
+             p3="$input_filters"
+             p4="!sizeof($input_filters)" />
    <If expression="$returnCode EQ %-1">
       <Then>
       <Print>Function fio_fiod_inputs_filter_set() failed</Print>
       <Call ref="Error_Handler" />
       </Then>
    <Else>
-      <Format var="$input_filter" />
+      <Format var="$input_filters" />
       <Call ref="Success_Handler" />
    </Else>
    </If>
@@ -760,9 +761,9 @@ APIR3.1.2[70]	If the transition buffer of the API overruns before the informatio
              errno="$errno"
              p1="$fio_handle"
              p2="$fiod_handle"
-			    p3="$trans_status"
+             p3="$trans_status"
              p4="$trans_buf"
-             p5="!sizeof($trans_buf)" />
+             p5="$trans_count" />
    <If expression="$trans_count EQ %-1">
       <Then>
       <Print>Function fio_fiod_inputs_trans_read() failed</Print>
@@ -770,7 +771,6 @@ APIR3.1.2[70]	If the transition buffer of the API overruns before the informatio
       </Then>
    <Else>
       <Format var="$trans_status" />
-      <Format var="$trans_buf" />
       <Format var="$trans_count" />
       <Call ref="Success_Handler" />
    </Else>
@@ -1298,52 +1298,96 @@ APIR3.1.2[70]	If the transition buffer of the API overruns before the informatio
    <Call ref="fio_fiod_register" setUp="API_Init_Variables"/>
    <Set var="$fiod_handle_1" value="$fiod_handle"/>
    
-   <!-- modify frame schedule to include transition buffering -->
-   <Set var="$frame_sched" file="@C3040_frame_sched.txt"/>
-   <Call ref="fio_fiod_frame_schedule_set" setUp="API_Init_Variables"/>
-   
    <!-- setup SDLC response messages (including transition buffering) -->
-   <FIOResponse file="@C3020_r177_a.txt" frame="%177" description="(c49->r177)"/>
-   <FIOResponse file="@C3020_r180_a.txt" frame="%180" description="(c52->r180)"/>
-   <FIOResponse file="@C3020_r181_a.txt" frame="%181" description="(c53->r181)"/>
-   <FIOResponse file="@C3040_r182_a.txt" frame="%182" description="(c54->r182)"/>
-   <FIOResponse file="@C3020_r183_a.txt" frame="%183" description="(c55->r183)"/>
+   <FIOResponse file="@Cxxxx_rsp177.txt" frame="%177" description="(c49->r177)"/>
+   <FIOResponse file="@Cxxxx_rsp180a.txt" frame="%180" description="(c52->r180)"/>
+   <FIOResponse file="@Cxxxx_rsp181a.txt" frame="%181" description="(c53->r181)"/>
+   <FIOResponse file="@C3040_rsp182a.txt" frame="%182" description="(c54->r182)"/>
+   <FIOResponse file="@Cxxxx_rsp183.txt" frame="%183" description="(c55->r183)"/>
    
-   <!-- start comm -->
+   <!-- schedule the raw inputs request frame 52 -->
+   <Set var="$frame_sched" index="%0" member="req_frame" value="%52"/>
+   <Set var="$frame_sched" index="%0" member="frequency" value="#FIO_HZ_10"/>
+   <Call ref="fio_fiod_frame_schedule_set" setUp="API_Init_Variables"/>
+
+   <!-- enable FIO332 APP 1 -->
    <Call ref="fio_fiod_enable" setUp="API_Init_Variables"/>
    
-   <!-- get input filtering: confirm default values are five (5) samples -->
+   <!-- enable FIO332 APP 2 -->
+   <Set var="$fio_handle"  value="$fio_handle_2"/>
+   <Set var="$fiod_handle" value="$fiod_handle_2"/>
+   <Call ref="fio_fiod_enable" setUp="API_Init_Variables"/>
+
+   <!-- get input filters: confirm defaults are 5 samples (APIR3.1.2[59]) -->
    <Set var="$fio_handle"  value="$fio_handle_1"/>
    <Set var="$fiod_handle" value="$fiod_handle_1"/>
-   <Call ref="fio_fiod_inputs_filter_get" setUp="API_Init_Variables" /> 
-   <If expression="input_filter.leading NE %5">
+   <Call ref="fio_fiod_inputs_filter_get" setUp="API_Init_Variables" />
+   <Set var="$input_filter" value="$input_filters" index="%0"/> 
+   <If expression="$input_filter.leading NE %5">
       <Then>
       <Print>Default leading edge filter value not five (5)</Print>
       <Abort status="FAIL"/>
       </Then>
    </If>
-   <If expression="input_filter.trailing NE %5">
+   <If expression="$input_filter.trailing NE %5">
       <Then>
       <Print>Default trailing edge filter value not five (5)</Print>
       <Abort status="FAIL"/>
       </Then>
    </If>
 
-   <!-- change filters to three (3) and verify -->
+   <!-- APP 1 change lead filter to 3, trailing filter to 3 (APIR3.1.2[56]) -->
    <Set var="$fio_handle"  value="$fio_handle_1"/>
    <Set var="$fiod_handle" value="$fiod_handle_1"/>
-   <Set var="$input_filter" member="input_point" value="%0"/>
-   <Set var="$input_filter" member="leading" value="%3"/>
-   <Set var="$input_filter" member="trailing" value="%3"/>
-   <Call ref="fio_fiod_inputs_filter_set" setUp="API_Init_Variables" /> 
-   <Call ref="fio_fiod_inputs_filter_get" setUp="API_Init_Variables" /> 
-   <If expression="input_filter.leading NE %3">
+   <Set var="$input_filters" index="%0" member="input_point" value="%0"/>
+   <Set var="$input_filters" index="%0" member="leading" value="%3"/>
+   <Set var="$input_filters" index="%0" member="trailing" value="%3"/>
+   <Call ref="fio_fiod_inputs_filter_set" setUp="API_Init_Variables" />
+   <!-- verify new values -->
+   <Call ref="fio_fiod_inputs_filter_get" setUp="API_Init_Variables" />
+   <Set var="$input_filter" value="$input_filters" index="%0"/> 
+   <If expression="$input_filter.input_point NE %0">
+      <Then>
+      <Print>Invalid input_point value</Print>
+      <Abort status="FAIL"/>
+      </Then>
+   </If>
+   <If expression="$input_filter.leading NE %3">
       <Then>
       <Print>Default leading edge filter value not three (3)</Print>
       <Abort status="FAIL"/>
       </Then>
    </If>
-   <If expression="input_filter.trailing NE %3">
+   <If expression="$input_filter.trailing NE %3">
+      <Then>
+      <Print>Default trailing edge filter value not three (3)</Print>
+      <Abort status="FAIL"/>
+      </Then>
+   </If>
+
+   <!-- APP 2 change lead filter to 2, trailing filter to 4 -->
+   <Set var="$fio_handle"  value="$fio_handle_2"/>
+   <Set var="$fiod_handle" value="$fiod_handle_2"/>
+   <Set var="$input_filters" index="%0" member="input_point" value="%0"/>
+   <Set var="$input_filters" index="%0" member="leading" value="%2"/>
+   <Set var="$input_filters" index="%0" member="trailing" value="%4"/>
+   <Call ref="fio_fiod_inputs_filter_set" setUp="API_Init_Variables" /> 
+   <!-- verify shortest values of App 1 and App 2 are used (APIR3.1.2[57]) -->
+   <!-- verify values used are returned by set filter operation (APIR3.1.2[58]) -->
+   <Set var="$input_filter" value="$input_filters" index="%0"/>
+   <If expression="$input_filter.input_point NE %0">
+      <Then>
+      <Print>Invalid input_point value</Print>
+      <Abort status="FAIL"/>
+      </Then>
+   </If>
+   <If expression="$input_filter.leading NE %2">
+      <Then>
+      <Print>Default leading edge filter value not two (2)</Print>
+      <Abort status="FAIL"/>
+      </Then>
+   </If>
+   <If expression="$input_filter.trailing NE %3">
       <Then>
       <Print>Default trailing edge filter value not three (3)</Print>
       <Abort status="FAIL"/>
@@ -1351,7 +1395,9 @@ APIR3.1.2[70]	If the transition buffer of the API overruns before the informatio
    </If>
 
    <!-- transition buffer inputs (App 1) -->
-   <!-- confirm monitoring is disabled by default for all inputs-->
+   <!-- confirm monitoring is disabled by default for all inputs (APIR3.1.2[64]) -->
+   <Set var="$fio_handle"  value="$fio_handle_1"/>
+   <Set var="$fiod_handle" value="$fiod_handle_1"/>
    <Call ref="fio_fiod_inputs_trans_get" setUp="API_Init_Variables" /> 
    <Set var="$input_number" value="%0"/>
    <While expression="$input_number LT %64">
@@ -1364,65 +1410,187 @@ APIR3.1.2[70]	If the transition buffer of the API overruns before the informatio
       <Set var="$input_number" value="%1" operation="add"/>
    </While>
    
-   <!-- unreserve all inputs -->
-   <Set var="$inputs" file="@Cxxxx_null_x16.txt"/>
+   <!-- disable all input transitions monitoring -->
+   <Set var="$inputs" file="@C3040_inputs_null.txt"/>
    <Call ref="fio_fiod_inputs_trans_set" setUp="API_Init_Variables" /> 
-   <!-- unreserve inputs again, should be no error -->
-   <Set var="$inputs" file="@Cxxxx_null_x16.txt"/>
-   <Call ref="fio_fiod_inputs_trans_set" setUp="API_Init_Variables" /> 
-   
-   <!-- reserve select inputs (App 1) -->
-   <Set var="$inputs" file="@C3040_inputs_a.txt"/>
-   <Call ref="fio_fiod_inputs_trans_set" setUp="API_Init_Variables" /> 
-   <!-- reserve select inputs again, should be no error -->
-   <Set var="$inputs" file="@C3040_inputs_a.txt"/>
+   <!-- disable again, should be no error (APIR3.1.2[66]) -->
+   <Set var="$inputs" file="@C3040_inputs_null.txt"/>
    <Call ref="fio_fiod_inputs_trans_set" setUp="API_Init_Variables" /> 
    
-   <!-- reserve same inputs (App 2) -->
+   <!-- enable select input transition monitoring (App 1) (APIR3.1.2[63]) -->
+   <Set var="$inputs" file="@C3040_inputs_a.txt"/>
+   <Call ref="fio_fiod_inputs_trans_set" setUp="API_Init_Variables" /> 
+   <!-- verify test input transition point set -->
+   <Call ref="fio_fiod_inputs_trans_get" setUp="API_Init_Variables" /> 
+   <If expression="!FIO_BIT_TEST($inputs,%0) NE #TRUE">
+      <Then>
+      <Print>Input transition point set error</Print>
+      <Abort status="FAIL"/>
+      </Then>
+   </If>
+   <!-- enable again, should be no error (APIR3.1.2[65]) -->
+   <Set var="$inputs" file="@C3040_inputs_a.txt"/>
+   <Call ref="fio_fiod_inputs_trans_set" setUp="API_Init_Variables" /> 
+   
+   <!-- enable same input transition point (App 2) -->
    <Set var="$fio_handle"  value="$fio_handle_2"/>
    <Set var="$fiod_handle" value="$fiod_handle_2"/>
    <Set var="$inputs" file="@C3040_inputs_a.txt"/>
    <Call ref="fio_fiod_inputs_trans_set" setUp="API_Init_Variables" /> 
+   <!-- verify test input transition point set -->
+   <Call ref="fio_fiod_inputs_trans_get" setUp="API_Init_Variables" /> 
+   <If expression="!FIO_BIT_TEST($inputs,%0) NE #TRUE">
+      <Then>
+      <Print>Input transition point set error</Print>
+      <Abort status="FAIL"/>
+      </Then>
+   </If>
    
    <!-- create a transition entry -->
-   <FIOResponse file="@C3040_r182_b.txt" frame="%182" description="(c54->r182)"/>
+   <FIOResponse file="@C3040_rsp182b.txt" frame="%182" description="(c54->r182)"/>
+   <Sleep time="%2"/>
+   <!-- schedule the transition buffer request frame 54 -->
+   <Set var="$frame_sched" index="%0" member="req_frame" value="%54"/>
+   <Set var="$frame_sched" index="%0" member="frequency" value="#FIO_HZ_ONCE"/>
+   <Call ref="fio_fiod_frame_schedule_set" setUp="API_Init_Variables"/>
    
-   <!-- read entry (App 1)-->
+   <Sleep time="%2"/>
+
+   <!-- read transition entry (App 1) (APIR3.1.2[60]) -->
    <Set var="$fio_handle"  value="$fio_handle_1"/>
    <Set var="$fiod_handle" value="$fiod_handle_1"/>
-   <Call ref="fio_fiod_inputs_trans_read" setUp="API_Init_Variables" /> 
-   <If expression="$trans_buf.input_point NE %0">
+   <Set var="$trans_count" value="%1"/>
+   <Call ref="fio_fiod_inputs_trans_read" setUp="API_Init_Variables" />
+   <Set var="$trans_entry" value="$trans_buf" index="%0"/> 
+   <If expression="$trans_entry.input_point NE %0">
       <Then>
       <Print>Transition input point number error (1)</Print>
       <Abort status="FAIL"/>
       </Then>
    </If>
-   <If expression="$trans_buf.state NE %1">
+   <If expression="$trans_entry.state NE %1">
       <Then>
       <Print>Transition input point state error (1)</Print>
       <Abort status="FAIL"/>
       </Then>
    </If>
    
-   <!-- confirm that we can read the same entry (App 2)-->
+   <!-- create a second, different transition entry -->
+   <FIOResponse file="@C3040_rsp182c.txt" frame="%182" description="(c54->r182)"/>
+   <Sleep time="%2"/>
+   <!-- schedule the transition buffer request frame 54 -->
+   <Set var="$frame_sched" index="%0" member="req_frame" value="%54"/>
+   <Set var="$frame_sched" index="%0" member="frequency" value="#FIO_HZ_ONCE"/>
+   <Call ref="fio_fiod_frame_schedule_set" setUp="API_Init_Variables"/>
+   
+   <Sleep time="%2"/>
+
+   <!-- confirm that we can read the same first entry (App 2) independent
+        of newer transition frames (APIR3.1.2[67]) and unaffected by the
+        earlier transition entry read by App 1 (APIR3.1.2[68]) -->
    <Set var="$fio_handle"  value="$fio_handle_2"/>
    <Set var="$fiod_handle" value="$fiod_handle_2"/>
+   <Set var="$trans_count" value="%1"/>
    <Call ref="fio_fiod_inputs_trans_read" setUp="API_Init_Variables" /> 
-   <If expression="$trans_buf.input_point NE %0">
+   <Set var="$trans_entry" value="$trans_buf" index="%0"/> 
+   <If expression="$trans_entry.input_point NE %0">
       <Then>
       <Print>Transition input point number error (2)</Print>
       <Abort status="FAIL"/>
       </Then>
    </If>
-   <If expression="$trans_buf.state NE %1">
+   <If expression="$trans_entry.state NE %1">
       <Then>
       <Print>Transition input point state error (2)</Print>
       <Abort status="FAIL"/>
       </Then>
    </If>
 
-   <!-- close both apps -->
+   <!-- read second transition entry (App 2) -->
+   <Set var="$trans_count" value="%1"/>
+   <Call ref="fio_fiod_inputs_trans_read" setUp="API_Init_Variables" /> 
+   <Set var="$trans_entry" value="$trans_buf" index="%0"/> 
+   <If expression="$trans_entry.input_point NE %0">
+      <Then>
+      <Print>Transition input point number error (3)</Print>
+      <Abort status="FAIL"/>
+      </Then>
+   </If>
+   <If expression="$trans_entry.state NE %0">
+      <Then>
+      <Print>Transition input point state error (3)</Print>
+      <Abort status="FAIL"/>
+      </Then>
+   </If>
+
+   <!-- enable input transitions (inputs 0,1,2,3,4) (App 2) -->
+   <Set var="$inputs" file="@C3040_inputs_b.txt"/>
+   <Call ref="fio_fiod_inputs_trans_set" setUp="API_Init_Variables" /> 
+
+   <!-- generate a response buffer with 255 further transition entries
+        and Field I/O Device overrun indication -->
+   <FIOResponse file="@C3040_rsp182d.txt" frame="%182" description="(c54->r182)"/>
+   <Sleep time="%2"/>
+   <!-- schedule the transition buffer request frame 54 -->
+   <Set var="$frame_sched" index="%0" member="req_frame" value="%54"/>
+   <Set var="$frame_sched" index="%0" member="frequency" value="#FIO_HZ_ONCE"/>
+   <Call ref="fio_fiod_frame_schedule_set" setUp="API_Init_Variables"/>
+   
+   <Sleep time="%2"/>
+
+   <!-- verify that all 255 transitions are available (App 2) (APIR3.1.2[61]) -->
+   <Set var="$trans_count" value="%255"/>
+   <Call ref="fio_fiod_inputs_trans_read" setUp="API_Init_Variables" />
+   <If expression="$trans_count NE %255">
+      <Then>
+      <Print>Transition count not 255</Print>
+      <Abort status="FAIL"/>
+      </Then>
+   </If>
+   <!-- verify that the FIOD overrun status is returned (APIR3.1.2[69]) -->
+   <If expression="$trans_status NE #FIO_TRANS_FIOD_OVERRUN">
+      <Then>
+      <Print>Transition status not FIO_TRANS_FIOD_OVERRUN</Print>
+      <Abort status="FAIL"/>
+      </Then>
+   </If>
+
+   <!-- generate transition buffer response frames with > 1024 entries -->
+   <FIOResponse file="@C3040_rsp182e.txt" frame="%182" description="(c54->r182)"/>
+   <Sleep time="%2"/>
+   <!-- schedule the transition buffer request frame 54 -->
+   <Set var="$frame_sched" index="%0" member="req_frame" value="%54"/>
+   <Set var="$frame_sched" index="%0" member="frequency" value="#FIO_HZ_5"/>
+   <Call ref="fio_fiod_frame_schedule_set" setUp="API_Init_Variables"/>
+   
+   <Sleep time="%2"/>
+   
+   <Set var="$trans_count" value="%1024"/>
+   <Call ref="fio_fiod_inputs_trans_read" setUp="API_Init_Variables" />
+   <!-- verify that the API retains a FIFO of 1024 entries (APIR3.1.2[62]) -->
+   <If expression="$trans_count NE %1024">
+      <Then>
+      <Print>Transition count not 1024</Print>
+      <Abort status="FAIL"/>
+      </Then>
+   </If>
+   <!-- verify that the API overrun status is returned (APIR3.1.2[70]) -->
+   <If expression="$trans_status NE #FIO_TRANS_APP_OVERRUN">
+      <Then>
+      <Print>Transition status not FIO_TRANS_APP_OVERRUN</Print>
+      <Abort status="FAIL"/>
+      </Then>
+   </If>
+
+   <!-- disable fiod (App2) -->
+   <Call ref="fio_fiod_disable" setUp="API_Init_Variables"/>
+
+   <!-- disable fiod (App1) -->
    <Set var="$fio_handle" value="$fio_handle_1"/>
+   <Set var="$fiod_handle" value="$fiod_handle_1"/>
+   <Call ref="fio_fiod_disable" setUp="API_Init_Variables"/>
+
+   <!-- close both apps -->
    <Call ref="fio_deregister" setUp="API_Init_Variables"/>
    <Set var="$fio_handle" value="$fio_handle_2"/>
    <Call ref="fio_deregister" setUp="API_Init_Variables"/>

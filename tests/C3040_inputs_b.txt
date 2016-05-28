@@ -1,0 +1,10 @@
+# ATC 5401 API Reference Implementation Project 
+# 
+#     Filename: C3040_inputs_a.txt
+#    File Type: APIVS flat file (text format)
+#    Test Case: many
+#  Description: test input transitions
+# 
+# Date      Revision    Description
+# 2/24/16   1.0         initial release
+0x1f 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00
