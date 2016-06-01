@@ -511,6 +511,23 @@ int16_t emfio_setupCommands()
 		return -1;
 	}
 
+	// POLL_INPUT_TRANSITION_BUFFER_COMMAND.
+	pCommand = &emfio_commands[POLL_INPUT_TRANSITION_BUFFER_COMMAND];
+	if (pthread_mutex_init(&pCommand->mutex, 0) == -1)
+	{
+		emfio_setErrorCode(EMFIO_MUTEX_INIT_FAILED);
+		return -1;
+	}
+	pCommand->initialized = 1;
+	pCommand->possibleResponses = 1;
+	pCommand->commandType = POLL_INPUT_TRANSITION_BUFFER_COMMAND;
+	pCommand->maxCommandSize = POLL_INPUT_TRANSITION_BUFFER_COMMAND_SIZE;
+	if ((pCommand->lastCommandBuffer = (unsigned char *)calloc(1, pCommand->maxCommandSize)) == 0)
+	{
+		emfio_setErrorCode(EMFIO_ALLOC_FAILED);
+		return -1;
+	}
+
 	// SET_OUTPUTS_COMMAND.
 	pCommand = &emfio_commands[SET_OUTPUTS_COMMAND];
 	if (pthread_mutex_init(&pCommand->mutex, 0) == -1)
@@ -593,6 +610,40 @@ int16_t emfio_setupCommands()
 	pCommand->possibleResponses = 1;
 	pCommand->commandType = IO_MODULE_IDENTICATION_COMMAND;
 	pCommand->maxCommandSize = IO_MODULE_IDENTICATION_COMMAND_SIZE;
+	if ((pCommand->lastCommandBuffer = (unsigned char *)calloc(1, pCommand->maxCommandSize)) == 0)
+	{
+		emfio_setErrorCode(EMFIO_ALLOC_FAILED);
+		return -1;
+	}
+
+	// CMU_SWITCH_PACK_DRIVERS_COMMAND.
+	pCommand = &emfio_commands[CMU_SWITCH_PACK_DRIVERS_COMMAND];
+	if (pthread_mutex_init(&pCommand->mutex, 0) == -1)
+	{
+		emfio_setErrorCode(EMFIO_MUTEX_INIT_FAILED);
+		return -1;
+	}
+	pCommand->initialized = 1;
+	pCommand->possibleResponses = 1;
+	pCommand->commandType = CMU_SWITCH_PACK_DRIVERS_COMMAND;
+	pCommand->maxCommandSize = CMU_SWITCH_PACK_DRIVERS_COMMAND_SIZE;
+	if ((pCommand->lastCommandBuffer = (unsigned char *)calloc(1, pCommand->maxCommandSize)) == 0)
+	{
+		emfio_setErrorCode(EMFIO_ALLOC_FAILED);
+		return -1;
+	}
+
+	// CMU_SWITCH_PACK_DRIVERS_SHORT_STATUS_COMMAND.
+	pCommand = &emfio_commands[CMU_SWITCH_PACK_DRIVERS_SHORT_STATUS_COMMAND];
+	if (pthread_mutex_init(&pCommand->mutex, 0) == -1)
+	{
+		emfio_setErrorCode(EMFIO_MUTEX_INIT_FAILED);
+		return -1;
+	}
+	pCommand->initialized = 1;
+	pCommand->possibleResponses = 1;
+	pCommand->commandType = CMU_SWITCH_PACK_DRIVERS_SHORT_STATUS_COMMAND;
+	pCommand->maxCommandSize = CMU_SWITCH_PACK_DRIVERS_SHORT_STATUS_COMMAND_SIZE;
 	if ((pCommand->lastCommandBuffer = (unsigned char *)calloc(1, pCommand->maxCommandSize)) == 0)
 	{
 		emfio_setErrorCode(EMFIO_ALLOC_FAILED);
@@ -1028,6 +1079,23 @@ int16_t emfio_setupResponses()
 		return -1;
 	}
 
+	// POLL_INPUT_TRANSITION_BUFFER_RESPONSE.
+	pResponse = &emfio_responses[POLL_INPUT_TRANSITION_BUFFER_RESPONSE - EMFIO_SDLC_RESPONSE_OFFSET];
+	if (pthread_mutex_init(&pResponse->mutex, 0) == -1)
+	{
+		emfio_setErrorCode(EMFIO_MUTEX_INIT_FAILED);
+		return -1;
+	}
+	pResponse->initialized = 1;
+	pResponse->responseVariableLength = 1;
+	pResponse->responseType = POLL_INPUT_TRANSITION_BUFFER_RESPONSE;
+	pResponse->responseSize = pResponse->responseAllocSize = POLL_INPUT_TRANSITION_BUFFER_RESPONSE_SIZE;
+	if ((pResponse->responseBuffer = (unsigned char *)calloc(1, pResponse->responseAllocSize)) == 0)
+	{
+		emfio_setErrorCode(EMFIO_ALLOC_FAILED);
+		return -1;
+	}
+
 	// SET_OUTPUTS_RESPONSE.
 	pResponse = &emfio_responses[SET_OUTPUTS_RESPONSE - EMFIO_SDLC_RESPONSE_OFFSET];
 	if (pthread_mutex_init(&pResponse->mutex, 0) == -1)
@@ -1102,6 +1170,38 @@ int16_t emfio_setupResponses()
 	pResponse->initialized = 1;
 	pResponse->responseType = IO_MODULE_IDENTICATION_RESPONSE;
 	pResponse->responseSize = pResponse->responseAllocSize = IO_MODULE_IDENTICATION_RESPONSE_SIZE;
+	if ((pResponse->responseBuffer = (unsigned char *)calloc(1, pResponse->responseAllocSize)) == 0)
+	{
+		emfio_setErrorCode(EMFIO_ALLOC_FAILED);
+		return -1;
+	}
+
+	// CMU_SWITCH_PACK_DRIVERS_RESPONSE.
+	pResponse = &emfio_responses[CMU_SWITCH_PACK_DRIVERS_RESPONSE - EMFIO_SDLC_RESPONSE_OFFSET];
+	if (pthread_mutex_init(&pResponse->mutex, 0) == -1)
+	{
+		emfio_setErrorCode(EMFIO_MUTEX_INIT_FAILED);
+		return -1;
+	}
+	pResponse->initialized = 1;
+	pResponse->responseType = CMU_SWITCH_PACK_DRIVERS_RESPONSE;
+	pResponse->responseSize = pResponse->responseAllocSize = CMU_SWITCH_PACK_DRIVERS_RESPONSE_SIZE;
+	if ((pResponse->responseBuffer = (unsigned char *)calloc(1, pResponse->responseAllocSize)) == 0)
+	{
+		emfio_setErrorCode(EMFIO_ALLOC_FAILED);
+		return -1;
+	}
+
+	// CMU_SWITCH_PACK_DRIVERS_SHORT_STATUS_RESPONSE.
+	pResponse = &emfio_responses[CMU_SWITCH_PACK_DRIVERS_SHORT_STATUS_RESPONSE - EMFIO_SDLC_RESPONSE_OFFSET];
+	if (pthread_mutex_init(&pResponse->mutex, 0) == -1)
+	{
+		emfio_setErrorCode(EMFIO_MUTEX_INIT_FAILED);
+		return -1;
+	}
+	pResponse->initialized = 1;
+	pResponse->responseType = CMU_SWITCH_PACK_DRIVERS_SHORT_STATUS_RESPONSE;
+	pResponse->responseSize = pResponse->responseAllocSize = CMU_SWITCH_PACK_DRIVERS_SHORT_STATUS_RESPONSE_SIZE;
 	if ((pResponse->responseBuffer = (unsigned char *)calloc(1, pResponse->responseAllocSize)) == 0)
 	{
 		emfio_setErrorCode(EMFIO_ALLOC_FAILED);
