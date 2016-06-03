@@ -1,0 +1,11 @@
+# ATC 5401 API Reference Implementation Project 
+# 
+#     Filename: Cxxxx_rsp141.txt
+#    File Type: APIVS flat file (text format)
+#    Test Case: APIRI.TCS.3xxx
+#  Description: file load of Response Frame 141
+#               (CF 13: TF BIU #4 Outputs/Inputs Request)
+# 
+# Date      Revision    Description
+# 2/24/16   1.0         initial release
+0x8d 0x00 0x00 0x00 0x00 0x00

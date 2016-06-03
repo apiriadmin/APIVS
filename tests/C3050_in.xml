@@ -33,6 +33,7 @@ APIR3.1.2[76]	The API shall provide a method to send a frame from either
  Date      Revision    Description
  2/22/16   1.0         initial release
  2/25/16   1.1         second release
+ 6/2/16    1.2         third release (JMG)
 -->
 
 <Define var="$returnCode"     type="int" />
@@ -40,9 +41,19 @@ APIR3.1.2[76]	The API shall provide a method to send a frame from either
 <Define var="$fio_handle"     type="FIO_APP_HANDLE" />
 <Define var="$fio_handle_1"   type="FIO_APP_HANDLE" />
 <Define var="$fio_handle_2"   type="FIO_APP_HANDLE" />
+<Define var="$fiod_hdl1_CMU"  type="FIO_DEV_HANDLE" />
+<Define var="$fiod_hdl1_O14S1" type="FIO_DEV_HANDLE" />
+<Define var="$fiod_hdl2_O14S1" type="FIO_DEV_HANDLE" />
+<Define var="$fiod_hdl1_MMU"   type="FIO_DEV_HANDLE" />
+<Define var="$fiod_hdl1_TF1"   type="FIO_DEV_HANDLE" />
+<Define var="$fiod_hdl1_TF2"   type="FIO_DEV_HANDLE" />
+<Define var="$fiod_hdl1_TF3"   type="FIO_DEV_HANDLE" />
+<Define var="$fiod_hdl1_TF4"   type="FIO_DEV_HANDLE" />
+<Define var="$fiod_hdl1_DR1"   type="FIO_DEV_HANDLE" />
+<Define var="$fiod_hdl1_DR2"   type="FIO_DEV_HANDLE" />
+<Define var="$fiod_hdl1_DR3"   type="FIO_DEV_HANDLE" />
+<Define var="$fiod_hdl1_DR4"   type="FIO_DEV_HANDLE" />
 <Define var="$fiod_handle"    type="FIO_DEV_HANDLE" />
-<Define var="$fiod_handle_1"  type="FIO_DEV_HANDLE" />
-<Define var="$fiod_handle_2"  type="FIO_DEV_HANDLE" />
 <Define var="$fio_view"       type="FIO_VIEW" />
 <Define var="$map_count"      type="int" />
 <Define var="$channel_map"    type="FIO_CHANNEL_MAP" />
@@ -56,7 +67,13 @@ APIR3.1.2[76]	The API shall provide a method to send a frame from either
 <Define var="$seq_number"     type="unsigned int" />
 <Define var="$read_buffer"    type="unsigned char []" size="%128" />
 <Define var="$bytes_read"     type="int" />
-<Define var="$frame_sched"    type="FIO_FRAME_SCHD" size="%3" />
+<Define var="$frame_schds"    type="FIO_FRAME_SCHD" size="%6"/>
+<Define var="$frame_schd_cnt" type="int"/>
+<Define var="$frame_schd"     type="FIO_FRAME_SCHD" size="%1" />
+<Define var="$freq_tst_frame" type="int" />
+<Define var="$freq_tst_sched" type="int" />
+<Define var="$freq_tst_limit_l" type="int" />
+<Define var="$freq_tst_limit_h" type="int" />
 <Define var="$frame_size"     type="int" />
 <Define var="$write_buffer"   type="unsigned char []" size="%128" />
 <Define var="$write_count"    type="unsigned int" />
@@ -73,6 +90,7 @@ APIR3.1.2[76]	The API shall provide a method to send a frame from either
 <Define var="$fio_port"       type="FIO_PORT" />
 <Define var="$fio_device"     type="FIO_DEVICE_TYPE" />
 <Define var="$fiod_status"    type="FIO_FIOD_STATUS" />
+<Define var="$frame_info"     type="FIO_FRAME_INFO" size="%1" />
 <Define var="$fm_state"       type="FIO_TS_FM_STATE" />
 <Define var="$vm_state"       type="FIO_TS1_VM_STATE" />
 <Define var="$output_point"   type="unsigned int" />
@@ -553,16 +571,15 @@ APIR3.1.2[76]	The API shall provide a method to send a frame from either
              errno="$errno"
              p1="$fio_handle"
              p2="$fiod_handle"
-			    p3="$fio_view"
-             p4="$frame_sched"
-             p5="!sizeof($frame_sched)" />
+             p3="$fio_view"
+             p4="$frame_schds"
+             p5="$frame_schd_cnt" />
    <If expression="$returnCode EQ %-1">
       <Then>
       <Print>Function fio_fiod_frame_schedule_get() failed</Print>
       <Call ref="Error_Handler" />
       </Then>
    <Else>
-      <Format var="$frame_sched" />
       <Call ref="Success_Handler" />
    </Else>
    </If>
@@ -574,8 +591,8 @@ APIR3.1.2[76]	The API shall provide a method to send a frame from either
              errno="$errno"
              p1="$fio_handle"
              p2="$fiod_handle"
-             p3="$frame_sched"
-             p4="!sizeof($frame_sched)" />
+             p3="$frame_schds"
+             p4="$frame_schd_cnt" />
    <If expression="$returnCode EQ %-1">
       <Then>
       <Print>Function fio_fiod_frame_schedule_set() failed</Print>
@@ -1228,6 +1245,34 @@ APIR3.1.2[76]	The API shall provide a method to send a frame from either
    </If>
 </Subroutine>
 
+<Subroutine name="frame_frequency_test">
+   <Set var="$frame_schds" index="%0" member="req_frame" value="$freq_tst_frame"/>
+   <Set var="$frame_schds" index="%0" member="frequency" value="$freq_tst_sched"/>
+   <Set var="$frame_schd_cnt" value="%1"/>   
+   <Call ref="fio_fiod_frame_schedule_set" setUp="API_Init_Variables"/>
+   
+   <!-- reset frame count status -->
+   <Call ref="fio_fiod_status_reset" setUp="API_Init_Variables"/>
+
+   <!-- start of test -->
+   <Sleep time="%10"/>
+
+   <!-- verify frame count -->
+   <Call ref="fio_fiod_status_get" setUp="API_Init_Variables"/>
+   <If expression="$fiod_status.success_rx LT $freq_tst_limit_l">
+      <Then>
+      <Print>frame frequency test failed (LOW)</Print>
+      <Abort status="FAIL"/>
+      </Then>
+   </If>
+   <If expression="$fiod_status.success_rx GT $freq_tst_limit_h">
+      <Then>
+      <Print>frame frequency test failed (HIGH)</Print>
+      <Abort status="FAIL"/>
+      </Then>
+   </If>
+</Subroutine>
+
 <!--
  test case(s)
 -->
@@ -1240,209 +1285,897 @@ APIR3.1.2[76]	The API shall provide a method to send a frame from either
    <Set var="$failed"     value="#FALSE"/>
    <Set var="$fio_view"   value="#FIO_VIEW_SYSTEM"/>
 
-   <!-- register two 'apps' with the FIO API -->
+   <!-- register App 1 with the FIO API -->
    <Call ref="fio_register" setUp="API_Init_Variables"/>
    <Set var="$fio_handle_1" value="$fio_handle"/>
+   
+   <!-- register a FIOCMU on SP5 (App 1) -->
+   <Set var="$fio_port"   value="#FIO_SP5"/>
+   <Set var="$fio_device" value="#FIOCMU"/>
+   <Call ref="fio_fiod_register" setUp="API_Init_Variables"/>
+   <Set var="$fiod_hdl1_CMU" value="$fiod_handle"/>
+
+   <!-- setup FIOCMU SDLC response messages -->
+   <FIOResponse file="@Cxxxx_rsp195.txt" frame="%195" description="(FIO C67->R195)"/>
+  
+   <!-- enable comm (FIOCMU) -->
+   <Call ref="fio_fiod_enable" setUp="API_Init_Variables"/>
+
+   <!-- register a  FIOOUT14SIU1 on SP5 (App 1) -->
+   <Set var="$fio_device" value="#FIOOUT14SIU1"/>
+   <Call ref="fio_fiod_register" setUp="API_Init_Variables"/>
+   <Set var="$fiod_hdl1_O14S1" value="$fiod_handle"/>
+
+   <!-- setup FIO SIU* SDLC response messages -->
+   <FIOResponse file="@Cxxxx_rsp177.txt" frame="%177" description="(FIO C49->R177)"/>
+   <FIOResponse file="@Cxxxx_rsp181a.txt" frame="%181" description="(FIO C53->R181)"/>
+   <FIOResponse file="@Cxxxx_rsp183.txt" frame="%183" description="(FIO C55->R183)"/>
+   <FIOResponse file="@Cxxxx_rsp188a.txt" frame="%188" description="(FIO C60->R188)"/>
+
+   <!-- enable comm (FIOOUT14SIU1) -->
+   <Call ref="fio_fiod_enable" setUp="API_Init_Variables"/>
+
+   <!-- confirm default frame settings and frame counts (APIR3.1.2[71]) -->
+
+   <!-- test frames (FIOOUT14SIU1) -->
+   <!-- reset frame count status -->
+   <Call ref="fio_fiod_status_reset" setUp="API_Init_Variables"/>
+   <!-- start test period -->
+   <Sleep time="%10"/>
+   <!-- get device communications status -->
+   <Call ref="fio_fiod_status_get" setUp="API_Init_Variables"/>
+   <!-- command frame 49 -->
+   <Set var="$frame_info" value="$fiod_status" index="%49"/>
+   <If expression="$frame_info.frequency NE #FIO_HZ_10">
+      <Then>
+      <Print>frame 49 default frequency incorrect</Print>
+      <Abort status="FAIL"/>
+      </Then>
+   </If>
+   <If expression="$frame_info.success_rx LT %95">
+      <Then>
+      <Print>frame 49 frequency test failed (LOW)</Print>
+      <Abort status="FAIL"/>
+      </Then>
+   </If>
+   <If expression="$frame_info.success_rx GT %105">
+      <Then>
+      <Print>frame 49 frequency test failed (HIGH)</Print>
+      <Abort status="FAIL"/>
+      </Then>
+   </If>
+   <!-- command frame 51 -->
+   <Set var="$frame_info" value="$fiod_status" index="%51"/>
+   <If expression="$frame_info.frequency NE #FIO_HZ_0">
+      <Then>
+      <Print>frame 51 default frequency incorrect</Print>
+      <Abort status="FAIL"/>
+      </Then>
+   </If>
+   <If expression="$frame_info.success_rx NE %0">
+      <Then>
+      <Print>frame 51 frequency test failed</Print>
+      <Abort status="FAIL"/>
+      </Then>
+   </If>
+   <!-- command frame 52 -->
+   <Set var="$frame_info" value="$fiod_status" index="%52"/>
+   <If expression="$frame_info.frequency NE #FIO_HZ_0">
+      <Then>
+      <Print>frame 52 default frequency incorrect</Print>
+      <Abort status="FAIL"/>
+      </Then>
+   </If>
+   <If expression="$frame_info.success_rx NE %0">
+      <Then>
+      <Print>frame 52 frequency test failed</Print>
+      <Abort status="FAIL"/>
+      </Then>
+   </If>
+   <!-- command frame 53 -->
+   <Set var="$frame_info" value="$fiod_status" index="%53"/>
+   <If expression="$frame_info.frequency NE #FIO_HZ_10">
+      <Then>
+      <Print>frame 53 default frequency incorrect</Print>
+      <Abort status="FAIL"/>
+      </Then>
+   </If>
+   <If expression="$frame_info.success_rx LT %95">
+      <Then>
+      <Print>frame 53 frequency test failed (LOW)</Print>
+      <Abort status="FAIL"/>
+      </Then>
+   </If>
+   <If expression="$frame_info.success_rx GT %105">
+      <Then>
+      <Print>frame 53 frequency test failed (HIGH)</Print>
+      <Abort status="FAIL"/>
+      </Then>
+   </If>
+   <!-- command frame 54 -->
+   <Set var="$frame_info" value="$fiod_status" index="%54"/>
+   <If expression="$frame_info.frequency NE #FIO_HZ_0">
+      <Then>
+      <Print>frame 54 default frequency incorrect</Print>
+      <Abort status="FAIL"/>
+      </Then>
+   </If>
+   <If expression="$frame_info.success_rx NE %0">
+      <Then>
+      <Print>frame 54 frequency test failed</Print>
+      <Abort status="FAIL"/>
+      </Then>
+   </If>
+   <!-- command frame 55 -->
+   <Set var="$frame_info" value="$fiod_status" index="%55"/>
+   <If expression="$frame_info.frequency NE #FIO_HZ_10">
+      <Then>
+      <Print>frame 55 default frequency incorrect</Print>
+      <Abort status="FAIL"/>
+      </Then>
+   </If>
+   <If expression="$frame_info.success_rx LT %95">
+      <Then>
+      <Print>frame 55 frequency test failed (LOW)</Print>
+      <Abort status="FAIL"/>
+      </Then>
+   </If>
+   <If expression="$frame_info.success_rx GT %105">
+      <Then>
+      <Print>frame 55 frequency test failed (HIGH)</Print>
+      <Abort status="FAIL"/>
+      </Then>
+   </If>
+   <!-- command frame 60 -->
+   <Set var="$frame_info" value="$fiod_status" index="%60"/>
+   <If expression="$frame_info.frequency NE #FIO_HZ_0">
+      <Then>
+      <Print>frame 60 default frequency incorrect</Print>
+      <Abort status="FAIL"/>
+      </Then>
+   </If>
+   <If expression="$frame_info.success_rx NE %0">
+      <Then>
+      <Print>frame 60 frequency test failed</Print>
+      <Abort status="FAIL"/>
+      </Then>
+   </If>
+
+   <!-- test frames (FIOCMU) -->
+   <Set var="$fiod_handle" value="$fiod_hdl1_CMU"/>
+   <!-- reset frame count status -->
+   <Call ref="fio_fiod_status_reset" setUp="API_Init_Variables"/>
+   <!-- start test period -->
+   <Sleep time="%10"/>
+   <!-- get device communications status -->
+   <Call ref="fio_fiod_status_get" setUp="API_Init_Variables"/>
+   <!-- command frame 61 -->
+   <Set var="$frame_info" value="$fiod_status" index="%61"/>
+   <If expression="$frame_info.frequency NE #FIO_HZ_0">
+      <Then>
+      <Print>frame 61 default frequency incorrect</Print>
+      <Abort status="FAIL"/>
+      </Then>
+   </If>
+   <If expression="$frame_info.success_rx NE %0">
+      <Then>
+      <Print>frame 61 frequency test failed</Print>
+      <Abort status="FAIL"/>
+      </Then>
+   </If>
+   <!-- command frame 62 -->
+   <Set var="$frame_info" value="$fiod_status" index="%62"/>
+   <If expression="$frame_info.frequency NE #FIO_HZ_0">
+      <Then>
+      <Print>frame 62 default frequency incorrect</Print>
+      <Abort status="FAIL"/>
+      </Then>
+   </If>
+   <If expression="$frame_info.success_rx NE %0">
+      <Then>
+      <Print>frame 62 frequency test failed</Print>
+      <Abort status="FAIL"/>
+      </Then>
+   </If>
+   <!-- command frame 65 -->
+   <Set var="$frame_info" value="$fiod_status" index="%65"/>
+   <If expression="$frame_info.frequency NE #FIO_HZ_0">
+      <Then>
+      <Print>frame 65 default frequency incorrect</Print>
+      <Abort status="FAIL"/>
+      </Then>
+   </If>
+   <If expression="$frame_info.success_rx NE %0">
+      <Then>
+      <Print>frame 65 frequency test failed</Print>
+      <Abort status="FAIL"/>
+      </Then>
+   </If>
+   <!-- command frame 66 (broadcast frame not included in counts) -->
+   <!-- command frame 67 -->
+   <Set var="$frame_info" value="$fiod_status" index="%67"/>
+   <If expression="$frame_info.frequency NE #FIO_HZ_10">
+      <Then>
+      <Print>frame 67 default frequency incorrect</Print>
+      <Abort status="FAIL"/>
+      </Then>
+   </If>
+   <If expression="$frame_info.success_rx LT %95">
+      <Then>
+      <Print>frame 67 frequency test failed (LOW)</Print>
+      <Abort status="FAIL"/>
+      </Then>
+   </If>
+   <If expression="$frame_info.success_rx GT %105">
+      <Then>
+      <Print>frame 67 frequency test failed (HIGH)</Print>
+      <Abort status="FAIL"/>
+      </Then>
+   </If>
+
+   <!-- disable FIOCMU comm (App 1)-->
+   <Call ref="fio_fiod_disable" setUp="API_Init_Variables"/>
+   <!-- deregister FIOCMU device -->
+   <Call ref="fio_fiod_deregister" setUp="API_Init_Variables"/>
+
+   <!-- select FIOOUT14SIU1 device (App 1) -->
+   <Set var="$fiod_handle" value="$fiod_hdl1_O14S1"/>
+   <!-- disable default scheduled frames we are not testing -->
+   <!-- set scheduled frame frequencies to FIO_HZ_0 and confirm (APIR3.1.2[74]) -->
+   <Set var="$frame_schds" index="%0" member="req_frame" value="%53"/>
+   <Set var="$frame_schds" index="%0" member="frequency" value="#FIO_HZ_0"/>
+   <Set var="$frame_schds" index="%1" member="req_frame" value="%55"/>
+   <Set var="$frame_schds" index="%1" member="frequency" value="#FIO_HZ_0"/>
+   <Set var="$frame_schd_cnt" value="%2"/>
+   <Call ref="fio_fiod_frame_schedule_set" setUp="API_Init_Variables"/>
+   <Call ref="fio_fiod_frame_schedule_get" setUp="API_Init_Variables"/>
+   <Set var="$frame_schd" value="$frame_schds" index="%0" />
+   <If expression="$frame_schd.req_frame NE %53">
+      <Then>
+      <Print>frame number incorrect (1)</Print>
+      <Format var="$frame_schd"/>
+      <Abort status="FAIL"/>
+      </Then>
+   </If>
+   <If expression="$frame_schd.frequency NE #FIO_HZ_0">
+      <Then>
+      <Print>frame frequency incorrect (1)</Print>
+      <Format var="$frame_schd"/>
+      <Abort status="FAIL"/>
+      </Then>
+   </If>
+   <Set var="$frame_schd" value="$frame_schds" index="%1" />
+   <If expression="$frame_schd.req_frame NE %55">
+      <Then>
+      <Print>frame number incorrect (2)</Print>
+      <Format var="$frame_schd"/>
+      <Abort status="FAIL"/>
+      </Then>
+   </If>
+   <If expression="$frame_schd.frequency NE #FIO_HZ_0">
+      <Then>
+      <Print>frame frequency incorrect (2)</Print>
+      <Format var="$frame_schd"/>
+      <Abort status="FAIL"/>
+      </Then>
+   </If>
+   
+   <!-- register App 2 with the FIO API -->
    <Call ref="fio_register" setUp="API_Init_Variables"/>
    <Set var="$fio_handle_2" value="$fio_handle"/>
-   
-   <!-- register a 332-type FIO on SP5 each app --> 
-   <Set var="$fio_port"   value="#FIO_SP5"/>
-   <Set var="$fio_device" value="#FIO332"/>
-   <Call ref="fio_fiod_register" setUp="API_Init_Variables"/>
-   <Set var="$fiod_handle_2" value="$fiod_handle"/>
-   <Set var="$fio_handle"    value="$fio_handle_1"/>
-   <Call ref="fio_fiod_register" setUp="API_Init_Variables"/>
-   <Set var="$fiod_handle_1" value="$fiod_handle"/>
-   
-   <!-- setup SDLC response messages -->
-   <FIOResponse file="@C3020_r177_a.txt" frame="%177" description="(c49->r177)"/>
-   
-   <!-- set CF49 frame rate to 10Hz (App 1)-->
-   <Set var="$frame_sched" file="@C3050_frame_sched_10.txt"/>
-   <Call ref="fio_fiod_frame_schedule_set" setUp="API_Init_Variables"/>
-   
-   <!-- reset comm status -->
-   <Call ref="fio_fiod_status_reset" setUp="API_Init_Variables"/>
-   
-   <!-- start comm -->
-   <Call ref="fio_fiod_enable" setUp="API_Init_Variables"/>
-   
-   <!-- wait 10s -->
-   <Sleep time="%10"/>
-   
-   <!-- get comm status: see what rate we were operating at -->
-   <!-- (should have ~100 successful messages) -->
-   <Call ref="fio_fiod_status_get" setUp="API_Init_Variables"/>
-   <If expression="$fiod_status.success_rx LT %90">
-      <Then>
-      <Print>10Hz frame rate failed (LOW)</Print>
-      <Abort status="FAIL"/>
-      </Then>
-   </If>
-   <If expression="$fiod_status.success_rx GT %110">
-      <Then>
-      <Print>10Hz frame rate failed (HIGH)</Print>
-      <Abort status="FAIL"/>
-      </Then>
-   </If>
 
-   <!-- stop comm -->
-   <Call ref="fio_fiod_disable" setUp="API_Init_Variables"/>
-   
-   <!-- set CF49 frame rate to 5Hz (App 2)-->
-   <Set var="$fio_handle"  value="$fio_handle_2"/>
-   <Set var="$fiod_handle" value="$fiod_handle_2"/>
-   <Set var="$frame_sched" file="@C3050_frame_sched_5.txt"/>
-   <Call ref="fio_fiod_frame_schedule_set" setUp="API_Init_Variables"/>
-   
-   <!-- reset comm status -->
-   <Call ref="fio_fiod_status_reset" setUp="API_Init_Variables"/>
-   
-   <!-- start comm -->
-   <Call ref="fio_fiod_enable" setUp="API_Init_Variables"/>
-   
-   <!-- wait 10s -->
-   <Sleep time="%10"/>
-   
-   <!-- get comm status: see what rate we were operating at -->
-   <!-- (should still be at 10HZ and have ~100 successful messages) -->
-   <Call ref="fio_fiod_status_get" setUp="API_Init_Variables"/>
-   <If expression="$fiod_status.success_rx LT %90">
-      <Then>
-      <Print>10Hz frame rate failed (LOW)</Print>
-      <Abort status="FAIL"/>
-      </Then>
-   </If>
-   <If expression="$fiod_status.success_rx GT %110">
-      <Then>
-      <Print>10Hz frame rate failed (HIGH)</Print>
-      <Abort status="FAIL"/>
-      </Then>
-   </If>
+   <!-- register a FIOOUT14SIU1 on SP5 (App 2) -->
+   <Set var="$fio_device" value="#FIOOUT14SIU1"/>
+   <Call ref="fio_fiod_register" setUp="API_Init_Variables"/>
+   <Set var="$fiod_hdl2_O14S1" value="$fiod_handle"/>
 
-   <!-- stop comm -->
-   <Call ref="fio_fiod_disable" setUp="API_Init_Variables"/>
+   <!-- enable comm (FIOOUT14SIU1) (App 2) -->
+   <Call ref="fio_fiod_enable" setUp="API_Init_Variables"/>
+
+   <!-- try to test CF49 frame rate at 5Hz (App 2) -->
+   <Set var="$freq_tst_frame" value="%49"/>
+   <Set var="$freq_tst_sched" value="#FIO_HZ_5"/>
+   <!-- (should still be at 10Hz and have ~100 successful messages) (APIR3.1.2[75]) -->
+   <Set var="$freq_tst_limit_h" value="%105"/>
+   <Set var="$freq_tst_limit_l" value="%95"/>
+   <Call ref="frame_frequency_test" />
    
-   <!-- set CF49 frame rate to 5Hz (App 1)-->
+   <!-- test CF49 frame rate at 5Hz (App 1)-->
    <Set var="$fio_handle"  value="$fio_handle_1"/>
-   <Set var="$fiod_handle" value="$fiod_handle_1"/>
-   <Set var="$frame_sched" file="@C3050_frame_sched_5.txt"/>
-   <Call ref="fio_fiod_frame_schedule_set" setUp="API_Init_Variables"/>
-   
-   <!-- reset comm status -->
-   <Call ref="fio_fiod_status_reset" setUp="API_Init_Variables"/>
-   
-   <!-- start comm -->
-   <Call ref="fio_fiod_enable" setUp="API_Init_Variables"/>
-   
-   <!-- wait 10s -->
-   <Sleep time="%10"/>
-   
-   <!-- get comm status: see what rate we were operating at -->
+   <Set var="$fiod_handle" value="$fiod_hdl1_O14S1"/>
+   <Set var="$freq_tst_sched" value="#FIO_HZ_5"/>
    <!-- (should be at 5HZ now and have ~50 successful messages) -->
-   <Call ref="fio_fiod_status_get" setUp="API_Init_Variables"/>
-   <If expression="$fiod_status.success_rx LT %45">
-      <Then>
-      <Print>5Hz frame rate failed (LOW)</Print>
-      <Abort status="FAIL"/>
-      </Then>
-   </If>
-   <If expression="$fiod_status.success_rx GT %55">
-      <Then>
-      <Print>5Hz frame rate failed (HIGH)</Print>
-      <Abort status="FAIL"/>
-      </Then>
-   </If>
+   <Set var="$freq_tst_limit_h" value="%53"/>
+   <Set var="$freq_tst_limit_l" value="%47"/>
+   <Call ref="frame_frequency_test" />
 
    <!-- close App 2 -->
-   <Set var="$fio_handle" value="$fio_handle_2"/>
+   <Set var="$fio_handle"  value="$fio_handle_2"/>
+   <Set var="$fiod_handle" value="$fiod_hdl2_O14S1"/>
+   <Call ref="fio_fiod_disable" setUp="API_Init_Variables"/>
+   <Call ref="fio_fiod_deregister" setUp="API_Init_Variables"/>
    <Call ref="fio_deregister" setUp="API_Init_Variables"/>
 
-   <!-- stop comm -->
+   <!-- switch to App 1 -->
    <Set var="$fio_handle"  value="$fio_handle_1"/>
-   <Set var="$fiod_handle" value="$fiod_handle_1"/>
-   <Call ref="fio_fiod_disable" setUp="API_Init_Variables"/>
+   <Set var="$fiod_handle" value="$fiod_hdl1_O14S1"/>
    
-   <!-- set CF49 frame rate to 2Hz (App 1)-->
-   <Set var="$frame_sched" file="@C3050_frame_sched_2.txt"/>
-   <Call ref="fio_fiod_frame_schedule_set" setUp="API_Init_Variables"/>
-   
-   <!-- reset comm status -->
-   <Call ref="fio_fiod_status_reset" setUp="API_Init_Variables"/>
-   
-   <!-- start comm -->
-   <Call ref="fio_fiod_enable" setUp="API_Init_Variables"/>
-   
-   <!-- wait 10s -->
-   <Sleep time="%10"/>
-   
-   <!-- get comm status: see what rate we were operating at -->
-   <!-- (should be at 2HZ now and have ~20 successful messages) -->
-   <Call ref="fio_fiod_status_get" setUp="API_Init_Variables"/>
-   <If expression="$fiod_status.success_rx LT %18">
-      <Then>
-      <Print>2Hz frame rate failed (LOW)</Print>
-      <Abort status="FAIL"/>
-      </Then>
-   </If>
-   <If expression="$fiod_status.success_rx GT %22">
-      <Then>
-      <Print>2Hz frame rate failed (HIGH)</Print>
-      <Abort status="FAIL"/>
-      </Then>
-   </If>
-
-   <!-- stop comm -->
-   <Call ref="fio_fiod_disable" setUp="API_Init_Variables"/>
-   
+<!-- Test frame 49 frequency rates 1, 2, 5, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100 -->
+  
    <!-- set CF49 frame rate to 1Hz (App 1)-->
-   <Set var="$frame_sched" file="@C3050_frame_sched_1.txt"/>
-   <Call ref="fio_fiod_frame_schedule_set" setUp="API_Init_Variables"/>
-   
-   <!-- reset comm status -->
-   <Call ref="fio_fiod_status_reset" setUp="API_Init_Variables"/>
-   
-   <!-- start comm -->
-   <Call ref="fio_fiod_enable" setUp="API_Init_Variables"/>
-   
-   <!-- wait 10s -->
-   <Sleep time="%10"/>
-   
-   <!-- get comm status: see what rate we were operating at -->
-   <!-- (should be at 1HZ now and have ~10 successful messages) -->
-   <Call ref="fio_fiod_status_get" setUp="API_Init_Variables"/>
-   <If expression="$fiod_status.success_rx LT %9">
-      <Then>
-      <Print>1Hz frame rate failed (LOW)</Print>
-      <Abort status="FAIL"/>
-      </Then>
-   </If>
-   <If expression="$fiod_status.success_rx GT %11">
-      <Then>
-      <Print>1Hz frame rate failed (HIGH)</Print>
-      <Abort status="FAIL"/>
-      </Then>
-   </If>
+   <Set var="$freq_tst_sched" value="#FIO_HZ_1"/>
+   <!-- (should have ~10 successful messages) -->
+   <Set var="$freq_tst_limit_h" value="%11"/>
+   <Set var="$freq_tst_limit_l" value="%9"/>
+   <Call ref="frame_frequency_test" />
 
-   <!-- send I/O Module Identification frame (one time)-->
-   <Set var="$frame_number" value="%60"/> 
-   <Set var="$write_buffer" file="@C3050_c60.txt"/>
-   <Set var="$write_count"  value="%1"/>
-   <Call ref="fio_fiod_frame_write" setUp="API_Init_Variables" />
-   <Sleep time="%1"/>
+   <!-- set CF49 frame rate to 2Hz (App 1)-->
+   <Set var="$freq_tst_sched" value="#FIO_HZ_2"/>
+   <!-- (should have ~20 successful messages) -->
+   <Set var="$freq_tst_limit_h" value="%21"/>
+   <Set var="$freq_tst_limit_l" value="%19"/>
+   <Call ref="frame_frequency_test" />
+
+   <!-- set CF49 frame rate to 5Hz (App 1)-->
+   <Set var="$freq_tst_sched" value="#FIO_HZ_5"/>
+   <!-- (should have ~50 successful messages) -->
+   <Set var="$freq_tst_limit_h" value="%53"/>
+   <Set var="$freq_tst_limit_l" value="%47"/>
+   <Call ref="frame_frequency_test" />
+
+   <!-- set CF49 frame rate to 10Hz (App 1)-->
+   <Set var="$freq_tst_sched" value="#FIO_HZ_10"/>
+   <!-- (should have ~100 successful messages) -->
+   <Set var="$freq_tst_limit_h" value="%105"/>
+   <Set var="$freq_tst_limit_l" value="%95"/>
+   <Call ref="frame_frequency_test" />
+
+   <!-- set CF49 frame rate to 20Hz (App 1)-->
+   <Set var="$freq_tst_sched" value="#FIO_HZ_20"/>
+   <!-- (should have ~200 successful messages) -->
+   <Set var="$freq_tst_limit_h" value="%210"/>
+   <Set var="$freq_tst_limit_l" value="%190"/>
+   <Call ref="frame_frequency_test" />
+
+   <!-- set CF49 frame rate to 30Hz (App 1)-->
+   <Set var="$freq_tst_sched" value="#FIO_HZ_30"/>
+   <!-- (should have ~300 successful messages) -->
+   <Set var="$freq_tst_limit_h" value="%315"/>
+   <Set var="$freq_tst_limit_l" value="%285"/>
+   <Call ref="frame_frequency_test" />
+
+   <!-- set CF49 frame rate to 40Hz (App 1)-->
+   <Set var="$freq_tst_sched" value="#FIO_HZ_40"/>
+   <!-- (should have ~400 successful messages) -->
+   <Set var="$freq_tst_limit_h" value="%420"/>
+   <Set var="$freq_tst_limit_l" value="%380"/>
+   <Call ref="frame_frequency_test" />
+
+   <!-- set CF49 frame rate to 50Hz (App 1)-->
+   <Set var="$freq_tst_sched" value="#FIO_HZ_50"/>
+   <!-- (should have ~500 successful messages) -->
+   <Set var="$freq_tst_limit_h" value="%525"/>
+   <Set var="$freq_tst_limit_l" value="%475"/>
+   <Call ref="frame_frequency_test" />
+   
+   <!-- set CF49 frame rate to 60Hz (App 1)-->
+   <Set var="$freq_tst_sched" value="#FIO_HZ_60"/>
+   <!-- (should have ~600 successful messages) -->
+   <Set var="$freq_tst_limit_h" value="%630"/>
+   <Set var="$freq_tst_limit_l" value="%570"/>
+   <Call ref="frame_frequency_test" />
+   
+   <!-- set CF49 frame rate to 70Hz (App 1)-->
+   <Set var="$freq_tst_sched" value="#FIO_HZ_70"/>
+   <!-- (should have ~700 successful messages) -->
+   <Set var="$freq_tst_limit_h" value="%735"/>
+   <Set var="$freq_tst_limit_l" value="%665"/>
+   <Call ref="frame_frequency_test" />
+   
+   <!-- set CF49 frame rate to 80Hz (App 1)-->
+   <Set var="$freq_tst_sched" value="#FIO_HZ_80"/>
+   <!-- (should have ~800 successful messages) -->
+   <Set var="$freq_tst_limit_h" value="%840"/>
+   <Set var="$freq_tst_limit_l" value="%760"/>
+   <Call ref="frame_frequency_test" />
+   
+   <!-- set CF49 frame rate to 90Hz (App 1)-->
+   <Set var="$freq_tst_sched" value="#FIO_HZ_90"/>
+   <!-- (should have ~900 successful messages) -->
+   <Set var="$freq_tst_limit_h" value="%945"/>
+   <Set var="$freq_tst_limit_l" value="%855"/>
+   <Call ref="frame_frequency_test" />
+
+   <!-- test CF49 frame rate at 100Hz (App 1)-->
+   <Set var="$freq_tst_sched" value="#FIO_HZ_100"/>
+   <!-- (should have ~1000 successful messages) -->
+   <Set var="$freq_tst_limit_h" value="%1050"/>
+   <Set var="$freq_tst_limit_l" value="%950"/>
+   <Call ref="frame_frequency_test" />
+
+   <!-- disable frame 49 -->
+   <Set var="$frame_schds" index="%0" member="req_frame" value="%49"/>
+   <Set var="$frame_schds" index="%0" member="frequency" value="#FIO_HZ_0"/>
+   <Set var="$frame_schd_cnt" value="%1"/>   
+   <Call ref="fio_fiod_frame_schedule_set" setUp="API_Init_Variables"/>
+
+   <!-- Schedule one-time non-default frame 60 (FIO_HZ_ONCE) (APIR3.1.2[76])-->
+   <Set var="$freq_tst_frame" value="%60"/>
+   <Set var="$freq_tst_sched" value="#FIO_HZ_ONCE"/>
+   <!-- (should have exactly 1 successful message) -->
+   <Set var="$freq_tst_limit_h" value="%1"/>
+   <Set var="$freq_tst_limit_l" value="%1"/>
+   <Call ref="frame_frequency_test" />
 
    <!-- confirm transmitted command frame -->
-   <If expression="!CMDMSGCompare(@C3050_c60.txt,%60) EQ #FALSE">
+   <If expression="!CMDMSGCompare(@Cxxxx_cmd60.txt,%60) EQ #FALSE">
       <Then>
       <Print>CMDMSG 60 incorrect</Print>
-      <Dump dump="CMDMSG" force="#TRUE" file="@C3050_c60_err.txt" frame="%60"/>
+      <Dump dump="CMDMSG" force="#TRUE" file="@C3050_cmd51_err.txt" frame="%60"/>
       <Abort status="FAIL" />
       </Then>
    </If>
-   
+
+   <!-- disable FIOOUT14SIU1 (App 1) -->
+   <Call ref="fio_fiod_disable" setUp="API_Init_Variables"/>
+   <!-- deregister FIOOUT14SIU1 device -->
+   <Call ref="fio_fiod_deregister" setUp="API_Init_Variables"/>
+
+
+   <!-- register a FIOMMU on SP5 -->
+   <Set var="$fio_device" value="#FIOMMU"/>
+   <Call ref="fio_fiod_register" setUp="API_Init_Variables"/>
+   <Set var="$fiod_hdl1_MMU" value="$fiod_handle"/>
+
+   <!-- setup FIOMMU SDLC response messages -->
+   <FIOResponse file="@Cxxxx_rsp128.txt" frame="%128" description="(FIO C0->R128)"/>
+   <FIOResponse file="@Cxxxx_rsp129.txt" frame="%129" description="(FIO C1->R129)"/>
+   <FIOResponse file="@Cxxxx_rsp131.txt" frame="%131" description="(FIO C3->R131)"/>
+  
+   <!-- enable comm (MMU) -->
+   <Call ref="fio_fiod_enable" setUp="API_Init_Variables"/>
+
+   <!-- register a FIODR1 on SP5 -->
+   <Set var="$fio_device" value="#FIODR1"/>
+   <Call ref="fio_fiod_register" setUp="API_Init_Variables"/>
+   <Set var="$fiod_hdl1_DR1" value="$fiod_handle"/>
+
+   <!-- setup FIODR1 SDLC response messages -->
+   <FIOResponse file="@Cxxxx_rsp148.txt" frame="%148" description="(FIO C20->R148)"/>
+
+   <!-- enable comm DR1 -->
+   <Call ref="fio_fiod_enable" setUp="API_Init_Variables"/>
+
+   <!-- register a FIODR2 on SP5 -->
+   <Set var="$fio_device" value="#FIODR2"/>
+   <Call ref="fio_fiod_register" setUp="API_Init_Variables"/>
+   <Set var="$fiod_hdl1_DR2" value="$fiod_handle"/>
+
+   <!-- setup FIODR2 SDLC response messages -->
+   <FIOResponse file="@Cxxxx_rsp149.txt" frame="%149" description="(FIO C21->R149)"/>
+  
+   <!-- enable comm DR2 -->
+   <Call ref="fio_fiod_enable" setUp="API_Init_Variables"/>
+
+   <!-- register a FIODR3 on SP5 -->
+   <Set var="$fio_device" value="#FIODR3"/>
+   <Call ref="fio_fiod_register" setUp="API_Init_Variables"/>
+   <Set var="$fiod_hdl1_DR3" value="$fiod_handle"/>
+
+   <!-- setup FIODR3 SDLC response messages -->
+   <FIOResponse file="@Cxxxx_rsp150.txt" frame="%150" description="(FIO C22->R150)"/>
+  
+   <!-- enable comm DR3 -->
+   <Call ref="fio_fiod_enable" setUp="API_Init_Variables"/>
+
+   <!-- register a FIODR4 on SP5 -->
+   <Set var="$fio_device" value="#FIODR4"/>
+   <Call ref="fio_fiod_register" setUp="API_Init_Variables"/>
+   <Set var="$fiod_hdl1_DR4" value="$fiod_handle"/>
+
+   <!-- setup FIODR4 SDLC response messages -->
+   <FIOResponse file="@Cxxxx_rsp151.txt" frame="%151" description="(FIO C23->R151)"/>
+  
+   <!-- enable comm DR4 -->
+   <Call ref="fio_fiod_enable" setUp="API_Init_Variables"/>
+
+   <!-- register a FIOTF1 on SP5 -->
+   <Set var="$fio_device" value="#FIOTF1"/>
+   <Call ref="fio_fiod_register" setUp="API_Init_Variables"/>
+   <Set var="$fiod_hdl1_TF1" value="$fiod_handle"/>
+
+   <!-- setup FIOTF1 SDLC response messages -->
+   <FIOResponse file="@Cxxxx_rsp138.txt" frame="%138" description="(FIO C10->R138)"/>
+  
+   <!-- enable comm TF1 -->
+   <Call ref="fio_fiod_enable" setUp="API_Init_Variables"/>
+
+   <!-- register a FIOTF2 on SP5 -->
+   <Set var="$fio_device" value="#FIOTF2"/>
+   <Call ref="fio_fiod_register" setUp="API_Init_Variables"/>
+   <Set var="$fiod_hdl1_TF2" value="$fiod_handle"/>
+
+   <!-- setup FIOTF2 SDLC response messages -->
+   <FIOResponse file="@Cxxxx_rsp139.txt" frame="%139" description="(FIO C11->R139)"/>
+  
+   <!-- enable comm TF2 -->
+   <Call ref="fio_fiod_enable" setUp="API_Init_Variables"/>
+
+   <!-- register a FIOTF3 on SP5 -->
+   <Set var="$fio_device" value="#FIOTF3"/>
+   <Call ref="fio_fiod_register" setUp="API_Init_Variables"/>
+   <Set var="$fiod_hdl1_TF3" value="$fiod_handle"/>
+
+   <!-- setup FIOTF3 SDLC response messages -->
+   <FIOResponse file="@Cxxxx_rsp140.txt" frame="%140" description="(FIO C12->R140)"/>
+  
+   <!-- enable comm TF3 -->
+   <Call ref="fio_fiod_enable" setUp="API_Init_Variables"/>
+
+   <!-- register a FIOTF4 on SP5 -->
+   <Set var="$fio_device" value="#FIOTF4"/>
+   <Call ref="fio_fiod_register" setUp="API_Init_Variables"/>
+   <Set var="$fiod_hdl1_TF4" value="$fiod_handle"/>
+
+   <!-- setup FIOTF4 SDLC response messages -->
+   <FIOResponse file="@Cxxxx_rsp141.txt" frame="%141" description="(FIO C13->R141)"/>
+  
+   <!-- enable comm TF4 -->
+   <Call ref="fio_fiod_enable" setUp="API_Init_Variables"/>
+
+   <!-- confirm default frame settings and frame counts (APIR3.1.2[72]) -->
+
+   <!-- test frames (FIOMMU) -->
+   <Set var="$fiod_handle" value="$fiod_hdl1_MMU"/>
+   <!-- reset frame count status -->
+   <Call ref="fio_fiod_status_reset" setUp="API_Init_Variables"/>
+   <!-- start test period -->
+   <Sleep time="%10"/>
+   <!-- get device communications status -->
+   <Call ref="fio_fiod_status_get" setUp="API_Init_Variables"/>
+   <!-- command frame 0 -->
+   <Set var="$frame_info" value="$fiod_status" index="%0"/>
+   <If expression="$frame_info.frequency NE #FIO_HZ_10">
+      <Then>
+      <Print>frame 0 default frequency incorrect</Print>
+      <Abort status="FAIL"/>
+      </Then>
+   </If>
+   <If expression="$frame_info.success_rx LT %95">
+      <Then>
+      <Print>frame 0 frequency test failed (LOW)</Print>
+      <Abort status="FAIL"/>
+      </Then>
+   </If>
+   <If expression="$frame_info.success_rx GT %105">
+      <Then>
+      <Print>frame 0 frequency test failed (HIGH)</Print>
+      <Abort status="FAIL"/>
+      </Then>
+   </If>
+   <!-- command frame 1 -->
+   <Set var="$frame_info" value="$fiod_status" index="%1"/>
+   <If expression="$frame_info.frequency NE #FIO_HZ_10">
+      <Then>
+      <Print>frame 1 default frequency incorrect</Print>
+      <Abort status="FAIL"/>
+      </Then>
+   </If>
+   <If expression="$frame_info.success_rx LT %95">
+      <Then>
+      <Print>frame 1 frequency test failed (LOW)</Print>
+      <Abort status="FAIL"/>
+      </Then>
+   </If>
+   <If expression="$frame_info.success_rx GT %105">
+      <Then>
+      <Print>frame 1 frequency test failed (HIGH)</Print>
+      <Abort status="FAIL"/>
+      </Then>
+   </If>
+   <!-- command frame 3 -->
+   <Set var="$frame_info" value="$fiod_status" index="%3"/>
+   <If expression="$frame_info.frequency NE #FIO_HZ_1">
+      <Then>
+      <Print>frame 3 default frequency incorrect</Print>
+      <Abort status="FAIL"/>
+      </Then>
+   </If>
+   <If expression="$frame_info.success_rx LT %9">
+      <Then>
+      <Print>frame 3 frequency test failed (LOW)</Print>
+      <Abort status="FAIL"/>
+      </Then>
+   </If>
+   <If expression="$frame_info.success_rx GT %11">
+      <Then>
+      <Print>frame 3 frequency test failed (HIGH)</Print>
+      <Abort status="FAIL"/>
+      </Then>
+   </If>
+   <!-- command frame 9 (broadcast frame not included in counts) -->
+   <!-- test frames (FIOTF1) -->
+   <Set var="$fiod_handle" value="$fiod_hdl1_TF1"/>
+   <!-- reset frame count status -->
+   <Call ref="fio_fiod_status_reset" setUp="API_Init_Variables"/>
+   <!-- start test period -->
+   <Sleep time="%10"/>
+   <!-- get device communications status -->
+   <Call ref="fio_fiod_status_get" setUp="API_Init_Variables"/>
+   <!-- command frame 10 -->
+   <Set var="$frame_info" value="$fiod_status" index="%10"/>
+   <If expression="$frame_info.frequency NE #FIO_HZ_10">
+      <Then>
+      <Print>frame 10 default frequency incorrect</Print>
+      <Abort status="FAIL"/>
+      </Then>
+   </If>
+   <If expression="$frame_info.success_rx LT %95">
+      <Then>
+      <Print>frame 10 frequency test failed (LOW)</Print>
+      <Abort status="FAIL"/>
+      </Then>
+   </If>
+   <If expression="$frame_info.success_rx GT %105">
+      <Then>
+      <Print>frame 10 frequency test failed (HIGH)</Print>
+      <Abort status="FAIL"/>
+      </Then>
+   </If>
+   <!-- test frames (FIOTF2) -->
+   <Set var="$fiod_handle" value="$fiod_hdl1_TF2"/>
+   <!-- reset frame count status -->
+   <Call ref="fio_fiod_status_reset" setUp="API_Init_Variables"/>
+   <!-- start test period -->
+   <Sleep time="%10"/>
+   <!-- get device communications status -->
+   <Call ref="fio_fiod_status_get" setUp="API_Init_Variables"/>
+   <!-- command frame 11 -->
+   <Set var="$frame_info" value="$fiod_status" index="%11"/>
+   <If expression="$frame_info.frequency NE #FIO_HZ_10">
+      <Then>
+      <Print>frame 11 default frequency incorrect</Print>
+      <Abort status="FAIL"/>
+      </Then>
+   </If>
+   <If expression="$frame_info.success_rx LT %95">
+      <Then>
+      <Print>frame 11 frequency test failed (LOW)</Print>
+      <Abort status="FAIL"/>
+      </Then>
+   </If>
+   <If expression="$frame_info.success_rx GT %105">
+      <Then>
+      <Print>frame 11 frequency test failed (HIGH)</Print>
+      <Abort status="FAIL"/>
+      </Then>
+   </If>
+   <!-- test frames (FIOTF3) -->
+   <Set var="$fiod_handle" value="$fiod_hdl1_TF3"/>
+   <!-- reset frame count status -->
+   <Call ref="fio_fiod_status_reset" setUp="API_Init_Variables"/>
+   <!-- start test period -->
+   <Sleep time="%10"/>
+   <!-- get device communications status -->
+   <Call ref="fio_fiod_status_get" setUp="API_Init_Variables"/>
+   <!-- command frame 12 -->
+   <Set var="$frame_info" value="$fiod_status" index="%12"/>
+   <If expression="$frame_info.frequency NE #FIO_HZ_10">
+      <Then>
+      <Print>frame 12 default frequency incorrect</Print>
+      <Abort status="FAIL"/>
+      </Then>
+   </If>
+   <If expression="$frame_info.success_rx LT %95">
+      <Then>
+      <Print>frame 12 frequency test failed (LOW)</Print>
+      <Abort status="FAIL"/>
+      </Then>
+   </If>
+   <If expression="$frame_info.success_rx GT %105">
+      <Then>
+      <Print>frame 12 frequency test failed (HIGH)</Print>
+      <Abort status="FAIL"/>
+      </Then>
+   </If>
+   <!-- test frames (FIOTF4) -->
+   <Set var="$fiod_handle" value="$fiod_hdl1_TF4"/>
+   <!-- reset frame count status -->
+   <Call ref="fio_fiod_status_reset" setUp="API_Init_Variables"/>
+   <!-- start test period -->
+   <Sleep time="%10"/>
+   <!-- get device communications status -->
+   <Call ref="fio_fiod_status_get" setUp="API_Init_Variables"/>
+   <!-- command frame 13 -->
+   <Set var="$frame_info" value="$fiod_status" index="%13"/>
+   <If expression="$frame_info.frequency NE #FIO_HZ_10">
+      <Then>
+      <Print>frame 13 default frequency incorrect</Print>
+      <Abort status="FAIL"/>
+      </Then>
+   </If>
+   <If expression="$frame_info.success_rx LT %95">
+      <Then>
+      <Print>frame 13 frequency test failed (LOW)</Print>
+      <Abort status="FAIL"/>
+      </Then>
+   </If>
+   <If expression="$frame_info.success_rx GT %105">
+      <Then>
+      <Print>frame 13 frequency test failed (HIGH)</Print>
+      <Abort status="FAIL"/>
+      </Then>
+   </If>
+   <!-- command frame 18 (broadcast frame not included in counts) -->
+   <!-- test frames (FIODR1) -->
+   <Set var="$fiod_handle" value="$fiod_hdl1_DR1"/>
+   <!-- reset frame count status -->
+   <Call ref="fio_fiod_status_reset" setUp="API_Init_Variables"/>
+   <!-- start test period -->
+   <Sleep time="%10"/>
+   <!-- get device communications status -->
+   <Call ref="fio_fiod_status_get" setUp="API_Init_Variables"/>
+   <!-- command frame 20 -->
+   <Set var="$frame_info" value="$fiod_status" index="%20"/>
+   <If expression="$frame_info.frequency NE #FIO_HZ_10">
+      <Then>
+      <Print>frame 20 default frequency incorrect</Print>
+      <Abort status="FAIL"/>
+      </Then>
+   </If>
+   <If expression="$frame_info.success_rx LT %95">
+      <Then>
+      <Print>frame 20 frequency test failed (LOW)</Print>
+      <Abort status="FAIL"/>
+      </Then>
+   </If>
+   <If expression="$frame_info.success_rx GT %105">
+      <Then>
+      <Print>frame 20 frequency test failed (HIGH)</Print>
+      <Abort status="FAIL"/>
+      </Then>
+   </If>
+   <!-- test frames (FIODR2) -->
+   <Set var="$fiod_handle" value="$fiod_hdl1_DR2"/>
+   <!-- reset frame count status -->
+   <Call ref="fio_fiod_status_reset" setUp="API_Init_Variables"/>
+   <!-- start test period -->
+   <Sleep time="%10"/>
+   <!-- get device communications status -->
+   <Call ref="fio_fiod_status_get" setUp="API_Init_Variables"/>
+   <!-- command frame 21 -->
+   <Set var="$frame_info" value="$fiod_status" index="%21"/>
+   <If expression="$frame_info.frequency NE #FIO_HZ_10">
+      <Then>
+      <Print>frame 21 default frequency incorrect</Print>
+      <Abort status="FAIL"/>
+      </Then>
+   </If>
+   <If expression="$frame_info.success_rx LT %95">
+      <Then>
+      <Print>frame 21 frequency test failed (LOW)</Print>
+      <Abort status="FAIL"/>
+      </Then>
+   </If>
+   <If expression="$frame_info.success_rx GT %105">
+      <Then>
+      <Print>frame 21 frequency test failed (HIGH)</Print>
+      <Abort status="FAIL"/>
+      </Then>
+   </If>
+   <!-- test frames (FIODR3) -->
+   <Set var="$fiod_handle" value="$fiod_hdl1_DR3"/>
+   <!-- reset frame count status -->
+   <Call ref="fio_fiod_status_reset" setUp="API_Init_Variables"/>
+   <!-- start test period -->
+   <Sleep time="%10"/>
+   <!-- get device communications status -->
+   <Call ref="fio_fiod_status_get" setUp="API_Init_Variables"/>
+   <!-- command frame 22 -->
+   <Set var="$frame_info" value="$fiod_status" index="%22"/>
+   <If expression="$frame_info.frequency NE #FIO_HZ_10">
+      <Then>
+      <Print>frame 22 default frequency incorrect</Print>
+      <Abort status="FAIL"/>
+      </Then>
+   </If>
+   <If expression="$frame_info.success_rx LT %95">
+      <Then>
+      <Print>frame 22 frequency test failed (LOW)</Print>
+      <Abort status="FAIL"/>
+      </Then>
+   </If>
+   <If expression="$frame_info.success_rx GT %105">
+      <Then>
+      <Print>frame 22 frequency test failed (HIGH)</Print>
+      <Abort status="FAIL"/>
+      </Then>
+   </If>
+   <!-- test frames (FIODR4) -->
+   <Set var="$fiod_handle" value="$fiod_hdl1_DR4"/>
+   <!-- reset frame count status -->
+   <Call ref="fio_fiod_status_reset" setUp="API_Init_Variables"/>
+   <!-- start test period -->
+   <Sleep time="%10"/>
+   <!-- get device communications status -->
+   <Call ref="fio_fiod_status_get" setUp="API_Init_Variables"/>
+   <!-- command frame 23 -->
+   <Set var="$frame_info" value="$fiod_status" index="%23"/>
+   <If expression="$frame_info.frequency NE #FIO_HZ_10">
+      <Then>
+      <Print>frame 23 default frequency incorrect</Print>
+      <Abort status="FAIL"/>
+      </Then>
+   </If>
+   <If expression="$frame_info.success_rx LT %95">
+      <Then>
+      <Print>frame 23 frequency test failed (LOW)</Print>
+      <Abort status="FAIL"/>
+      </Then>
+   </If>
+   <If expression="$frame_info.success_rx GT %105">
+      <Then>
+      <Print>frame 23 frequency test failed (HIGH)</Print>
+      <Abort status="FAIL"/>
+      </Then>
+   </If>
+
+   <!-- disable FIOMMU comm -->
+   <Set var="$fiod_handle" value="$fiod_hdl1_MMU"/>
+   <Call ref="fio_fiod_disable" setUp="API_Init_Variables"/>
+   <!-- deregister device -->
+   <Call ref="fio_fiod_deregister" setUp="API_Init_Variables"/>
+
+   <!-- disable FIODR1 comm -->
+   <Set var="$fiod_handle" value="$fiod_hdl1_DR1"/>
+   <Call ref="fio_fiod_disable" setUp="API_Init_Variables"/>
+   <!-- deregister device -->
+   <Call ref="fio_fiod_deregister" setUp="API_Init_Variables"/>
+
+   <!-- disable FIODR2 comm -->
+   <Set var="$fiod_handle" value="$fiod_hdl1_DR2"/>
+   <Call ref="fio_fiod_disable" setUp="API_Init_Variables"/>
+   <!-- deregister device -->
+   <Call ref="fio_fiod_deregister" setUp="API_Init_Variables"/>
+
+   <!-- disable FIODR3 comm -->
+   <Set var="$fiod_handle" value="$fiod_hdl1_DR3"/>
+   <Call ref="fio_fiod_disable" setUp="API_Init_Variables"/>
+   <!-- deregister device -->
+   <Call ref="fio_fiod_deregister" setUp="API_Init_Variables"/>
+
+   <!-- disable FIODR4 comm -->
+   <Set var="$fiod_handle" value="$fiod_hdl1_DR4"/>
+   <Call ref="fio_fiod_disable" setUp="API_Init_Variables"/>
+   <!-- deregister device -->
+   <Call ref="fio_fiod_deregister" setUp="API_Init_Variables"/>
+
+   <!-- disable FIOTF1 comm -->
+   <Set var="$fiod_handle" value="$fiod_hdl1_TF1"/>
+   <Call ref="fio_fiod_disable" setUp="API_Init_Variables"/>
+   <!-- deregister device -->
+   <Call ref="fio_fiod_deregister" setUp="API_Init_Variables"/>
+
+   <!-- disable FIOTF2 comm -->
+   <Set var="$fiod_handle" value="$fiod_hdl1_TF2"/>
+   <Call ref="fio_fiod_disable" setUp="API_Init_Variables"/>
+   <!-- deregister device -->
+   <Call ref="fio_fiod_deregister" setUp="API_Init_Variables"/>
+
+   <!-- disable FIOTF3 comm -->
+   <Set var="$fiod_handle" value="$fiod_hdl1_TF3"/>
+   <Call ref="fio_fiod_disable" setUp="API_Init_Variables"/>
+   <!-- deregister device -->
+   <Call ref="fio_fiod_deregister" setUp="API_Init_Variables"/>
+
+   <!-- disable FIOTF4 comm -->
+   <Set var="$fiod_handle" value="$fiod_hdl1_TF4"/>
+   <Call ref="fio_fiod_disable" setUp="API_Init_Variables"/>
+   <!-- deregister device -->
+   <Call ref="fio_fiod_deregister" setUp="API_Init_Variables"/>
+
+
    <!-- close App 1 -->
-   <Set var="$fio_handle" value="$fio_handle_1"/>
    <Call ref="fio_deregister" setUp="API_Init_Variables"/>
 </TestCase>
 
