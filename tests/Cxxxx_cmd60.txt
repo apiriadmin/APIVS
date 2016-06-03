@@ -2,7 +2,7 @@
 # 
 #     Filename: Cxxxx_cmd60.txt
 #    File Type: APIVS flat file (text format)
-#    Test Case: APIRI.TCS.3xxx
+#    Test Case: APIRI.TCS.3050
 #  Description: file load of Command Frame 60
 #               (I/O Module ID)
 # 

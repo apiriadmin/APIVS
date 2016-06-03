@@ -68,6 +68,7 @@ APIR3.1.2[92]	The default state of the Voltage Monitor output point shall
  Date      Revision    Description
  2/22/16   1.0         initial release
  2/25/16   1.1         second release
+ 6/3/16    1.2         third release (JMG)
 -->
 
 <Define var="$returnCode"     type="int" />
@@ -1281,7 +1282,7 @@ APIR3.1.2[92]	The default state of the Voltage Monitor output point shall
    <Call ref="fio_register" setUp="API_Init_Variables"/>
    <Set var="$fio_handle_2" value="$fio_handle"/>
    
-   <!-- register an FIOCMU on SP5 each app --> 
+   <!-- register a FIOCMU on SP5 each app --> 
    <Set var="$fio_port"   value="#FIO_SP5"/>
    <Set var="$fio_device" value="#FIOCMU"/>
    <Call ref="fio_fiod_register" setUp="API_Init_Variables"/>
@@ -1291,7 +1292,7 @@ APIR3.1.2[92]	The default state of the Voltage Monitor output point shall
    <Set var="$fiod_handle_1" value="$fiod_handle"/>
    
    <!-- get the Failed State Action (FSA) this FIOCMU --> 
-   <!-- check the default value -->
+   <!-- check the default value (APIR3.1.2[79])-->
    <Call ref="fio_fiod_cmu_fault_get" setUp="API_Init_Variables" />
    <If expression="$cmu_fsa NE #FIO_CMU_FSA_NONE">
       <Then>
@@ -1300,18 +1301,7 @@ APIR3.1.2[92]	The default state of the Voltage Monitor output point shall
       </Then>
    </If>
    
-   <!-- set the FSA to Latched and confirm the change --> 
-   <Set var="$cmu_fsa" value="#FIO_CMU_FSA_LATCHING"/>
-   <Call ref="fio_fiod_cmu_fault_set" setUp="API_Init_Variables" />
-   <Call ref="fio_fiod_cmu_fault_get" setUp="API_Init_Variables" />
-   <If expression="$cmu_fsa NE #FIO_CMU_FSA_LATCHING">
-      <Then>
-      <Print>FSA Latched state not set (1)</Print>
-      <Abort status="FAIL" />
-      </Then>
-   </If>
-   
-   <!-- set the FSA to Non-Latched and confirm the change --> 
+   <!-- set the FSA to Non-Latched and confirm the change (APIR3.1.2[77], APIR3.1.2[81])--> 
    <Set var="$cmu_fsa" value="#FIO_CMU_FSA_NON_LATCHING"/>
    <Call ref="fio_fiod_cmu_fault_set" setUp="API_Init_Variables" />
    <Call ref="fio_fiod_cmu_fault_get" setUp="API_Init_Variables" />
@@ -1322,7 +1312,7 @@ APIR3.1.2[92]	The default state of the Voltage Monitor output point shall
       </Then>
    </If>
    
-   <!-- set the FSA to Latched (App 2) and confirm the change --> 
+   <!-- set the FSA to Latched (App 2) and confirm the change (APIR3.1.2[80])--> 
    <Set var="$fio_handle"  value="$fio_handle_2"/>
    <Set var="$fiod_handle" value="$fiod_handle_2"/>
    <Set var="$cmu_fsa" value="#FIO_CMU_FSA_LATCHING"/>
@@ -1335,7 +1325,7 @@ APIR3.1.2[92]	The default state of the Voltage Monitor output point shall
       </Then>
    </If>
    
-   <!-- set the FSA to None (both apps) and confirm the change --> 
+   <!-- set the FSA to None (both apps) and confirm the change (APIR3.1.2[78], APIR3.1.2[82])--> 
    <Set var="$cmu_fsa" value="#FIO_CMU_FSA_NONE"/>
    <Call ref="fio_fiod_cmu_fault_set" setUp="API_Init_Variables" />
    <Set var="$fio_handle"  value="$fio_handle_1"/>
@@ -1368,7 +1358,7 @@ APIR3.1.2[92]	The default state of the Voltage Monitor output point shall
    <Set var="$fiod_handle_1" value="$fiod_handle"/>
    
    <!-- get the Fault Monitor (FM) state this FIOTS1 --> 
-   <!-- check the default value (ON) -->
+   <!-- check the default value (ON) (APIR3.1.2[87]) -->
    <Call ref="fio_fiod_ts_fault_monitor_get" setUp="API_Init_Variables" />
    <If expression="$fm_state NE #FIO_TS_FM_ON">
       <Then>
@@ -1377,7 +1367,28 @@ APIR3.1.2[92]	The default state of the Voltage Monitor output point shall
       </Then>
    </If>
    
-   <!-- set the FM to OFF (App 1) and confirm the change --> 
+   <!-- Attempt to reserve the fault monitor output point (App 1) (APIR3.1.2[84])-->
+   <!-- since we need this to fail, change abort_mode to FALSE -->
+   <Set var="$outputs" file="@C3060_outputs_fm.txt"/>
+   <Set var="$abort_mode" value="#FALSE"/>
+   <Set var="$failed"     value="#FALSE"/>
+   <Call ref="fio_fiod_outputs_reservation_set" setUp="API_Init_Variables" /> 
+   <If expression="$failed NE #TRUE">
+      <Then>
+      <Print>Reservation conflict not detected</Print>
+      <Abort status="FAIL"/>
+      </Then>
+   </If>
+   <If expression="$errno NE %25"> <!-- ENOTTY -->
+      <Then>
+      <Print>Reservation conflict but ERRNO incorrect</Print>
+      <Abort status="FAIL"/>
+      </Then>
+   </If>
+   <!-- change abort_mode back to normal -->
+   <Set var="$abort_mode" value="#TRUE"/>
+
+   <!-- set the FM to OFF (App 1) and confirm the change (APIR3.1.2[83], APIR3.1.2[85]) --> 
    <Set var="$fm_state" value="#FIO_TS_FM_OFF"/>
    <Call ref="fio_fiod_ts_fault_monitor_set" setUp="API_Init_Variables" />
    <Call ref="fio_fiod_ts_fault_monitor_get" setUp="API_Init_Variables" />
@@ -1387,7 +1398,7 @@ APIR3.1.2[92]	The default state of the Voltage Monitor output point shall
       <Abort status="FAIL" />
       </Then>
    </If>
-   
+
    <!-- set the FM back to ON (App 1) --> 
    <Set var="$fm_state" value="#FIO_TS_FM_ON"/>
    <Call ref="fio_fiod_ts_fault_monitor_set" setUp="API_Init_Variables" />
@@ -1409,7 +1420,7 @@ APIR3.1.2[92]	The default state of the Voltage Monitor output point shall
    <Set var="$fm_state" value="#FIO_TS_FM_ON"/>
    <Call ref="fio_fiod_ts_fault_monitor_set" setUp="API_Init_Variables" />
 
-   <!-- check that it is actually back ON now --> 
+   <!-- check that it is actually back ON now (APIR3.1.2[86]) --> 
    <Call ref="fio_fiod_ts_fault_monitor_get" setUp="API_Init_Variables" />
    <If expression="$fm_state NE #FIO_TS_FM_ON">
       <Then>
@@ -1419,7 +1430,7 @@ APIR3.1.2[92]	The default state of the Voltage Monitor output point shall
    </If>
    
    <!-- get the Voltage Monitor (VM) state this FIOTS1 --> 
-   <!-- check the default value (ON) -->
+   <!-- check the default value (ON) (APIR3.1.2[92]) -->
    <Set var="$fio_handle"  value="$fio_handle_1"/>
    <Set var="$fiod_handle" value="$fiod_handle_1"/>
    <Call ref="fio_fiod_ts1_volt_monitor_get" setUp="API_Init_Variables" />
@@ -1430,7 +1441,28 @@ APIR3.1.2[92]	The default state of the Voltage Monitor output point shall
       </Then>
    </If>
    
-   <!-- set the VM to OFF (App 1) and confirm the change --> 
+   <!-- Attempt to reserve the voltage monitor output point (App 1) (APIR3.1.2[89])-->
+   <!-- since we need this to fail, change abort_mode to FALSE -->
+   <Set var="$outputs" file="@C3060_outputs_vm.txt"/>
+   <Set var="$abort_mode" value="#FALSE"/>
+   <Set var="$failed"     value="#FALSE"/>
+   <Call ref="fio_fiod_outputs_reservation_set" setUp="API_Init_Variables" /> 
+   <If expression="$failed NE #TRUE">
+      <Then>
+      <Print>Reservation conflict not detected</Print>
+      <Abort status="FAIL"/>
+      </Then>
+   </If>
+   <If expression="$errno NE %25"> <!-- ENOTTY -->
+      <Then>
+      <Print>Reservation conflict but ERRNO incorrect</Print>
+      <Abort status="FAIL"/>
+      </Then>
+   </If>
+   <!-- change abort_mode back to normal -->
+   <Set var="$abort_mode" value="#TRUE"/>
+
+   <!-- set the VM to OFF (App 1) and confirm the change (APIR3.1.2[88], APIR3.1.2[90] --> 
    <Set var="$vm_state" value="#FIO_TS1_VM_OFF"/>
    <Call ref="fio_fiod_ts1_volt_monitor_set" setUp="API_Init_Variables" />
    <Call ref="fio_fiod_ts1_volt_monitor_get" setUp="API_Init_Variables" />
@@ -1462,7 +1494,7 @@ APIR3.1.2[92]	The default state of the Voltage Monitor output point shall
    <Set var="$vm_state" value="#FIO_TS1_VM_ON"/>
    <Call ref="fio_fiod_ts1_volt_monitor_set" setUp="API_Init_Variables" />
 
-   <!-- check that it is actually back ON now --> 
+   <!-- check that it is actually back ON now (APIR3.1.2[91]) --> 
    <Call ref="fio_fiod_ts1_volt_monitor_get" setUp="API_Init_Variables" />
    <If expression="$vm_state NE #FIO_TS1_VM_ON">
       <Then>
