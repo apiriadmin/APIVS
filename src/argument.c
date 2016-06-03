@@ -1978,16 +1978,16 @@ argFormat(uint16_t ln, const RUN_LEVEL level, ARG_P *pArg)
 		case VAR_FFSCHD:
 		{
 			if (pArg->arg.data.size > 1) {
+				outputXmlHex(level, pArg->pName,
+					pArg->arg.data.value.fioFschd,
+					pArg->arg.data.size * sizeof(FIO_FRAME_SCHD));
+			} else {
 				sprintf(string, "%s%c%s = [%d], %s%c%s = [%d]",
 					pArg->pName, ARG_MEMBER, MEM_FFSCHD_REQ,
 					pArg->arg.data.value.fioFschd->req_frame,
 					pArg->pName, ARG_MEMBER, MEM_FFSCHD_HZ,
 					pArg->arg.data.value.fioFschd->frequency);
 				outputXmlText(level, string);
-			} else {
-				outputXmlHex(level, pArg->pName,
-					pArg->arg.data.value.fioFschd,
-					pArg->arg.data.size * sizeof(FIO_FRAME_SCHD));
 			}
 		}
 		break;
@@ -2983,6 +2983,9 @@ printf("argSetVar(): VAR_FINF\n");
 			{
 				unsigned char *pBuf;
 				unsigned int size;
+				unsigned int index = 0;
+
+printf("argSetVar(): VAR_FFSCHD\n");
 				if (pFile != NULL) {
 					if ((operation == OP_ADD) || (operation == OP_SUB))
 					{
@@ -3000,9 +3003,9 @@ printf("argSetVar(): VAR_FINF\n");
 							break;
 						}
 						memset(pVar->arg.data.value.fioFschd,
-							0, pVar->arg.data.size * sizeof(FIO_INPUT_FILTER));
+							0, pVar->arg.data.size * sizeof(FIO_FRAME_SCHD));
 						memcpy(pVar->arg.data.value.fioFschd,
-							pBuf, MIN(pVar->arg.data.size * sizeof(FIO_INPUT_FILTER), size));
+							pBuf, MIN(pVar->arg.data.size * sizeof(FIO_FRAME_SCHD), size));
 						free(pBuf);
 					}
 					break;
@@ -3011,79 +3014,91 @@ printf("argSetVar(): VAR_FINF\n");
 				if (pValue == NULL)
 				{
 					char string[OUTPUT_STRING_MAX];
-					sprintf(string, "argSetVar(): Must set data type [%s] from a value",
+					sprintf(string, "argSetVar(): Must set data type [%s] from file or value",
 							argVarStringGet(pVar->varType));
 					OUTPUT_ERR(ln, string, NULL, NULL);
 					break;
 				}
 
-				if (NULL != pMember)
-				{
+				// get array index, if any
+				if (pIndex != NULL) {
+					if (argCastUint(ln, pIndex, &index) != STATUS_PASS) {
+						break;
+					}
+				}
+												
+				if (pMember != NULL) {
 					unsigned int value;
+					unsigned int *var;
+
+					if (index >= pVar->arg.data.size) {
+						OUTPUT_ERR(ln, "argSetVar(): variable array index out of range",
+							NULL, NULL);
+						break;
+					}
+						
+					// get unsigned int value
+					if ((status = argCastUint(ln, pValue, &value)) != STATUS_PASS)
+						break;
 					
-					memberAllowed = TRUE;
-					if (!strcmp(MEM_FFSCHD_REQ, pMember))
-					{
-						// Initialize member
-						if (STATUS_PASS == (status = argCastUint(ln, pValue, &value)))
-						{
-							switch (operation)
-							{
-								case OP_ADD:
-								{
-									pVar->arg.data.value.fioFschd->req_frame += value;
-								}
-								break;
-								case OP_SUB:
-								{
-									pVar->arg.data.value.fioFschd->req_frame -= value;
-								}
-								break;
-								default:
-								{
-									pVar->arg.data.value.fioFschd->req_frame = value;
-								}
-								break;
-							}
-						}
+					memberAllowed = TRUE;	
+					if (!strcmp(MEM_FFSCHD_REQ, pMember)) {
+						var = &pVar->arg.data.value.fioFschd[index].req_frame;
 					}
-					else if (!strcmp(MEM_FFSCHD_HZ, pMember))
-					{
-						if (STATUS_PASS == (status = argCastUint(ln, pValue, &value)))
-						{
-							switch (operation)
-							{
-								case OP_ADD:
-								{
-									pVar->arg.data.value.fioFschd->frequency += value;
-								}
-								break;
-								case OP_SUB:
-								{
-									pVar->arg.data.value.fioFschd->frequency -= value;
-								}
-								break;
-								default:
-								{
-									pVar->arg.data.value.fioFschd->frequency = value;
-								}
-								break;
-							}
-						}
+					else if (!strcmp(MEM_FFSCHD_HZ, pMember)) {
+						var = &pVar->arg.data.value.fioFschd[index].frequency;
 					}
-					else
-					{
+					else {
 						// Invalid member specified
 						char string[OUTPUT_STRING_MAX];
 						sprintf(string, "argSetVar(): Illegal member [%s] specified for variable [%s]",
 							pMember,
 							pVar->pName);
 						OUTPUT_ERR(ln, string, NULL, NULL);
+						break;
 					}
-				}
-				else
-				{
-					OUTPUT_ERR(ln, "argSetVar(): Not supported", NULL, NULL);
+					switch (operation)
+					{
+						case OP_ADD:
+							*var += value;
+							break;
+						case OP_SUB:
+							*var -= value;
+							break;
+						default:
+							*var = value;
+							break;
+					}
+				} else {
+					if ((operation == OP_ADD) || (operation == OP_SUB)) {
+						OUTPUT_ERR(ln, "argSetVar(): Operation add/subtract not allowed on this variable type",
+							NULL, NULL);
+					} else {
+						if ((pValue->argType == ARG_VAR)
+							&& (pValue->varType == VAR_FFSCHD)) {
+							if (pIndex != NULL) {
+								// Set from array element
+								if (index >= pValue->arg.data.size) {
+									OUTPUT_ERR(ln,
+										"argSetVar(): value array index out of range",
+										NULL, NULL);
+									break;
+								}
+								memcpy(pVar->arg.data.value.fioFschd,
+									&pValue->arg.data.value.fioFschd[index],
+									sizeof(FIO_FRAME_SCHD));
+							} else {
+								// Set whole array
+								memset(pVar->arg.data.value.fioFschd,
+									0, pVar->arg.data.size * sizeof(FIO_FRAME_SCHD));
+								memcpy(pVar->arg.data.value.fioFschd,
+									pValue->arg.data.value.fioFschd,
+									MIN(pVar->arg.data.size * sizeof(FIO_FRAME_SCHD),
+									pValue->arg.data.size));
+							}
+							status = STATUS_PASS;
+						}
+					}
 				}
 			}
 			break;
@@ -3521,7 +3536,7 @@ printf("argSetVar(): VAR_FTBUF\n");
 							NULL, NULL);
 					} else {
 						if ((pValue->argType == ARG_VAR)
-							&& (pValue->varType == VAR_FFINFO)) {
+							&& (pValue->varType == VAR_FFDSTAT)) {
 							if (pIndex != NULL) {
 								// Set from array element
 								if (index >= pValue->arg.data.size) {
@@ -3531,14 +3546,14 @@ printf("argSetVar(): VAR_FTBUF\n");
 									break;
 								}
 								memcpy(pVar->arg.data.value.fioFrameInfo,
-									&pValue->arg.data.value.fioFrameInfo[index],
+									&pValue->arg.data.value.fioFiodStatus.frame_info[index],
 									sizeof(FIO_FRAME_INFO));
 							} else {
 								// Set whole array
 								memset(pVar->arg.data.value.fioFrameInfo,
 									0, pVar->arg.data.size * sizeof(FIO_FRAME_INFO));
 								memcpy(pVar->arg.data.value.fioFrameInfo,
-									pValue->arg.data.value.fioFrameInfo,
+									pValue->arg.data.value.fioFiodStatus.frame_info,
 									MIN(pVar->arg.data.size * sizeof(FIO_FRAME_INFO),
 									pValue->arg.data.size));
 							}
@@ -4118,7 +4133,7 @@ argCastNumCompare(uint16_t lineNumber, ARG_P *pArg, char *pMember, long *pLong)
 						}
 						else if (!strcmp(MEM_FFSCHD_HZ, pMember))
 						{
-							*pLong = pArg->arg.data.value.fioFschd->req_frame;
+							*pLong = pArg->arg.data.value.fioFschd->frequency;
 						}
 						else
 						{
@@ -6816,6 +6831,40 @@ argCompareType(uint16_t ln, ARG_P *pArg, char *pMember, boolean *comp)
 				if ((!strcmp(MEM_FINF_IP, pMember))
 					|| (!strcmp(MEM_FINF_LEAD, pMember))
 					|| (!strcmp(MEM_FINF_TRAIL, pMember)))
+				{
+					*comp = TRUE;	// Show numeric comparison
+				}
+				else
+				{
+					// Invalid member specified
+					char string[OUTPUT_STRING_MAX];
+					sprintf(string,
+						"argCompareType(): Illegal member [%s] specified for variable [%s]",
+						pMember,
+						pArg->pName);
+					OUTPUT_ERR(ln, string, NULL, NULL);
+				}
+			}
+			else
+			{
+				// member not specified, must have member
+				char	string[OUTPUT_STRING_MAX];
+				sprintf(string,
+						"argCompareType(): Member must be specified for variable [%s, %s]",
+						pArg->pName,
+						argVarStringGet(pArg->varType));
+				OUTPUT_ERR(ln, string, NULL, NULL);
+			}
+		}
+		break;
+
+		case VAR_FFSCHD:
+		{
+			if (NULL != pMember)
+			{
+				memberOK = TRUE;
+				if ((!strcmp(MEM_FFSCHD_REQ, pMember))
+					|| (!strcmp(MEM_FFSCHD_HZ, pMember)))
 				{
 					*comp = TRUE;	// Show numeric comparison
 				}
