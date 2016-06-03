@@ -37,6 +37,7 @@ APIR3.1.2[99]	Upon a Watchdog Triggered Condition, the API shall toggle the
  Date      Revision    Description
  2/22/16   1.0         initial release
  2/25/16   1.1         second release
+ 6/3/16    1.2         third release (JMG)
 -->
 
 <Define var="$returnCode"     type="int" />
@@ -1261,16 +1262,14 @@ APIR3.1.2[99]	Upon a Watchdog Triggered Condition, the API shall toggle the
    <Set var="$fiod_handle_1" value="$fiod_handle"/>
    
    <!-- setup SDLC response messages -->
-   <FIOResponse file="@C3020_r177_a.txt" frame="%177" description="(c49->r177)"/>
-   <FIOResponse file="@C3020_r181_a.txt" frame="%181" description="(c53->r181)"/>
-   <FIOResponse file="@C3020_r183_a.txt" frame="%183" description="(c55->r183)"/>
+   <FIOResponse file="@Cxxxx_rsp177.txt" frame="%177" description="(c49->r177)"/>
+   <FIOResponse file="@Cxxxx_rsp181a.txt" frame="%181" description="(c53->r181)"/>
+   <FIOResponse file="@Cxxxx_rsp183.txt" frame="%183" description="(c55->r183)"/>
    
-   <!-- start comm -->
-   <Call ref="fio_fiod_enable" setUp="API_Init_Variables"/>
-   
-   <!-- let App 1 set the watchdog point -->
+   <!-- let App 1 register and set the watchdog point (APIR3.1.2[93], APIR3.1.2[96])-->
    <Set var="$fio_handle"  value="$fio_handle_1"/>
    <Set var="$fiod_handle" value="$fiod_handle_1"/>
+   <Call ref="fio_fiod_wd_register" setUp="API_Init_Variables"/>
    <Set var="$output_point" value="%1"/>
    <Call ref="fio_fiod_wd_reservation_set" setUp="API_Init_Variables"/>
    
@@ -1283,25 +1282,40 @@ APIR3.1.2[99]	Upon a Watchdog Triggered Condition, the API shall toggle the
       </Then>
    </If>
    
-   <!-- verify that we can't reserve the watchdog output -->
+   <!-- verify that we can't reserve the watchdog output (APIR3.1.2[95]) -->
    <Set var="$outputs" file="@C3070_outputs_wd.txt"/>
    <Set var="$abort_mode" value="#FALSE"/>
    <Call ref="fio_fiod_outputs_reservation_set" setUp="API_Init_Variables"/> 
+   <If expression="$failed NE #TRUE">
+      <Then>
+      <Print>Reservation conflict not detected</Print>
+      <Abort status="FAIL"/>
+      </Then>
+   </If>
+   <If expression="$errno NE %25"> <!-- ENOTTY -->
+      <Then>
+      <Print>Reservation conflict but ERRNO incorrect</Print>
+      <Abort status="FAIL"/>
+      </Then>
+   </If>
+   <!-- change abort_mode back to normal -->
    <Set var="$abort_mode" value="#TRUE"/>
 
-   <!-- verify that it's too late for App 2 to set the point -->
+   <!-- verify that it's too late for App 2 to set the point (APIR3.1.2[94]) -->
    <Set var="$fio_handle"   value="$fio_handle_2"/>
    <Set var="$fiod_handle"  value="$fiod_handle_2"/>
+   <Call ref="fio_fiod_wd_register" setUp="API_Init_Variables"/>
    <Set var="$abort_mode"   value="#FALSE"/>
    <Set var="$output_point" value="%1"/>
    <Call ref="fio_fiod_wd_reservation_set" setUp="API_Init_Variables"/>
-   <Set var="$abort_mode" value="#TRUE"/>
    <If expression="$errno NE %17"> <!-- EEXIST -->
       <Then>
       <Print>WD output point reservation error (2)</Print>
       <Abort status="FAIL"/>
       </Then>
    </If>
+   <!-- change abort_mode back to normal -->
+   <Set var="$abort_mode" value="#TRUE"/>
   
    <!-- let App 2 confirm the point's location -->
    <Call ref="fio_fiod_wd_reservation_get" setUp="API_Init_Variables"/>
@@ -1312,32 +1326,29 @@ APIR3.1.2[99]	Upon a Watchdog Triggered Condition, the API shall toggle the
       </Then>
    </If>
 
-   <!-- register both apps for control of the point --> 
+   <!-- start comm APP 2 -->
+   <Call ref="fio_fiod_enable" setUp="API_Init_Variables"/>
+   <!-- start comm APP 1 -->
    <Set var="$fio_handle"  value="$fio_handle_1"/>
    <Set var="$fiod_handle" value="$fiod_handle_1"/>
-   <Call ref="fio_fiod_wd_register" setUp="API_Init_Variables"/>
-   <Set var="$fio_handle"  value="$fio_handle_2"/>
-   <Set var="$fiod_handle" value="$fiod_handle_2"/>
-   <Call ref="fio_fiod_wd_register" setUp="API_Init_Variables"/>
+   <Call ref="fio_fiod_enable" setUp="API_Init_Variables"/>
 
-   <!-- heartbeat from App 1 and confirm the output did not toggle --> 
-   <Set var="$fio_handle"  value="$fio_handle_1"/>
-   <Set var="$fiod_handle" value="$fiod_handle_1"/>
+   <!-- heartbeat from App 1 and confirm the output did not toggle (APIR3.1.2[97]) --> 
    <Call ref="fio_fiod_wd_heartbeat" setUp="API_Init_Variables"/>
-   <Sleep time="%1"/>
-   <If expression="!CMDMSGCompare(@C3070_c53_wd_1.txt,%53) EQ #FALSE">
+   <Sleep time="%2"/>
+   <If expression="!CMDMSGCompare(@C3070_cmd55a.txt,%55) EQ #FALSE">
       <Then>
       <Print>WD output toggled in error</Print>
       <Abort status="FAIL" />
       </Then>
    </If>
    
-   <!-- heartbeat from App 2 and confirm the output did toggle --> 
+   <!-- heartbeat from App 2 and confirm the output did toggle (APIR3.1.2[98], APIR3.1.2[99]) --> 
    <Set var="$fio_handle"  value="$fio_handle_2"/>
    <Set var="$fiod_handle" value="$fiod_handle_2"/>
    <Call ref="fio_fiod_wd_heartbeat" setUp="API_Init_Variables"/>
-   <Sleep time="%1"/>
-   <If expression="!CMDMSGCompare(@C3070_c53_wd_2.txt,%53) EQ #FALSE">
+   <Sleep time="%2"/>
+   <If expression="!CMDMSGCompare(@C3070_cmd55b.txt,%55) EQ #FALSE">
       <Then>
       <Print>WD output did not toggle</Print>
       <Abort status="FAIL" />
@@ -1348,10 +1359,12 @@ APIR3.1.2[99]	Upon a Watchdog Triggered Condition, the API shall toggle the
    <Set var="$fio_handle"  value="$fio_handle_1"/>
    <Set var="$fiod_handle" value="$fiod_handle_1"/>
    <Call ref="fio_fiod_wd_deregister" setUp="API_Init_Variables"/>
+   <Call ref="fio_fiod_deregister" setUp="API_Init_Variables"/>
    <Call ref="fio_deregister" setUp="API_Init_Variables"/>
    <Set var="$fio_handle"  value="$fio_handle_2"/>
    <Set var="$fiod_handle" value="$fiod_handle_2"/>
    <Call ref="fio_fiod_wd_deregister" setUp="API_Init_Variables"/>
+   <Call ref="fio_fiod_deregister" setUp="API_Init_Variables"/>
    <Call ref="fio_deregister" setUp="API_Init_Variables"/>
 </TestCase>
 
