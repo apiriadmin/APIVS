@@ -34,6 +34,14 @@ APIR3.1.2[98]	The API shall only toggle the Watchdog output point if all
 APIR3.1.2[99]	Upon a Watchdog Triggered Condition, the API shall toggle the
                state of the Watchdog output point within the API.
 
+APIR3.1.2[100]	When the API updates the output states of the Field I/O Device,
+               the API shall clear all previous toggle requests and the Watchdog
+               Triggered Condition so that a new Watchdog Triggered Condition
+               can be generated.
+
+APIR3.1.2[101]	The API shall not toggle the Watchdog output point more than
+               once per update of the output states on the Field I/O Device. 
+
  Date      Revision    Description
  2/22/16   1.0         initial release
  2/25/16   1.1         second release
@@ -1355,6 +1363,88 @@ APIR3.1.2[99]	Upon a Watchdog Triggered Condition, the API shall toggle the
       </Then>
    </If>
 
+   <!-- change rate of outputs command frame 55 to FIO_HZ_ONCE -->
+   <Set var="$frame_sched" index="%0" member="req_frame" value="%55"/>
+   <Set var="$frame_sched" index="%0" member="frequency" value="#FIO_HZ_ONCE"/>
+   <Call ref="fio_fiod_frame_schedule_set" setUp="API_Init_Variables"/>
+   
+   <Sleep time="%2"/>
+
+   <!-- verify watchdog output last sent is set on -->
+   <If expression="!CMDMSGCompare(@C3070_cmd55b.txt,%55) EQ #FALSE">
+      <Then>
+      <Print>WD output not set on (1)</Print>
+      <Abort status="FAIL" />
+      </Then>
+   </If>
+   
+   <!-- heartbeat from App 2 -->
+   <Call ref="fio_fiod_wd_heartbeat" setUp="API_Init_Variables"/>
+
+   <!-- verify watchdog output has not toggled in next outputs command frame -->
+   <Set var="$frame_sched" index="%0" member="req_frame" value="%55"/>
+   <Set var="$frame_sched" index="%0" member="frequency" value="#FIO_HZ_ONCE"/>
+   <Call ref="fio_fiod_frame_schedule_set" setUp="API_Init_Variables"/>
+   <Sleep time="%2"/>
+   <If expression="!CMDMSGCompare(@C3070_cmd55b.txt,%55) EQ #FALSE">
+      <Then>
+      <Print>WD output not set on (2)</Print>
+      <Abort status="FAIL" />
+      </Then>
+   </If>
+   
+   <!-- heartbeat from App 1 -->
+   <Set var="$fio_handle"  value="$fio_handle_1"/>
+   <Set var="$fiod_handle" value="$fiod_handle_1"/>
+   <Call ref="fio_fiod_wd_heartbeat" setUp="API_Init_Variables"/>
+   
+   <!-- verify that a new watchdog triggered condition has been generated
+        and the output state has toggled to cleared state in next outputs
+        command frame (APIR3.1.2[100]) -->
+   <Set var="$frame_sched" index="%0" member="req_frame" value="%55"/>
+   <Set var="$frame_sched" index="%0" member="frequency" value="#FIO_HZ_ONCE"/>
+   <Call ref="fio_fiod_frame_schedule_set" setUp="API_Init_Variables"/>
+   <Sleep time="%2"/>
+   <If expression="!CMDMSGCompare(@C3070_cmd55a.txt,%55) EQ #FALSE">
+      <Then>
+      <Print>WD output not cleared (1)</Print>
+      <Abort status="FAIL" />
+      </Then>
+   </If>
+
+   <!-- generate two further toggle requests before the next outputs command
+        frame is sent -->
+   <!-- heartbeat from App 1 -->
+   <Call ref="fio_fiod_wd_heartbeat" setUp="API_Init_Variables"/>
+   
+   <!-- heartbeat from App 2 -->
+   <Set var="$fio_handle"  value="$fio_handle_2"/>
+   <Set var="$fiod_handle" value="$fiod_handle_2"/>
+   <Call ref="fio_fiod_wd_heartbeat" setUp="API_Init_Variables"/>
+   
+   <!-- heartbeat from App 1 -->
+   <Set var="$fio_handle"  value="$fio_handle_1"/>
+   <Set var="$fiod_handle" value="$fiod_handle_1"/>
+   <Call ref="fio_fiod_wd_heartbeat" setUp="API_Init_Variables"/>
+   
+   <!-- heartbeat from App 2 -->
+   <Set var="$fio_handle"  value="$fio_handle_2"/>
+   <Set var="$fiod_handle" value="$fiod_handle_2"/>
+   <Call ref="fio_fiod_wd_heartbeat" setUp="API_Init_Variables"/>
+   
+   <!-- verify that the watchdog output state has toggled only once and is
+        set on in the next outputs command frame (APIR3.1.2[101]) -->
+   <Set var="$frame_sched" index="%0" member="req_frame" value="%55"/>
+   <Set var="$frame_sched" index="%0" member="frequency" value="#FIO_HZ_ONCE"/>
+   <Call ref="fio_fiod_frame_schedule_set" setUp="API_Init_Variables"/>
+   <Sleep time="%2"/>
+   <If expression="!CMDMSGCompare(@C3070_cmd55b.txt,%55) EQ #FALSE">
+      <Then>
+      <Print>WD output not set on (3)</Print>
+      <Abort status="FAIL" />
+      </Then>
+   </If>
+   
    <!-- deregister and close both apps -->
    <Set var="$fio_handle"  value="$fio_handle_1"/>
    <Set var="$fiod_handle" value="$fiod_handle_1"/>
