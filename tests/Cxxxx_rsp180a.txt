@@ -1,0 +1,11 @@
+# ATC 5401 API Reference Implementation Project 
+# 
+#     Filename: C3xxxx_rsp180a.txt
+#    File Type: APIVS flat file (text format)
+#    Test Case: APIRI.TCS.3xxx
+#  Description: file load of Response Frame 180
+#               (CF 52: Poll Raw Input Data)
+# 
+# Date      Revision    Description
+# 2/24/16   1.0         initial release
+0xB4 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00

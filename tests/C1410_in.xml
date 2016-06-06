@@ -1,0 +1,413 @@
+<?xml version="1.0" encoding="utf-8"?>
+<APIVSXML>
+<!--
+ ATC 5401 API Reference Implementation Project 
+ 
+     Filename: C1410_in.xml
+    File Type: APIVSXML test script (XML format)
+    Test Case: APIVS.TCS.1410
+  Description: TOD Library C Function Present
+ 
+   This test case validates that each TOD function defined in
+   Section 4.1 of the ATC 5401 Standard is present in the API
+   software (APIVS SRS Section 3.21.1).
+
+ Date      Revision    Description
+ 2/22/16   1.0         initial release
+-->
+
+<Define var="$ver_string"     type="char []" size="%64" />
+<Define var="$null_string"    type="char []" size="%64" />
+<Define var="$errno"          type="int" />
+<Define var="$returnCode"     type="int" />
+<Define var="$tv"             type="struct timeval" />
+<Define var="$tzsec_offset"   type="int" />
+<Define var="$dst_offset"     type="int" />
+<Define var="$dst_info"       type="dst_info_t" />
+<Define var="$dst_state"      type="int" />
+<Define var="$time_src"       type="int" />
+<Define var="$timesrc_freq"   type="int" />
+<Define var="$signal"         type="int" />
+<Define var="$sig_fd_oc"      type="int" />
+<Define var="$sig_fd_tick"    type="int" />
+
+<Define var="$abort_mode"     type="boolean" />
+<Define var="$failed"         type="boolean" />
+
+<!--
+ subroutines for setup, teardown, error logging
+-->
+<SetUp name="API_Init_Variables">
+   <Set var="$returnCode"  value="%-1"/>
+   <Set var="$errno"       value="%0"/>
+</SetUp>
+
+<Subroutine name="Error_Handler">
+   <If expression="$errno EQ %1" >
+      <Then> <Print>EPERM: Operation not permitted</Print> </Then> </If>
+   <If expression="$errno EQ %2" >
+      <Then> <Print>ENOENT: No such file or directory</Print> </Then> </If>
+   <If expression="$errno EQ %3" >
+      <Then> <Print>ESRCH: No such process</Print> </Then> </If>
+   <If expression="$errno EQ %4" >
+      <Then> <Print>EINTR: Interrupted system call</Print> </Then> </If>
+   <If expression="$errno EQ %5" >
+      <Then> <Print>EIO: I/O error</Print> </Then> </If>
+   <If expression="$errno EQ %6" >
+      <Then> <Print>ENXIO: No such device or address</Print> </Then> </If>
+   <If expression="$errno EQ %7" >
+      <Then> <Print>E2BIG: Argument list too long</Print> </Then> </If>
+   <If expression="$errno EQ %8" >
+      <Then> <Print>ENOEXEC: Exec format error</Print> </Then> </If>
+   <If expression="$errno EQ %9" >
+      <Then> <Print>EBADF: Bad file number</Print> </Then> </If>
+   <If expression="$errno EQ %10" >
+      <Then> <Print>ECHILD: No child processes</Print> </Then> </If>
+   <If expression="$errno EQ %11" >
+      <Then> <Print>EAGAIN: Try again</Print> </Then> </If>
+   <If expression="$errno EQ %12" >
+      <Then> <Print>ENOMEM: Out of memory</Print> </Then> </If>
+   <If expression="$errno EQ %13" >
+      <Then> <Print>EACCES: Permission denied</Print> </Then> </If>
+   <If expression="$errno EQ %14" >
+      <Then> <Print>EFAULT: Bad address</Print> </Then> </If>
+   <If expression="$errno EQ %15" >
+      <Then> <Print>ENOTBLK: Block device required</Print> </Then> </If>
+   <If expression="$errno EQ %16" >
+      <Then> <Print>EBUSY: Device or resource busy</Print> </Then> </If>
+   <If expression="$errno EQ %17" >
+      <Then> <Print>EEXIST: File exists</Print> </Then> </If>
+   <If expression="$errno EQ %18" >
+      <Then> <Print>EXDEV: Cross-device link</Print> </Then> </If>
+   <If expression="$errno EQ %19" >
+      <Then> <Print>ENODEV: No such device</Print> </Then> </If>
+   <If expression="$errno EQ %20" >
+      <Then> <Print>ENOTDIR: Not a directory</Print> </Then> </If>
+   <If expression="$errno EQ %21" >
+      <Then> <Print>EISDIR: Is a directory</Print> </Then> </If>
+   <If expression="$errno EQ %22" >
+      <Then> <Print>EINVAL: Invalid argument</Print> </Then> </If>
+   <If expression="$errno EQ %23" >
+      <Then> <Print>ENFILE: File table overflow</Print> </Then> </If>
+   <If expression="$errno EQ %24" >
+      <Then> <Print>EMFILE: Too many open files</Print> </Then> </If>
+   <If expression="$errno EQ %25" >
+      <Then> <Print>ENOTTY: Not a typewriter</Print> </Then> </If>
+   <If expression="$errno EQ %26" >
+      <Then> <Print>ETXTBSY: Text file busy</Print> </Then> </If>
+   <If expression="$errno EQ %27" >
+      <Then> <Print>EFBIG: File too large</Print> </Then> </If>
+   <If expression="$errno EQ %28" >
+      <Then> <Print>ENOSPC: No space left on device</Print> </Then> </If>
+   <If expression="$errno EQ %29" >
+      <Then> <Print>ESPIPE: Illegal seek</Print> </Then> </If>
+   <If expression="$errno EQ %30" >
+      <Then> <Print>EROFS: Read-only file system</Print> </Then> </If>
+   <If expression="$errno EQ %31" >
+      <Then> <Print>EMLINK: Too many links</Print> </Then> </If>
+   <If expression="$errno EQ %32" >
+      <Then> <Print>EPIPE: Broken pipe</Print> </Then> </If>
+   <If expression="$errno EQ %33" >
+      <Then> <Print>EDOM: Math argument out of domain of func</Print> </Then> </If>
+   <If expression="$errno EQ %34" >
+      <Then> <Print>ERANGE: Math result not representable</Print> </Then> </If>
+      
+   <Format var="$errno" />
+   <Set var="$failed" value="#TRUE"/>
+   <If expression="$abort_mode EQ #TRUE" >
+      <Then> <Abort status="FAIL" /> </Then>
+   <Else>
+      <Print>Function failed properly (forced)</Print>
+   </Else>
+   </If>
+</Subroutine>
+
+<Subroutine name="Success_Handler">
+   <If expression="$abort_mode EQ #FALSE" >
+      <Then>
+      <Print>Function succeeded but should have failed</Print>
+      <Abort status="FAIL" />
+      </Then>
+   </If>
+</Subroutine>
+
+<!--
+ subroutines to call API functions and verify return status
+-->
+<Subroutine name="tod_apiver" description="Call tod_apiver()" >
+   <Function funcName="tod_apiver"
+             return="$ver_string"
+             errno="$errno" />
+   <If expression="$ver_string EQ $null_string" >
+      <Then>
+      <Print>Function tod_apiver() failed</Print>
+      <Call ref="Error_Handler" />
+      </Then>
+   <Else>
+      <Format var="$ver_string" />
+      <Call ref="Success_Handler" />
+   </Else>
+   </If>
+</Subroutine>
+
+<Subroutine name="tod_cancel_onchange_signal" description="Call tod_cancel_onchange_signal()" >
+   <Function funcName="tod_cancel_onchange_signal"
+             return="$returnCode"
+             errno="$errno"
+             p1="$sig_fd_oc" />
+   <If expression="$returnCode EQ %-1">
+      <Then>
+      <Print>Function tod_cancel_onchange_signal() failed</Print>
+      <Call ref="Error_Handler" />
+      </Then>
+   <Else>
+      <Call ref="Success_Handler" />
+   </Else>
+   </If>
+</Subroutine>
+
+<Subroutine name="tod_cancel_tick_signal" description="Call tod_cancel_tick_signal()" >
+   <Function funcName="tod_cancel_tick_signal"
+             return="$returnCode"
+             errno="$errno"
+             p1="$sig_fd_tick" />
+   <If expression="$returnCode EQ %-1">
+      <Then>
+      <Print>Function tod_cancel_tick_signal() failed</Print>
+      <Call ref="Error_Handler" />
+      </Then>
+   <Else>
+      <Call ref="Success_Handler" />
+   </Else>
+   </If>
+</Subroutine>
+
+<Subroutine name="tod_get" description="Call tod_get()" >
+   <Function funcName="tod_get"
+             return="$returnCode"
+             errno="$errno"
+             p1="$tv"
+             p2="$tzsec_offset"
+			    p3="$dst_offset" />
+   <If expression="$returnCode EQ %-1">
+      <Then>
+      <Print >Function tod_get() failed</Print>
+      <Call ref="Error_Handler" />
+      </Then>
+   <Else>
+      <Format var="$tv" />
+      <Format var="$tzsec_offset" />
+      <Format var="$dst_offset" />
+      <Call ref="Success_Handler" />
+   </Else>
+   </If>
+</Subroutine>
+
+<Subroutine name="tod_get_dst_info" description="Call tod_get_dst_info()" >
+   <Function funcName="tod_get_dst_info"
+             return="$returnCode"
+             errno="$errno"
+             p1="$dst_info" />
+   <If expression="$returnCode EQ %-1">
+      <Then>
+      <Print >Function tod_get_dst_info() failed</Print>
+      <Call ref="Error_Handler" />
+      </Then>
+   <Else>
+      <Format var="$dst_info" />
+      <Call ref="Success_Handler" />
+   </Else>
+   </If>
+</Subroutine>
+
+<Subroutine name="tod_get_dst_state" description="Call tod_get_dst_state()" >
+   <Function funcName="tod_get_dst_state"
+             return="$dst_state"
+             errno="$errno" />
+   <Format var="$dst_state" />
+   <If expression="$dst_state EQ %-1">
+      <Then>
+      <Print >Function tod_get_dst_state() failed</Print>
+      <Call ref="Error_Handler" />
+      </Then>
+   <Else>
+      <Call ref="Success_Handler" />
+   </Else>
+   </If>
+</Subroutine>
+
+<Subroutine name="tod_get_timesrc" description="Call tod_get_timesrc()" >
+   <Function funcName="tod_get_timesrc"
+             return="$time_src"
+             errno="$errno" />
+   <Format var="$time_src" />
+   <If expression="$time_src EQ %-1">
+      <Then>
+      <Print >Function tod_get_timesrc() failed</Print>
+      <Call ref="Error_Handler" />
+      </Then>
+   <Else>
+      <Call ref="Success_Handler" />
+   </Else>
+   </If>
+</Subroutine>
+
+<Subroutine name="tod_get_timesrc_freq" description="Call tod_get_timesrc_freq()" >
+   <Function funcName="tod_get_timesrc_freq"
+             return="$timesrc_freq"
+             errno="$errno" />
+   <Format var="$timesrc_freq" />
+   <If expression="$timesrc_freq EQ %-1">
+      <Then>
+      <Print >Function tod_get_timesrc_freq() failed</Print>
+      <Call ref="Error_Handler" />
+      </Then>
+   <Else>
+      <Call ref="Success_Handler" />
+   </Else>
+   </If>
+</Subroutine>
+
+<Subroutine name="tod_request_onchange_signal" description="Call tod_request_onchange_signal()" >
+   <Function funcName="tod_request_onchange_signal"
+             return="$sig_fd_oc"
+             errno="$errno"
+             p1="$signal" />
+   <If expression="$sig_fd_oc EQ %-1">
+      <Then>
+      <Print >Function tod_request_onchange_signal() failed</Print>
+      <Call ref="Error_Handler" />
+      </Then>
+   <Else>
+      <Call ref="Success_Handler" />
+   </Else>
+   </If>
+</Subroutine>
+
+<Subroutine name="tod_request_tick_signal" description="Call tod_request_tick_signal()" >
+   <Function funcName="tod_request_tick_signal"
+             return="$sig_fd_tick"
+             errno="$errno"
+             p1="$signal" />
+   <If expression="$sig_fd_tick EQ %-1">
+      <Then>
+      <Print >Function tod_request_tick_signal() failed</Print>
+      <Call ref="Error_Handler" />
+      </Then>
+   <Else>
+      <Call ref="Success_Handler" />
+   </Else>
+   </If>
+</Subroutine>
+
+<Subroutine name="tod_set" description="Call tod_set()" >
+   <Function funcName="tod_set"
+             return="$returnCode"
+             errno="$errno"
+             p1="$tv"
+             p2="$tzsec_offset" />
+   <If expression="$returnCode EQ %-1">
+      <Then>
+      <Print >Function tod_set() failed</Print>
+      <Call ref="Error_Handler" />
+      </Then>
+   <Else>
+      <Call ref="Success_Handler" />
+   </Else>
+   </If>
+</Subroutine>
+
+<Subroutine name="tod_set_dst_info" description="Call tod_set_dst_info()" >
+   <Function funcName="tod_set_dst_info"
+             return="$returnCode"
+             errno="$errno"
+             p1="$dst_info" />
+   <If expression="$returnCode EQ %-1">
+      <Then>
+      <Print >Function tod_set_dst_info() failed</Print>
+      <Call ref="Error_Handler" />
+      </Then>
+   <Else>
+      <Call ref="Success_Handler" />
+   </Else>
+   </If>
+</Subroutine>
+
+<Subroutine name="tod_set_dst_state" description="Call tod_set_dst_state()" >
+   <Function funcName="tod_set_dst_state"
+             return="$returnCode"
+             errno="$errno"
+             p1="$dst_state" />
+   <If expression="$returnCode EQ %-1">
+      <Then>
+      <Print >Function tod_set_dst_state() failed</Print>
+      <Call ref="Error_Handler" />
+      </Then>
+   <Else>
+      <Call ref="Success_Handler" />
+   </Else>
+   </If>
+</Subroutine>
+
+<Subroutine name="tod_set_timesrc" description="Call tod_set_timesrc()" >
+   <Function funcName="tod_set_timesrc"
+             return="$returnCode"
+             errno="$errno"
+             p1="$time_src" />
+   <If expression="$returnCode EQ %-1">
+      <Then>
+      <Print >Function tod_set_timesrc() failed</Print>
+      <Call ref="Error_Handler" />
+      </Then>
+   <Else>
+      <Call ref="Success_Handler" />
+   </Else>
+   </If>
+</Subroutine>
+
+<!--
+ test case(s)
+-->
+<TestCase name="Case_C1410" description="C1410: TOD Library C Function Present" >
+   <!-- set abort_mode to FALSE to attempt 'invalid' API function operations;
+        script will proceed (not abort) in these cases to allow validation
+        of the (forced) error -->
+   <!-- when abort_mode is TRUE, script operates normally (abort on error) -->
+   <Set var="$abort_mode" value="#TRUE"/>
+   <Set var="$failed"     value="#FALSE"/>
+
+   <Set var="$null_string" value="@Cxxxx_null.txt"/>
+   <Set var="$ver_string"  value="@Cxxxx_null.txt"/>
+   <Call ref="tod_apiver"                    setUp="API_Init_Variables" />
+
+   <Call ref="tod_get"                       setUp="API_Init_Variables" />
+   <Call ref="tod_set"                       setUp="API_Init_Variables" />
+
+   <Call ref="tod_get_dst_info"              setUp="API_Init_Variables" />
+   <Call ref="tod_set_dst_info"              setUp="API_Init_Variables" />
+   
+   <Call ref="tod_get_dst_state"             setUp="API_Init_Variables" />
+   <Call ref="tod_set_dst_state"             setUp="API_Init_Variables" />
+
+   <Call ref="tod_get_timesrc"               setUp="API_Init_Variables" />
+   <Call ref="tod_set_timesrc"               setUp="API_Init_Variables" />
+   <Call ref="tod_get_timesrc_freq"          setUp="API_Init_Variables" />
+
+   <Set var="$signal" value="#TOD_SIG"/>
+   <Call ref="tod_request_onchange_signal"   setUp="API_Init_Variables" />
+   <Call ref="tod_cancel_onchange_signal"    setUp="API_Init_Variables" />
+   
+   <Set var="$signal" value="#TOD_SIG"/>
+   <Call ref="tod_request_tick_signal"       setUp="API_Init_Variables" />
+   <Call ref="tod_cancel_tick_signal"        setUp="API_Init_Variables" />
+</TestCase>
+
+<!--
+ test suite(s)
+-->
+<TestSuite name="All_Test_Cases" description="Run All Test Cases" >
+  <TestCaseRef ref="Case_C1410" />
+</TestSuite>
+
+</APIVSXML>
+

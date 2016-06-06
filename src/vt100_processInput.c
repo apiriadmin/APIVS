@@ -503,9 +503,9 @@ static char ESC_terminators [] = {
 		0, CLEAR_DISPLAY, CLEAR_LINE, 0, 0, 0, 0, COMPOSE_SPECIAL,                     //  I - P
 		0, 0, BACKLIGHT_TIMEOUT, 0, 0, SPECIAL_CHAR, 0, 0, 0, 0,                       //  Q - Z
 		0, 0, 0, 0, 0, 0,                                                              //  : - @
-		0, 0, 0, 0, 0, CURSOR_POSITION, CLEAR_TABS, SET_AUTO_MODES,                    //  a - h
+		0, 0, PANEL_TYPE, 0, 0, CURSOR_POSITION, CLEAR_TABS, SET_AUTO_MODES,           //  a - h
 		0, 0, 0, CLEAR_AUTO_MODES, CHAR_ATTRIBUTES, STATUS_QUERY, 0, 0, 0,             //  i - q
-		0, 0, 0, 0, 0, 0, 0, 0, 0,               									   //  r - z
+		0, 0, 0, 0, 0, 0, 0, 0, 0,                                                     //  r - z
 		0, 0, 0, 0, 0                                                                  //  { - DEL 
 };
 
@@ -671,6 +671,7 @@ char *pRowAttribs = NULL;
 		// get rest of sequence and process
 		ESC_sequence[1] = '[';
 		seqCode = get_ESC_Seq(fd, ESC_sequence, pBuffPtr);
+//printf("get_ESC_Seq:ESC[0x%02x,0x%02x seqCode=%d\n", ESC_sequence[2], ESC_sequence[3], seqCode);
 		break;
 		
 	case '6':      //  <ESC> 6 n  sequence - CURSOR_POSITION request 

@@ -1,0 +1,11 @@
+# ATC 5401 API Reference Implementation Project 
+# 
+#     Filename: C3020_r177_a.txt
+#    File Type: APIVS flat file (text format)
+#    Test Case: APIRI.TCS.3020
+#  Description: file load of Response Frame 177
+#               (CF 49: Request Module Status)
+# 
+# Date      Revision    Description
+# 2/24/16   1.0         initial release
+0xB1 0x00 0x00 0x00 0x00 0x00 0x00 0x00

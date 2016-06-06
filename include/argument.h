@@ -190,6 +190,9 @@ typedef enum
 #define MEM_FCMAP_FIOD	"fiod"
 #define MEM_FCMAP_CHAN	"channel"
 #define MEM_FCMAP_CLR	"color"
+#define MEM_FTBUF_IP    "input_point"
+#define MEM_FTBUF_STAT  "state"
+#define MEM_FTBUF_TIM    "timestamp"
 
 
 /** \brief Named Constant Definitions */

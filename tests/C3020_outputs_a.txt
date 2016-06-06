@@ -1,0 +1,11 @@
+# ATC 5401 API Reference Implementation Project 
+# 
+#     Filename: C3020_outputs_a.txt
+#    File Type: APIVS flat file (text format)
+#    Test Case: APIRI.TCS.3020
+#  Description: file load of output bits
+#               (reserve App 1)
+# 
+# Date      Revision    Description
+# 2/24/16   1.0         initial release
+0x05 0x50 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00

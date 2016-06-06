@@ -6666,6 +6666,15 @@ funcFioFiodInputsFilterSet(uint16_t lineNumber, C_FUNC *pCF)
 
 	if (argFilter)
 	{
+		if (pCF->arg[2]) {
+			memset(pCF->arg[2]->arg.data.value.fioFinf,
+			   0,
+			   sizeof(FIO_INPUT_FILTER) * pCF->arg[2]->arg.data.size);
+			memcpy(pCF->arg[2]->arg.data.value.fioFinf,
+			   argFilter,
+			   MIN(sizeof(FIO_INPUT_FILTER) * pCF->arg[2]->arg.data.size,
+			   	   sizeof(FIO_INPUT_FILTER) * count));
+		}
 		free(argFilter);
 	}
 
@@ -7659,7 +7668,9 @@ funcFioFiodStatusGet(uint16_t	lineNumber,
 
 	argReturn = fio_fiod_status_get(argHandle, argDh, &argStatus);
 	argErrno = errno;
-
+printf("funcFioFiodStatusGet: comm_enabled=%d, success_rx=%d, error_rx=%d\n",
+	argStatus.comm_enabled, argStatus.success_rx, argStatus.error_rx);
+	
 	if (pCF->arg[2])
 	{
 		pCF->arg[2]->arg.data.value.fioFiodStatus = argStatus;

@@ -1,18 +1,18 @@
 #
 # -- Virtual Display and Global Variable Dump --
-# Date: 20151026 11:48:30 -     
+# Date: 20160511 15:13:55 -     
 #
 # Display Rows: 
 #0       1         2         3         4         
 #234567890123456789012345678901234567890123456789
-                                        
-                                        
-                                        
-                                        
-                                        
-                                        
-                                        
-                                        
+          FRONT PANEL MANAGER           
+SELECT WINDOW [0-F]  SET DEFAULT *[0-F] 
+0 C2020_00          1 C2020_01          
+2 C2020_02          3 C2020_03          
+4 C2020_04          5 C2020_05          
+6 C2020_06          7 C2020_07          
+8 C2020_08          9 C2020_09          
+[UP/DN ARROW]        [CONFIG INFO- NEXT]
 #----------------------------------------
 #
 #
@@ -53,13 +53,13 @@
 # cursorState: 
 1
 # cursorBlink: 
-1
+0
 # reverseVideo: 
 0
 # auxSwitch: 
 0
 #_cursorPos: 
-1,1
+3,10
 # saved_cursorPos: 
 1,1
 #
