@@ -48,7 +48,7 @@ LIBEMFIOOBJS = $(OBJDIR)/emfio.o $(OBJDIR)/emfio_globalData.o $(OBJDIR)/emfio_se
 	$(OBJDIR)/emfio_errors.o $(OBJDIR)/emfio_responses.o $(OBJDIR)/emfio_stats.o
 
 $(LIBDIR)/$(LIBVT100).1: $(LIBVT100OBJS)
-	rm -f $(LIBDIR)/$(LIBVT100)*
+	mkdir -p $(LIBDIR)
 	$(CC) -shared -fPIC -Wl,-soname,$(LIBVT100).1 -o $(LIBDIR)/$(LIBVT100).1.0 $(LIBVT100OBJS) -lc -Wall
 	cd $(LIBDIR); ln -s  $(LIBVT100).1.0  $(LIBVT100).1
 	cd $(LIBDIR); ln -s  $(LIBVT100).1.0  $(LIBVT100)
@@ -94,7 +94,7 @@ $(OBJDIR)/vt100_fromDumpToVD.o: $(SRCDIR)/vt100_fromDumpToVD.c $(INCLUDES)
 
 
 $(LIBDIR)/$(LIBEMFIO).1: $(LIBEMFIOOBJS)
-	rm -f $(LIBDIR)/$(LIBEMFIO)*
+	mkdir -p $(LIBDIR)
 	$(CC) -shared -fPIC -Wl,-soname,$(LIBEMFIO).1 -o $(LIBDIR)/$(LIBEMFIO).1.0 $(LIBEMFIOOBJS) -lc -Wall
 	cd $(LIBDIR); ln -s  $(LIBEMFIO).1.0  $(LIBEMFIO).1
 	cd $(LIBDIR); ln -s  $(LIBEMFIO).1.0  $(LIBEMFIO)
@@ -119,6 +119,7 @@ $(OBJDIR)/emfio_stats.o: $(SRCDIR)/emfio_stats.c $(INCLUDES)
 
 
 $(TARGET): $(OBJECTS)
+	mkdir -p $(BINDIR)
 	$(CC) $(LDFLAGS) $(OBJECTS) -o $@
 
 $(OBJDIR)/main.o: $(SRCDIR)/main.c $(INCLUDES)
