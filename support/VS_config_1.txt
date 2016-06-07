@@ -10,7 +10,7 @@
 # 10/21/15   1.0         initial release
 
 XMLInputFilePath        = ./
-XMLOutputFilePath       = ./
+XMLOutputFilePath       = /tmp/
 SetFilePath             = ./
 
 ScreenHeight            = 8
