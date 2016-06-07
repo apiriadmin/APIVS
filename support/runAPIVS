@@ -4,11 +4,11 @@
 # 
 #     Filename: runAPIVS
 #    File Type: Linux shell script
-#    Test Case: n/a
-#  Description: run VSE on specific test cases
+#    Test Case: many
+#  Description: run VSE from USB at startup on specific test cases
 #               
 # Date      Revision    Description
-# 10/21/15   1.0         initial release
+# 2/24/16   1.0         initial release
 
 # start async loopback driver; add symbolic links
 insmod /media/sda1/APIVS/bin/tty0tty.ko
@@ -66,30 +66,90 @@ loop_count=1
 # loop through all specified test cases
 while [ $loop_count -ge 1 ]
 do
-#   if [ "$DELETE_LOGS" == TRUE ]; then rm C1001_log.xml; fi
-#   clear_test_line; printf "Testing APIVS.TCS.1001... " >/dev/sp6
-#   vse -L $LEVEL -c ./VS_config_1.txt -i C1001_in.xml -o C1001_log.xml
-#   print_test_result
-   
-   if [ "$DELETE_LOGS" == TRUE ]; then rm C2001d_log.xml; fi
-   clear_test_line; printf "Testing APIRI.TCS.2001d... " >/dev/sp6
-   vse -L $LEVEL -c ./VS_config_1.txt -i C2001d_in.xml -o C2001d_log.xml
+   if [ "$DELETE_LOGS" == TRUE ]; then rm C1310_log.xml; fi
+   clear_test_line; printf "Testing APIVS.TCS.1310... " >/dev/sp6
+   vse -L $LEVEL -c ./VS_config_1.txt -i C1310_in.xml -o C1310_log.xml
    print_test_result
    
-#   if [ "$DELETE_LOGS" == TRUE ]; then rm C1009_log.xml; fi
-#   clear_test_line; printf "Testing APIVS.TCS.1009... " >/dev/sp6
-#   vse -L $LEVEL -c ./VS_config_1.txt -i C1009_in.xml -o C1009_log.xml
-#   print_test_result
+   if [ "$DELETE_LOGS" == TRUE ]; then rm C1320_log.xml; fi
+   clear_test_line; printf "Testing APIVS.TCS.1320... " >/dev/sp6
+   vse -L $LEVEL -c ./VS_config_1.txt -i C1320_in.xml -o C1320_log.xml
+   print_test_result
    
-#   if [ "$DELETE_LOGS" == TRUE ]; then rm C1015_log.xml; fi
-#   clear_test_line; printf "Testing APIVS.TCS.1015... " >/dev/sp6
-#   vse -L $LEVEL -c ./VS_config_1.txt -i C1015_in.xml -o C1015_log.xml
-#   print_test_result
+   if [ "$DELETE_LOGS" == TRUE ]; then rm C1330_log.xml; fi
+   clear_test_line; printf "Testing APIVS.TCS.1330... " >/dev/sp6
+   vse -L $LEVEL -c ./VS_config_1.txt -i C1330_in.xml -o C1330_log.xml
+   print_test_result
    
-#   if [ "$DELETE_LOGS" == TRUE ]; then rm C2010_log.xml; fi
-#   clear_test_line; printf "Testing APIRI.TCS.2010... " >/dev/sp6
-#   vse -L $LEVEL -c ./VS_config_1.txt -i C2010_in.xml -o C2010_log.xml
-#   print_test_result
+   if [ "$DELETE_LOGS" == TRUE ]; then rm C1350_log.xml; fi
+   clear_test_line; printf "Testing APIVS.TCS.1350... " >/dev/sp6
+   vse -L $LEVEL -c ./VS_config_1.txt -i C1350_in.xml -o C1350_log.xml
+   print_test_result
+   
+   if [ "$DELETE_LOGS" == TRUE ]; then rm C3010_log.xml; fi
+   clear_test_line; printf "Testing APIRI.TCS.3010... " >/dev/sp6
+   vse -L $LEVEL -c ./VS_config_1.txt -i C3010_in.xml -o C3010_log.xml
+   print_test_result
+   
+   if [ "$DELETE_LOGS" == TRUE ]; then rm C3020_log.xml; fi
+   clear_test_line; printf "Testing APIRI.TCS.3020... " >/dev/sp6
+   vse -L $LEVEL -c ./VS_config_1.txt -i C3020_in.xml -o C3020_log.xml
+   print_test_result
+   
+   if [ "$DELETE_LOGS" == TRUE ]; then rm C3030_log.xml; fi
+   clear_test_line; printf "Testing APIRI.TCS.3030... " >/dev/sp6
+   vse -L $LEVEL -c ./VS_config_1.txt -i C3030_in.xml -o C3030_log.xml
+   print_test_result
+   
+   if [ "$DELETE_LOGS" == TRUE ]; then rm C3040_log.xml; fi
+   clear_test_line; printf "Testing APIRI.TCS.3040... " >/dev/sp6
+   vse -L $LEVEL -c ./VS_config_1.txt -i C3040_in.xml -o C3040_log.xml
+   print_test_result
+   
+   if [ "$DELETE_LOGS" == TRUE ]; then rm C3050_log.xml; fi
+   clear_test_line; printf "Testing APIRI.TCS.3050... " >/dev/sp6
+   vse -L $LEVEL -c ./VS_config_1.txt -i C3050_in.xml -o C3050_log.xml
+   print_test_result
+   
+   if [ "$DELETE_LOGS" == TRUE ]; then rm C3060_log.xml; fi
+   clear_test_line; printf "Testing APIRI.TCS.3060... " >/dev/sp6
+   vse -L $LEVEL -c ./VS_config_1.txt -i C3060_in.xml -o C3060_log.xml
+   print_test_result
+   
+   if [ "$DELETE_LOGS" == TRUE ]; then rm C3070_log.xml; fi
+   clear_test_line; printf "Testing APIRI.TCS.3070... " >/dev/sp6
+   vse -L $LEVEL -c ./VS_config_1.txt -i C3070_in.xml -o C3070_log.xml
+   print_test_result
+   
+   if [ "$DELETE_LOGS" == TRUE ]; then rm C3080_log.xml; fi
+   clear_test_line; printf "Testing APIRI.TCS.3080... " >/dev/sp6
+   vse -L $LEVEL -c ./VS_config_1.txt -i C3080_in.xml -o C3080_log.xml
+   print_test_result
+   
+   if [ "$DELETE_LOGS" == TRUE ]; then rm C3090_log.xml; fi
+   clear_test_line; printf "Testing APIRI.TCS.3090... " >/dev/sp6
+   vse -L $LEVEL -c ./VS_config_1.txt -i C3090_in.xml -o C3090_log.xml
+   print_test_result
+   
+   if [ "$DELETE_LOGS" == TRUE ]; then rm C3100_log.xml; fi
+   clear_test_line; printf "Testing APIRI.TCS.3100... " >/dev/sp6
+   vse -L $LEVEL -c ./VS_config_1.txt -i C3100_in.xml -o C3100_log.xml
+   print_test_result
+   
+   if [ "$DELETE_LOGS" == TRUE ]; then rm C3110_log.xml; fi
+   clear_test_line; printf "Testing APIRI.TCS.3110... " >/dev/sp6
+   vse -L $LEVEL -c ./VS_config_1.txt -i C3110_in.xml -o C3110_log.xml
+   print_test_result
+   
+   if [ "$DELETE_LOGS" == TRUE ]; then rm C3120_log.xml; fi
+   clear_test_line; printf "Testing APIRI.TCS.3120... " >/dev/sp6
+   vse -L $LEVEL -c ./VS_config_1.txt -i C3120_in.xml -o C3120_log.xml
+   print_test_result
+   
+   if [ "$DELETE_LOGS" == TRUE ]; then rm C3130_log.xml; fi
+   clear_test_line; printf "Testing APIRI.TCS.3130... " >/dev/sp6
+   vse -L $LEVEL -c ./VS_config_1.txt -i C3130_in.xml -o C3130_log.xml
+   print_test_result
    
    loop_count=$((loop_count - 1))
 done
