@@ -27,7 +27,7 @@ INCLUDES= $(INCDIR)/vse_stnd.h $(INCDIR)/vse.h $(INCDIR)/outputXML.h $(INCDIR)/i
 
 TARGET=   $(BINDIR)/vse
 
-CFLAGS= -g -Wall -fPIC -I$(SRCDIR) -I$(INCDIR) -I$(LOCALINCDIR) -I$(VT100INCDIR) -I$(FIOINCDIR) -I$(EMFIOINCDIR) -I$(FPUIINCDIR) -I$(TODINCDIR)
+CFLAGS= -std=gnu99 -g -O2 -Wall -fPIC -I$(SRCDIR) -I$(INCDIR) -I$(LOCALINCDIR) -I$(VT100INCDIR) -I$(FIOINCDIR) -I$(EMFIOINCDIR) -I$(FPUIINCDIR) -I$(TODINCDIR)
 LDFLAGS= -L$(LIBDIR) -L$(BSPDIR)/usr/lib -lexpat -lvt100 -lpthread -lemfio -lfio -lfpui -ltod #-lfiostub.$(ARCH) -lfpuistub.$(ARCH) -ltodstub.$(ARCH)
 CC= $(CROSS_COMPILE)gcc
 RANLIB= $(CROSS_COMPILE)ranlib
