@@ -31,16 +31,12 @@ APIR3.1.2[107]	The API shall provide a method for application programs to reset
 APIR3.1.2[108]	A response frame shall only be considered successful if it is
                fully received within the time period defined by the
                “Handshaking” algorithm in Section 3.3.1.5.3 of the NEMA TS 2
-               Standard.
-
-APIR3.1.2[73]	The timing for the command/response cycle of the frames shall
-               be defined by the “Handshaking” algorithm in Section 3.3.1.5.3
-               of the NEMA TS 2 Standard.
-               
+               Standard.               
 
  Date      Revision    Description
  2/22/16   1.0         initial release
  2/25/16   1.1         second release
+ 6/3/16    1.2         third release (JMG)
 -->
 
 <Define var="$returnCode"     type="int" />
@@ -77,6 +73,8 @@ APIR3.1.2[73]	The timing for the command/response cycle of the frames shall
 <Define var="$fio_port"       type="FIO_PORT" />
 <Define var="$fio_device"     type="FIO_DEVICE_TYPE" />
 <Define var="$fiod_status"    type="FIO_FIOD_STATUS" />
+<Define var="$frame_info"     type="FIO_FRAME_INFO" size="%1" />
+<Define var="$frame_data"     type="unsigned char []" size="%128" />
 <Define var="$fm_state"       type="FIO_TS_FM_STATE" />
 <Define var="$vm_state"       type="FIO_TS1_VM_STATE" />
 <Define var="$output_point"   type="unsigned int" />
@@ -1247,15 +1245,15 @@ APIR3.1.2[73]	The timing for the command/response cycle of the frames shall
    <!-- register with the FIO API -->
    <Call ref="fio_register" setUp="API_Init_Variables"/>
    
-   <!-- register a 332-type FIO on SP5 --> 
+   <!-- register a FIOMMU on SP5 -->
    <Set var="$fio_port"   value="#FIO_SP5"/>
-   <Set var="$fio_device" value="#FIO332"/>
+   <Set var="$fio_device" value="#FIOMMU"/>
    <Call ref="fio_fiod_register" setUp="API_Init_Variables"/>
-   
-   <!-- setup SDLC response messages (each defaults to 10Hz) -->
-   <FIOResponse file="@C3020_r177_a.txt" frame="%177" description="(c49->r177)"/>
-   <FIOResponse file="@C3020_r181_a.txt" frame="%181" description="(c53->r181)"/>
-   <FIOResponse file="@C3020_r183_a.txt" frame="%183" description="(c55->r183)"/>
+
+   <!-- setup FIOMMU SDLC response messages -->
+   <FIOResponse file="@Cxxxx_rsp128.txt" frame="%128" description="(FIO C0->R128)"/>
+   <FIOResponse file="@Cxxxx_rsp129.txt" frame="%129" description="(FIO C1->R129)"/>
+   <FIOResponse file="@Cxxxx_rsp131.txt" frame="%131" description="(FIO C3->R131)"/>
    
    <!-- start comm -->
    <Call ref="fio_fiod_enable" setUp="API_Init_Variables"/>
@@ -1263,21 +1261,24 @@ APIR3.1.2[73]	The timing for the command/response cycle of the frames shall
    <!-- wait 10s -->
    <Sleep time="%10"/>
    
-   <!-- get comm status -->
-   <!-- (should have ~300 successful messages) -->
+   <!-- get comm status (APIR3.1.2[102]) -->
+   <!-- (should have ~210 successful messages) -->
    <Call ref="fio_fiod_status_get" setUp="API_Init_Variables"/>
+   <!-- verify communications enabled/disabled (APIR3.1.2[105](i))-->   
    <If expression="$fiod_status.comm_enabled NE #TRUE">
       <Then>
       <Print>Comm enable status incorrect (1)</Print>
       <Abort status="FAIL"/>
       </Then>
    </If>
-   <If expression="$fiod_status.success_rx LT %270">
+   <!-- verify cumulative successful count for all frames (APIR3.1.2[105](ii))-->
+   <If expression="$fiod_status.success_rx LT %190">
       <Then>
       <Print>Successful frame count too low</Print>
       <Abort status="FAIL"/>
       </Then>
    </If>
+   <!-- verify cumulative error count for all frames (APIR3.1.2[105](iii))-->   
    <If expression="$fiod_status.error_rx NE %0">
       <Then>
       <Print>Error frame count not zero</Print>
@@ -1285,20 +1286,228 @@ APIR3.1.2[73]	The timing for the command/response cycle of the frames shall
       </Then>
    </If>
 
-   <!-- stop comm -->
-   <Call ref="fio_fiod_disable" setUp="API_Init_Variables"/>
-
-   <!-- reset comm status -->
-   <Call ref="fio_fiod_status_reset" setUp="API_Init_Variables"/>
-   
-   <!-- confirm reset status -->
-   <Call ref="fio_fiod_status_get" setUp="API_Init_Variables"/>
-   <If expression="$fiod_status.comm_enabled NE #FALSE">
+   <!-- verify per frame status (APIR3.1.2[105](iv)) -->
+   <!-- command frame 0 information -->
+   <Set var="$frame_info" value="$fiod_status" index="%0"/>
+   <!-- verify current scheduled frequency -->
+   <If expression="$frame_info.frequency NE #FIO_HZ_10">
       <Then>
-      <Print>Comm not disabled</Print>
+      <Print>frame 0 default frequency incorrect</Print>
       <Abort status="FAIL"/>
       </Then>
    </If>
+   <!-- verify cumulative successful response count -->
+   <If expression="$frame_info.success_rx LT %95">
+      <Then>
+      <Print>frame 0 frequency test failed (LOW)</Print>
+      <Abort status="FAIL"/>
+      </Then>
+   </If>
+   <If expression="$frame_info.success_rx GT %105">
+      <Then>
+      <Print>frame 0 frequency test failed (HIGH)</Print>
+      <Abort status="FAIL"/>
+      </Then>
+   </If>
+   <!-- verify cumulative error -->
+   <If expression="$frame_info.error_rx NE %0">
+      <Then>
+      <Print>frame 0 error count not zero</Print>
+      <Abort status="FAIL"/>
+      </Then>
+   </If>
+   <!-- verify number of errors in last 10 frames -->
+   <If expression="$frame_info.error_last_10 NE %0">
+      <Then>
+      <Print>frame 0 error last 10 count not zero</Print>
+      <Abort status="FAIL"/>
+      </Then>
+   </If>
+   <!-- verify last frame sequence number -->
+   <If expression="$frame_info.last_seq LT %95">
+      <Then>
+      <Print>frame 0 last sequence number (LOW)</Print>
+      <Abort status="FAIL"/>
+      </Then>
+   </If>
+   <If expression="$frame_info.last_seq GT %105">
+      <Then>
+      <Print>frame 0 last sequence number (HIGH)</Print>
+      <Abort status="FAIL"/>
+      </Then>
+   </If>
+
+   <Set var="$frame_number" value="%128"/>
+   <Call ref="fio_fiod_frame_size" setUp="API_Init_Variables"/>
+   <!-- verify last response frame 128 size -->
+   <If expression="$frame_size NE %1">
+      <Then>
+      <Print>frame 0 response frame (128) size incorrect</Print>
+      <Abort status="FAIL"/>
+      </Then>
+   </If>
+   
+   <Set var="$frame_number" value="%128"/>
+   <Set var="$timeout" value="%1"/>
+   <Call ref="fio_fiod_frame_read" setUp="API_Init_Variables"/>
+   <Set var="$frame_data" file="@Cxxxx_rsp128.txt" />
+   <!-- verify last frame raw data -->   
+   <If expression="$read_buffer NE $frame_data">
+      <Then>
+      <Print>frame 0 response frame (128) data incorrect</Print>
+      <Abort status="FAIL"/>
+      </Then>
+   </If>
+
+   <!-- command frame 1 information -->
+   <Set var="$frame_info" value="$fiod_status" index="%1"/>
+   <!-- verify current scheduled frequency -->
+   <If expression="$frame_info.frequency NE #FIO_HZ_10">
+      <Then>
+      <Print>frame 1 default frequency incorrect</Print>
+      <Abort status="FAIL"/>
+      </Then>
+   </If>
+   <!-- verify cumulative successful response count -->
+   <If expression="$frame_info.success_rx LT %95">
+      <Then>
+      <Print>frame 1 frequency test failed (LOW)</Print>
+      <Abort status="FAIL"/>
+      </Then>
+   </If>
+   <If expression="$frame_info.success_rx GT %105">
+      <Then>
+      <Print>frame 1 frequency test failed (HIGH)</Print>
+      <Abort status="FAIL"/>
+      </Then>
+   </If>
+   <!-- verify cumulative error -->
+   <If expression="$frame_info.error_rx NE %0">
+      <Then>
+      <Print>frame 1 error count not zero</Print>
+      <Abort status="FAIL"/>
+      </Then>
+   </If>
+   <!-- verify number of errors in last 10 frames -->
+   <If expression="$frame_info.error_last_10 NE %0">
+      <Then>
+      <Print>frame 1 error last 10 count not zero</Print>
+      <Abort status="FAIL"/>
+      </Then>
+   </If>
+   <!-- verify last frame sequence number -->
+   <If expression="$frame_info.last_seq LT %95">
+      <Then>
+      <Print>frame 1 last sequence number (LOW)</Print>
+      <Abort status="FAIL"/>
+      </Then>
+   </If>
+   <If expression="$frame_info.last_seq GT %105">
+      <Then>
+      <Print>frame 1 last sequence number (HIGH)</Print>
+      <Abort status="FAIL"/>
+      </Then>
+   </If>
+
+   <Set var="$frame_number" value="%129"/>
+   <Call ref="fio_fiod_frame_size" setUp="API_Init_Variables"/>
+   <!-- verify last response frame 129 size -->
+   <If expression="$frame_size NE %12">
+      <Then>
+      <Print>frame 1 response frame (129) size incorrect</Print>
+      <Abort status="FAIL"/>
+      </Then>
+   </If>
+   
+   <Set var="$frame_number" value="%129"/>
+   <Set var="$timeout" value="%1"/>
+   <Call ref="fio_fiod_frame_read" setUp="API_Init_Variables"/>
+   <Set var="$frame_data" file="@Cxxxx_rsp129.txt" />
+   <!-- verify last frame raw data -->   
+   <If expression="$read_buffer NE $frame_data">
+      <Then>
+      <Print>frame 1 response frame (129) data incorrect</Print>
+      <Abort status="FAIL"/>
+      </Then>
+   </If>
+
+   <!-- command frame 3 information -->
+   <Set var="$frame_info" value="$fiod_status" index="%3"/>
+   <!-- verify current scheduled frequency -->
+   <If expression="$frame_info.frequency NE #FIO_HZ_1">
+      <Then>
+      <Print>frame 3 default frequency incorrect</Print>
+      <Abort status="FAIL"/>
+      </Then>
+   </If>
+   <!-- verify cumulative successful response count -->
+   <If expression="$frame_info.success_rx LT %9">
+      <Then>
+      <Print>frame 3 frequency test failed (LOW)</Print>
+      <Abort status="FAIL"/>
+      </Then>
+   </If>
+   <If expression="$frame_info.success_rx GT %11">
+      <Then>
+      <Print>frame 3 frequency test failed (HIGH)</Print>
+      <Abort status="FAIL"/>
+      </Then>
+   </If>
+   <!-- verify cumulative error -->
+   <If expression="$frame_info.error_rx NE %0">
+      <Then>
+      <Print>frame 3 error count not zero</Print>
+      <Abort status="FAIL"/>
+      </Then>
+   </If>
+   <!-- verify number of errors in last 10 frames -->
+   <If expression="$frame_info.error_last_10 NE %0">
+      <Then>
+      <Print>frame 3 error last 10 count not zero</Print>
+      <Abort status="FAIL"/>
+      </Then>
+   </If>
+   <!-- verify last frame sequence number -->
+   <If expression="$frame_info.last_seq LT %9">
+      <Then>
+      <Print>frame 3 last sequence number (LOW)</Print>
+      <Abort status="FAIL"/>
+      </Then>
+   </If>
+   <If expression="$frame_info.last_seq GT %11">
+      <Then>
+      <Print>frame 3 last sequence number (HIGH)</Print>
+      <Abort status="FAIL"/>
+      </Then>
+   </If>
+
+   <Set var="$frame_number" value="%131"/>
+   <Call ref="fio_fiod_frame_size" setUp="API_Init_Variables"/>
+   <!-- verify last response frame 131 size -->
+   <If expression="$frame_size NE %21">
+      <Then>
+      <Print>frame 3 response frame (131) size incorrect</Print>
+      <Abort status="FAIL"/>
+      </Then>
+   </If>
+   
+   <Set var="$frame_number" value="%131"/>
+   <Set var="$timeout" value="%21"/>
+   <Call ref="fio_fiod_frame_read" setUp="API_Init_Variables"/>
+   <Set var="$frame_data" file="@Cxxxx_rsp131.txt" />
+   <!-- verify last frame raw data -->   
+   <If expression="$read_buffer NE $frame_data">
+      <Then>
+      <Print>frame 3 response frame (131) data incorrect</Print>
+      <Abort status="FAIL"/>
+      </Then>
+   </If>
+
+
+   <!-- reset comm status (APIR3.1.2[107]) -->
+   <Call ref="fio_fiod_status_reset" setUp="API_Init_Variables"/>
+   <!-- confirm reset status -->
+   <Call ref="fio_fiod_status_get" setUp="API_Init_Variables"/>
    <If expression="$fiod_status.success_rx NE %0">
       <Then>
       <Print>Successful frame count not cleared</Print>
@@ -1312,45 +1521,117 @@ APIR3.1.2[73]	The timing for the command/response cycle of the frames shall
       </Then>
    </If>
 
-   <!-- setup SDLC response messages (each defaults to 10Hz) -->
-   <!-- modify to include excessive response delay -->
-   <!-- these responses should be seen as errors by the API -->
-   <!-- CF49: service 500us, response 275us, total=775us -->
-   <!-- CF53: service 500us, response 320us, total=820us -->
-   <!-- CF55: service 500us, response 410us, total=910us -->
-   <FIOResponse file="@C3020_r177_a.txt" frame="%177" delay="%775" description="(c49->r177)"/>
-   <FIOResponse file="@C3020_r181_a.txt" frame="%181" delay="%820" description="(c53->r181)"/>
-   <FIOResponse file="@C3020_r183_a.txt" frame="%183" delay="%910" description="(c55->r183)"/>
-   
-   <!-- start comm -->
-   <Call ref="fio_fiod_enable" setUp="API_Init_Variables"/>
+   <!-- modify FIOMMU frame 0 response to include excessive delay (increase service time delay) -->
+   <!-- these responses should be seen as errors by the API (APIR3.1.2[108])-->
+   <!-- CF0: service 500us, response 442us, command 1031us, total=1973us-->
+   <FIOResponse file="@Cxxxx_rsp128.txt" frame="%128" delay="%2000" description="(FIO C0->R128)"/>
+   <FIOResponse file="@Cxxxx_rsp129.txt" frame="%129" delay="%500" description="(FIO C1->R129)"/>
+   <FIOResponse file="@Cxxxx_rsp131.txt" frame="%131" delay="%500" description="(FIO C3->R131)"/>
+   <Call ref="fio_fiod_status_reset" setUp="API_Init_Variables"/>
 
    <!-- wait 10s -->
    <Sleep time="%10"/>
    
-   <!-- get comm status -->
-   <!-- (should have ~300 error messages) -->
+   <!-- get frame 0 comm status -->
+   <!-- (should have ~100 frame 0 error messages) -->
    <Call ref="fio_fiod_status_get" setUp="API_Init_Variables"/>
-   <If expression="$fiod_status.comm_enabled NE #TRUE">
+   <Set var="$frame_info" value="$fiod_status" index="%0"/>
+   <Format var="$frame_info"/>
+   <If expression="$frame_info.success_rx GT %0">
       <Then>
-      <Print>Comm enable status incorrect (2)</Print>
+      <Print>frame 0 success count not zero</Print>
       <Abort status="FAIL"/>
       </Then>
    </If>
-   <If expression="$fiod_status.success_rx NE %0">
+   <If expression="$frame_info.error_rx LT %90">
       <Then>
-      <Print>Successful frame count not zero</Print>
+      <Print>frame 0 error count too low</Print>
       <Abort status="FAIL"/>
       </Then>
    </If>
-   <If expression="$fiod_status.error_rx LT %270">
+   <If expression="$frame_info.error_rx GT %110">
       <Then>
-      <Print>Error frame count too low</Print>
+      <Print>frame 0 error count too high</Print>
       <Abort status="FAIL"/>
       </Then>
    </If>
 
+   <!-- modify FIOMMU frame 1 response to include excessive delay (increase service time delay) -->
+   <!-- these responses should be seen as errors by the API (APIR3.1.2[108])-->
+   <!-- CF1: service 500us, response 1074us, command 360us, total=1934us -->
+   <FIOResponse file="@Cxxxx_rsp128.txt" frame="%128" delay="%500" description="(FIO C0->R128)"/>
+   <FIOResponse file="@Cxxxx_rsp129.txt" frame="%129" delay="%2000" description="(FIO C1->R129)"/>
+   <FIOResponse file="@Cxxxx_rsp131.txt" frame="%131" delay="%500" description="(FIO C3->R131)"/>
+
+   <!-- reset comm status -->
+   <Call ref="fio_fiod_status_reset" setUp="API_Init_Variables"/>
+   <!-- wait 10s -->
+   <Sleep time="%10"/>
+
+   <!-- get frame 1 comm status -->
+   <!-- (should have ~100 frame 1 error messages) -->
+   <Call ref="fio_fiod_status_get" setUp="API_Init_Variables"/>
+   <Set var="$frame_info" value="$fiod_status" index="%1"/>
+   <Format var="$frame_info"/>
+   <If expression="$frame_info.success_rx GT %0">
+      <Then>
+      <Print>frame 1 success count not zero</Print>
+      <Abort status="FAIL"/>
+      </Then>
+   </If>
+   <If expression="$frame_info.error_rx LT %90">
+      <Then>
+      <Print>frame 1 error count too low</Print>
+      <Abort status="FAIL"/>
+      </Then>
+   </If>
+   <If expression="$frame_info.error_rx GT %110">
+      <Then>
+      <Print>frame 1 error count too high</Print>
+      <Abort status="FAIL"/>
+      </Then>
+   </If>
+   
+   <!-- modify FIOMMU frame 3 response to include excessive delay (increase service time delay) -->
+   <!-- these responses should be seen as errors by the API (APIR3.1.2[108])-->
+   <!-- CF3: service 500us, response 1705us, command 360us, total=2565us -->
+   <FIOResponse file="@Cxxxx_rsp128.txt" frame="%128" delay="%500" description="(FIO C0->R128)"/>
+   <FIOResponse file="@Cxxxx_rsp129.txt" frame="%129" delay="%500" description="(FIO C1->R129)"/>
+   <FIOResponse file="@Cxxxx_rsp131.txt" frame="%131" delay="%2600" description="(FIO C3->R131)"/>
+
+   <!-- reset comm status -->
+   <Call ref="fio_fiod_status_reset" setUp="API_Init_Variables"/>
+   <!-- wait 10s -->
+   <Sleep time="%10"/>
+   
+   <!-- get frame 3 comm status -->
+   <!-- (should have ~10 frame 3 error messages) -->
+   <Call ref="fio_fiod_status_get" setUp="API_Init_Variables"/>
+   <Set var="$frame_info" value="$fiod_status" index="%3"/>
+   <Format var="$frame_info"/>
+   <If expression="$frame_info.success_rx GT %0">
+      <Then>
+      <Print>frame 3 success count not zero</Print>
+      <Abort status="FAIL"/>
+      </Then>
+   </If>
+   <If expression="$frame_info.error_rx LT %9">
+      <Then>
+      <Print>frame 3 error count too low</Print>
+      <Abort status="FAIL"/>
+      </Then>
+   </If>
+   <If expression="$frame_info.error_rx GT %11">
+      <Then>
+      <Print>frame 3 error count too high</Print>
+      <Abort status="FAIL"/>
+      </Then>
+   </If>
+   
+
    <!-- close app -->
+   <Call ref="fio_fiod_disable" setUp="API_Init_Variables"/>
+   <Call ref="fio_fiod_deregister" setUp="API_Init_Variables"/>
    <Call ref="fio_deregister" setUp="API_Init_Variables"/>
 </TestCase>
 
