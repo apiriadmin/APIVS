@@ -53,6 +53,7 @@ APIR3.1.2[55]	Relinquishing a reserved output point or channel shall clear
  Date      Revision    Description
  2/22/16   1.0         initial release
  2/25/16   1.1         second release
+ 5/27/16   1.2         third release (JMG)
 -->
 
 <Define var="$returnCode"     type="int" />
@@ -1558,8 +1559,16 @@ APIR3.1.2[55]	Relinquishing a reserved output point or channel shall clear
    </If>
 
    <!-- close both apps -->
+   <Set var="$fiod_handle" value="$fiod_hOUT_2"/>
+   <Call ref="fio_fiod_deregister" setUp="API_Init_Variables"/>
+   <Set var="$fiod_handle" value="$fiod_hCMU_2"/>
+   <Call ref="fio_fiod_deregister" setUp="API_Init_Variables"/>
    <Call ref="fio_deregister" setUp="API_Init_Variables"/>
    <Set var="$fio_handle" value="$fio_handle_1"/>
+   <Set var="$fiod_handle" value="$fiod_hOUT_1"/>
+   <Call ref="fio_fiod_deregister" setUp="API_Init_Variables"/>
+   <Set var="$fiod_handle" value="$fiod_hCMU_1"/>
+   <Call ref="fio_fiod_deregister" setUp="API_Init_Variables"/>
    <Call ref="fio_deregister" setUp="API_Init_Variables"/>
 </TestCase>
 

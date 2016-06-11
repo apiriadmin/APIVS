@@ -1424,8 +1424,12 @@ APIR3.1.2[27]	When the disable communications method is called, the API shall
       </Then>
    </If>
 
-   <!-- check comm status -->
-   <Sleep time="%5"/>
+    <!-- reset frame count status -->
+   <Call ref="fio_fiod_status_reset" setUp="API_Init_Variables"/>
+
+   <Sleep time="%10"/>
+
+  <!-- check comm status -->
    <Call ref="fio_fiod_status_get" setUp="API_Init_Variables"/>
    <If expression="$fiod_status.success_rx EQ %0">
       <Then>
@@ -1438,18 +1442,18 @@ APIR3.1.2[27]	When the disable communications method is called, the API shall
    <!-- disable comm and verify -->
    <Call ref="fio_fiod_disable"      setUp="API_Init_Variables"/>
    <Call ref="fio_fiod_status_reset" setUp="API_Init_Variables"/>
-   <Sleep time="%5"/>   
+   <Sleep time="%2"/>   
    <Call ref="fio_fiod_status_get" setUp="API_Init_Variables"/>
    <If expression="$fiod_status.success_rx NE %0">
       <Then>
-      <Print>Comm not disabled (332-1)</Print>
+      <Print>Comm not disabled 332(1)</Print>
       <Format var="$success_rx" />
       <Abort status="FAIL" />
       </Then>
    </If>
    <If expression="$fiod_status.error_rx NE %0">
       <Then>
-      <Print>Comm not disabled (332-2)</Print>
+      <Print>Comm not disabled 332(2)</Print>
       <Format var="$error_rx" />
       <Abort status="FAIL" />
       </Then>
@@ -1462,13 +1466,8 @@ APIR3.1.2[27]	When the disable communications method is called, the API shall
    <Call ref="fio_fiod_status_get" setUp="API_Init_Variables"/>
    <Set var="$abort_mode" value="#TRUE"/>
    
-   <!-- disconnect from FIO API -->
-   <Call ref="fio_deregister" setUp="API_Init_Variables"/>
-
-   <Sleep time="%5"/>
    <!--#################################################################-->
    <!-- FIO NEMA TS1 testing: register with the FIO API -->
-   <Call ref="fio_register" setUp="API_Init_Variables"/>
    
    <!-- register a  FIOTS1 on SP5 -->
    <Set var="$fio_port"   value="#FIO_SP5"/>
@@ -1512,8 +1511,12 @@ APIR3.1.2[27]	When the disable communications method is called, the API shall
       </Then>
    </If>
 
+    <!-- reset frame count status -->
+   <Call ref="fio_fiod_status_reset" setUp="API_Init_Variables"/>
+
+   <Sleep time="%10"/>
+
    <!-- check comm status -->
-   <Sleep time="%5"/>
    <Call ref="fio_fiod_status_get" setUp="API_Init_Variables"/>
    <If expression="$fiod_status.success_rx EQ %0">
       <Then>
@@ -1525,6 +1528,23 @@ APIR3.1.2[27]	When the disable communications method is called, the API shall
 
    <!-- disable comm and verify -->
    <Call ref="fio_fiod_disable"      setUp="API_Init_Variables"/>
+   <Call ref="fio_fiod_status_reset" setUp="API_Init_Variables"/>
+   <Sleep time="%2"/>   
+   <Call ref="fio_fiod_status_get" setUp="API_Init_Variables"/>
+   <If expression="$fiod_status.success_rx NE %0">
+      <Then>
+      <Print>Comm not disabled TS1(1)</Print>
+      <Format var="$success_rx" />
+      <Abort status="FAIL" />
+      </Then>
+   </If>
+   <If expression="$fiod_status.error_rx NE %0">
+      <Then>
+      <Print>Comm not disabled TS1(2)</Print>
+      <Format var="$error_rx" />
+      <Abort status="FAIL" />
+      </Then>
+   </If>
 
    <!-- deregister device and confirm no connection -->
    <Call ref="fio_fiod_deregister" setUp="API_Init_Variables"/>
@@ -1533,13 +1553,8 @@ APIR3.1.2[27]	When the disable communications method is called, the API shall
    <Call ref="fio_fiod_status_get" setUp="API_Init_Variables"/>
    <Set var="$abort_mode" value="#TRUE"/>
    
-   <!-- disconnect from FIO API -->
-   <Call ref="fio_deregister" setUp="API_Init_Variables"/>
-
-   <Sleep time="%5"/>
 <!--#################################################################-->
    <!-- FIO NEMA TS2 testing: register with the FIO API -->
-   <Call ref="fio_register" setUp="API_Init_Variables"/>
    
    <!-- register a  FIOTS2 on SP5 -->
    <Set var="$fio_port"   value="#FIO_SP5"/>
@@ -1591,6 +1606,7 @@ APIR3.1.2[27]	When the disable communications method is called, the API shall
    <!-- disable FIOTS2 comm -->
    <Set var="$fiod_handle" value="$fiod_hdl_TS2"/>
    <Call ref="fio_fiod_disable"      setUp="API_Init_Variables"/>
+   <Sleep time="%2"/>
    <!-- deregister device and confirm no connection -->
    <Call ref="fio_fiod_deregister" setUp="API_Init_Variables"/>
    <Set var="$abort_mode" value="#FALSE"/>
@@ -1738,6 +1754,7 @@ APIR3.1.2[27]	When the disable communications method is called, the API shall
    <!-- disable FIOMMU comm -->
    <Set var="$fiod_handle" value="$fiod_hdl_MMU"/>
    <Call ref="fio_fiod_disable"      setUp="API_Init_Variables"/>
+   <Sleep time="%2"/>
    <!-- deregister device and confirm no connection -->
    <Call ref="fio_fiod_deregister" setUp="API_Init_Variables"/>
    <Set var="$abort_mode" value="#FALSE"/>
@@ -1748,6 +1765,7 @@ APIR3.1.2[27]	When the disable communications method is called, the API shall
    <!-- disable FIODR1 comm -->
    <Set var="$fiod_handle" value="$fiod_hdl_DR1"/>
    <Call ref="fio_fiod_disable"      setUp="API_Init_Variables"/>
+   <Sleep time="%2"/>
    <!-- deregister device and confirm no connection -->
    <Call ref="fio_fiod_deregister" setUp="API_Init_Variables"/>
    <Set var="$abort_mode" value="#FALSE"/>
@@ -1758,6 +1776,7 @@ APIR3.1.2[27]	When the disable communications method is called, the API shall
    <!-- disable FIODR2 comm -->
    <Set var="$fiod_handle" value="$fiod_hdl_DR2"/>
    <Call ref="fio_fiod_disable"      setUp="API_Init_Variables"/>
+   <Sleep time="%2"/>
    <!-- deregister device and confirm no connection -->
    <Call ref="fio_fiod_deregister" setUp="API_Init_Variables"/>
    <Set var="$abort_mode" value="#FALSE"/>
@@ -1768,6 +1787,7 @@ APIR3.1.2[27]	When the disable communications method is called, the API shall
    <!-- disable FIODR3 comm -->
    <Set var="$fiod_handle" value="$fiod_hdl_DR3"/>
    <Call ref="fio_fiod_disable"      setUp="API_Init_Variables"/>
+   <Sleep time="%2"/>
    <!-- deregister device and confirm no connection -->
    <Call ref="fio_fiod_deregister" setUp="API_Init_Variables"/>
    <Set var="$abort_mode" value="#FALSE"/>
@@ -1778,6 +1798,7 @@ APIR3.1.2[27]	When the disable communications method is called, the API shall
    <!-- disable FIODR4 comm -->
    <Set var="$fiod_handle" value="$fiod_hdl_DR4"/>
    <Call ref="fio_fiod_disable"      setUp="API_Init_Variables"/>
+   <Sleep time="%2"/>
    <!-- deregister device and confirm no connection -->
    <Call ref="fio_fiod_deregister" setUp="API_Init_Variables"/>
    <Set var="$abort_mode" value="#FALSE"/>
@@ -1788,6 +1809,7 @@ APIR3.1.2[27]	When the disable communications method is called, the API shall
    <!-- disable FIOTF1 comm -->
    <Set var="$fiod_handle" value="$fiod_hdl_TF1"/>
    <Call ref="fio_fiod_disable"      setUp="API_Init_Variables"/>
+   <Sleep time="%2"/>
    <!-- deregister device and confirm no connection -->
    <Call ref="fio_fiod_deregister" setUp="API_Init_Variables"/>
    <Set var="$abort_mode" value="#FALSE"/>
@@ -1795,13 +1817,8 @@ APIR3.1.2[27]	When the disable communications method is called, the API shall
    <Call ref="fio_fiod_status_get" setUp="API_Init_Variables"/>
    <Set var="$abort_mode" value="#TRUE"/>
 
-   <!-- disconnect from FIO API -->
-   <Call ref="fio_deregister" setUp="API_Init_Variables"/>
-
-   <Sleep time="%5"/>
 <!--#################################################################-->
    <!-- FIO ITS test: 2 14-Pack Output SIU, register with the FIO API -->
-   <Call ref="fio_register" setUp="API_Init_Variables"/>
    
    <!-- register a FIOCMU on SP5 -->
    <Set var="$fio_port"   value="#FIO_SP5"/>
@@ -1876,7 +1893,7 @@ APIR3.1.2[27]	When the disable communications method is called, the API shall
    <!-- enable comm OUT14SIU2 -->
    <Call ref="fio_fiod_enable" setUp="API_Init_Variables"/>
 
-   <Sleep time="%20"/>
+   <Sleep time="%10"/>
 
    <!-- check comm status (CMU) -->
    <Set var="$fiod_handle" value="$fiod_hdl_CMU"/>
@@ -1969,6 +1986,7 @@ APIR3.1.2[27]	When the disable communications method is called, the API shall
    <!-- disable FIOCMU comm -->
    <Set var="$fiod_handle" value="$fiod_hdl_CMU"/>
    <Call ref="fio_fiod_disable"      setUp="API_Init_Variables"/>
+   <Sleep time="%2"/>
    <!-- deregister device and confirm no connection -->
    <Call ref="fio_fiod_deregister" setUp="API_Init_Variables"/>
    <Set var="$abort_mode" value="#FALSE"/>
@@ -1979,6 +1997,7 @@ APIR3.1.2[27]	When the disable communications method is called, the API shall
    <!-- disable FIOINSIU1 comm -->
    <Set var="$fiod_handle" value="$fiod_hdl_IS1"/>
    <Call ref="fio_fiod_disable"      setUp="API_Init_Variables"/>
+   <Sleep time="%2"/>
    <!-- deregister device and confirm no connection -->
    <Call ref="fio_fiod_deregister" setUp="API_Init_Variables"/>
    <Set var="$abort_mode" value="#FALSE"/>
@@ -1989,6 +2008,7 @@ APIR3.1.2[27]	When the disable communications method is called, the API shall
    <!-- disable FIOINSIU2 comm -->
    <Set var="$fiod_handle" value="$fiod_hdl_IS2"/>
    <Call ref="fio_fiod_disable"      setUp="API_Init_Variables"/>
+   <Sleep time="%2"/>
    <!-- deregister device and confirm no connection -->
    <Call ref="fio_fiod_deregister" setUp="API_Init_Variables"/>
    <Set var="$abort_mode" value="#FALSE"/>
@@ -1999,6 +2019,7 @@ APIR3.1.2[27]	When the disable communications method is called, the API shall
    <!-- disable FIOINSIU3 comm -->
    <Set var="$fiod_handle" value="$fiod_hdl_IS3"/>
    <Call ref="fio_fiod_disable"      setUp="API_Init_Variables"/>
+   <Sleep time="%2"/>
    <!-- deregister device and confirm no connection -->
    <Call ref="fio_fiod_deregister" setUp="API_Init_Variables"/>
    <Set var="$abort_mode" value="#FALSE"/>
@@ -2009,6 +2030,7 @@ APIR3.1.2[27]	When the disable communications method is called, the API shall
    <!-- disable FIOINSIU4 comm -->
    <Set var="$fiod_handle" value="$fiod_hdl_IS4"/>
    <Call ref="fio_fiod_disable"      setUp="API_Init_Variables"/>
+   <Sleep time="%2"/>
    <!-- deregister device and confirm no connection -->
    <Call ref="fio_fiod_deregister" setUp="API_Init_Variables"/>
    <Set var="$abort_mode" value="#FALSE"/>
@@ -2019,6 +2041,7 @@ APIR3.1.2[27]	When the disable communications method is called, the API shall
    <!-- disable FIOINSIU5 comm -->
    <Set var="$fiod_handle" value="$fiod_hdl_IS5"/>
    <Call ref="fio_fiod_disable"      setUp="API_Init_Variables"/>
+   <Sleep time="%2"/>
    <!-- deregister device and confirm no connection -->
    <Call ref="fio_fiod_deregister" setUp="API_Init_Variables"/>
    <Set var="$abort_mode" value="#FALSE"/>
@@ -2029,6 +2052,7 @@ APIR3.1.2[27]	When the disable communications method is called, the API shall
    <!-- disable FIOOUT14SIU1 comm -->
    <Set var="$fiod_handle" value="$fiod_hdl_O14S1"/>
    <Call ref="fio_fiod_disable"      setUp="API_Init_Variables"/>
+   <Sleep time="%2"/>
    <!-- deregister device and confirm no connection -->
    <Call ref="fio_fiod_deregister" setUp="API_Init_Variables"/>
    <Set var="$abort_mode" value="#FALSE"/>
@@ -2039,6 +2063,7 @@ APIR3.1.2[27]	When the disable communications method is called, the API shall
    <!-- disable FIOOUT14SIU2 comm -->
    <Set var="$fiod_handle" value="$fiod_hdl_O14S2"/>
    <Call ref="fio_fiod_disable"      setUp="API_Init_Variables"/>
+   <Sleep time="%2"/>
    <!-- deregister device and confirm no connection -->
    <Call ref="fio_fiod_deregister" setUp="API_Init_Variables"/>
    <Set var="$abort_mode" value="#FALSE"/>
@@ -2046,13 +2071,8 @@ APIR3.1.2[27]	When the disable communications method is called, the API shall
    <Call ref="fio_fiod_status_get" setUp="API_Init_Variables"/>
    <Set var="$abort_mode" value="#TRUE"/>
 
-   <!-- disconnect from FIO API -->
-   <Call ref="fio_deregister" setUp="API_Init_Variables"/>
-
-   <Sleep time="%5"/>
 <!--#################################################################-->
    <!-- FIO ITS test: 4 6-Pack Output SIU, register with the FIO API -->
-   <Call ref="fio_register" setUp="API_Init_Variables"/>
    
    <!-- register a FIOCMU on SP5 -->
    <Set var="$fio_port"   value="#FIO_SP5"/>
@@ -2143,7 +2163,7 @@ APIR3.1.2[27]	When the disable communications method is called, the API shall
    <!-- enable comm OUT6SIU4 -->
    <Call ref="fio_fiod_enable" setUp="API_Init_Variables"/>
 
-   <Sleep time="%20"/>
+   <Sleep time="%10"/>
 
    <!-- check comm status (CMU) -->
    <Set var="$fiod_handle" value="$fiod_hdl_CMU"/>
@@ -2258,6 +2278,7 @@ APIR3.1.2[27]	When the disable communications method is called, the API shall
    <!-- disable FIOCMU comm -->
    <Set var="$fiod_handle" value="$fiod_hdl_CMU"/>
    <Call ref="fio_fiod_disable"      setUp="API_Init_Variables"/>
+   <Sleep time="%2"/>
    <!-- deregister device and confirm no connection -->
    <Call ref="fio_fiod_deregister" setUp="API_Init_Variables"/>
    <Set var="$abort_mode" value="#FALSE"/>
@@ -2268,6 +2289,7 @@ APIR3.1.2[27]	When the disable communications method is called, the API shall
    <!-- disable FIOINSIU1 comm -->
    <Set var="$fiod_handle" value="$fiod_hdl_IS1"/>
    <Call ref="fio_fiod_disable"      setUp="API_Init_Variables"/>
+   <Sleep time="%2"/>
    <!-- deregister device and confirm no connection -->
    <Call ref="fio_fiod_deregister" setUp="API_Init_Variables"/>
    <Set var="$abort_mode" value="#FALSE"/>
@@ -2278,6 +2300,7 @@ APIR3.1.2[27]	When the disable communications method is called, the API shall
    <!-- disable FIOINSIU2 comm -->
    <Set var="$fiod_handle" value="$fiod_hdl_IS2"/>
    <Call ref="fio_fiod_disable"      setUp="API_Init_Variables"/>
+   <Sleep time="%2"/>
    <!-- deregister device and confirm no connection -->
    <Call ref="fio_fiod_deregister" setUp="API_Init_Variables"/>
    <Set var="$abort_mode" value="#FALSE"/>
@@ -2288,6 +2311,7 @@ APIR3.1.2[27]	When the disable communications method is called, the API shall
    <!-- disable FIOINSIU3 comm -->
    <Set var="$fiod_handle" value="$fiod_hdl_IS3"/>
    <Call ref="fio_fiod_disable"      setUp="API_Init_Variables"/>
+   <Sleep time="%2"/>
    <!-- deregister device and confirm no connection -->
    <Call ref="fio_fiod_deregister" setUp="API_Init_Variables"/>
    <Set var="$abort_mode" value="#FALSE"/>
@@ -2298,6 +2322,7 @@ APIR3.1.2[27]	When the disable communications method is called, the API shall
    <!-- disable FIOINSIU4 comm -->
    <Set var="$fiod_handle" value="$fiod_hdl_IS4"/>
    <Call ref="fio_fiod_disable"      setUp="API_Init_Variables"/>
+   <Sleep time="%2"/>
    <!-- deregister device and confirm no connection -->
    <Call ref="fio_fiod_deregister" setUp="API_Init_Variables"/>
    <Set var="$abort_mode" value="#FALSE"/>
@@ -2308,6 +2333,7 @@ APIR3.1.2[27]	When the disable communications method is called, the API shall
    <!-- disable FIOINSIU5 comm -->
    <Set var="$fiod_handle" value="$fiod_hdl_IS5"/>
    <Call ref="fio_fiod_disable"      setUp="API_Init_Variables"/>
+   <Sleep time="%2"/>
    <!-- deregister device and confirm no connection -->
    <Call ref="fio_fiod_deregister" setUp="API_Init_Variables"/>
    <Set var="$abort_mode" value="#FALSE"/>
@@ -2318,6 +2344,7 @@ APIR3.1.2[27]	When the disable communications method is called, the API shall
    <!-- disable FIOOUT6SIU1 comm -->
    <Set var="$fiod_handle" value="$fiod_hdl_O6S1"/>
    <Call ref="fio_fiod_disable"      setUp="API_Init_Variables"/>
+   <Sleep time="%2"/>
    <!-- deregister device and confirm no connection -->
    <Call ref="fio_fiod_deregister" setUp="API_Init_Variables"/>
    <Set var="$abort_mode" value="#FALSE"/>
@@ -2328,6 +2355,7 @@ APIR3.1.2[27]	When the disable communications method is called, the API shall
    <!-- disable FIOOUT6SIU2 comm -->
    <Set var="$fiod_handle" value="$fiod_hdl_O6S2"/>
    <Call ref="fio_fiod_disable"      setUp="API_Init_Variables"/>
+   <Sleep time="%2"/>
    <!-- deregister device and confirm no connection -->
    <Call ref="fio_fiod_deregister" setUp="API_Init_Variables"/>
    <Set var="$abort_mode" value="#FALSE"/>
@@ -2338,6 +2366,7 @@ APIR3.1.2[27]	When the disable communications method is called, the API shall
    <!-- disable FIOOUT6SIU3 comm -->
    <Set var="$fiod_handle" value="$fiod_hdl_O6S3"/>
    <Call ref="fio_fiod_disable"      setUp="API_Init_Variables"/>
+   <Sleep time="%2"/>
    <!-- deregister device and confirm no connection -->
    <Call ref="fio_fiod_deregister" setUp="API_Init_Variables"/>
    <Set var="$abort_mode" value="#FALSE"/>
@@ -2348,6 +2377,7 @@ APIR3.1.2[27]	When the disable communications method is called, the API shall
    <!-- disable FIOOUT6SIU4 comm -->
    <Set var="$fiod_handle" value="$fiod_hdl_O6S4"/>
    <Call ref="fio_fiod_disable"      setUp="API_Init_Variables"/>
+   <Sleep time="%2"/>
    <!-- deregister device and confirm no connection -->
    <Call ref="fio_fiod_deregister" setUp="API_Init_Variables"/>
    <Set var="$abort_mode" value="#FALSE"/>
