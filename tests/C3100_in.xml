@@ -35,12 +35,13 @@ APIR3.1.2[121]	The API shall provide a method for an application program to
 <Define var="$frame_number"   type="unsigned int" />
 <Define var="$notify_freq"    type="FIO_NOTIFY" />
 <Define var="$seq_number"     type="unsigned int" />
-<Define var="$read_buffer"    type="unsigned char []" size="%128" />
+<Define var="$read_buffer"    type="unsigned char []" size="%640" />
 <Define var="$bytes_read"     type="int" />
 <Define var="$frame_sched"    type="FIO_FRAME_SCHD" size="%1" />
 <Define var="$frame_size"     type="int" />
 <Define var="$write_buffer"   type="unsigned char []" size="%128" />
 <Define var="$write_count"    type="unsigned int" />
+<Define var="$frame_data"     type="unsigned char []" size="%640" />
 <Define var="$input_filter"   type="FIO_INPUT_FILTER" size="%1" />
 <Define var="$input_type"     type="FIO_INPUTS_TYPE" />
 <Define var="$inputs"         type="unsigned char []" size="#FIO_INPUT_POINTS_BYTES" />
@@ -1228,25 +1229,53 @@ APIR3.1.2[121]	The API shall provide a method for an application program to
    <Set var="$fio_device" value="#FIOCMU"/>
    <Call ref="fio_fiod_register" setUp="API_Init_Variables"/>
 
+   <!-- setup FIOCMU SDLC response messages -->
+   <FIOResponse file="@Cxxxx_rsp193.txt" frame="%193" description="(FIO C65->R193)"/>
+
    <!-- enable the FIOCMU -->
    <Call ref="fio_fiod_enable" setUp="API_Init_Variables"/>
 
-   <!-- send Type 65 Command Frame (Get CMU Configuration) -->
+   <!-- send Type 65 Command Frame (Get CMU Configuration) (APIR3.1.2[121]) -->
    <Set var="$frame_number" value="%65"/>
-   <Set var="$write_buffer" file="@C3100_c65"/>
-   <Set var="$write_count"  value="%1"/>
+   <Set var="$write_buffer" file="@Cxxxx_cmd65.txt"/>
+   <Set var="$write_count"  value="%0"/>
    <Call ref="fio_fiod_frame_write" setUp="API_Init_Variables"/>
    
+   <Sleep time="%2"/>
+
    <!-- confirm transmitted command frame -->
-   <If expression="!CMDMSGCompare(@C3100_c65,%65) EQ #FALSE">
+   <If expression="!CMDMSGCompare(@Cxxxx_cmd65.txt,%65) EQ #FALSE">
       <Then>
       <Print>CMDMSG 65 incorrect</Print>
-      <Dump dump="CMDMSG" force="#TRUE" file="@C3100_c65_err" frame="%0"/>
+      <Dump dump="CMDMSG" force="#TRUE" file="@C3100_cmd65_err" frame="%0"/>
       <Abort status="FAIL" />
       </Then>
    </If>
 
+   <Set var="$frame_number" value="%193"/>
+   <Call ref="fio_fiod_frame_size" setUp="API_Init_Variables"/>
+   <!-- verify last response frame 193 size -->
+   <If expression="$frame_size NE %513">
+      <Then>
+      <Print>frame 65 response frame (193) size incorrect</Print>
+      <Abort status="FAIL"/>
+      </Then>
+   </If>
+   
+   <Set var="$frame_number" value="%193"/>
+   <Set var="$timeout" value="%1"/>
+   <Call ref="fio_fiod_frame_read" setUp="API_Init_Variables"/>
+   <Set var="$frame_data" file="@Cxxxx_rsp193.txt" />
+   <!-- verify last frame raw data -->   
+   <If expression="$read_buffer NE $frame_data">
+      <Then>
+      <Print>frame 65 response frame (193) data incorrect</Print>
+      <Abort status="FAIL"/>
+      </Then>
+   </If>
+
    <!-- deregister and exit -->
+   <Call ref="fio_fiod_disable" setUp="API_Init_Variables"/>
    <Call ref="fio_deregister" setUp="API_Init_Variables"/>
 </TestCase>
 

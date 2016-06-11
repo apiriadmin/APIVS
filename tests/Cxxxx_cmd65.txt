@@ -1,0 +1,11 @@
+# ATC 5401 API Reference Implementation Project 
+# 
+#     Filename: Cxxxx_cmd65.txt
+#    File Type: APIVS flat file (text format)
+#    Test Case: APIRI.TCS.3100
+#  Description: file load of Command Frame 65
+#               (Get CMU Configuration)
+# 
+# Date      Revision    Description
+# 2/24/16   1.0         initial release
+0x41
