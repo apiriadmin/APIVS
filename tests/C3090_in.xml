@@ -57,6 +57,7 @@ APIR3.1.2[120]	The API Health Monitor Function shall return whether an API
  Date      Revision    Description
  2/22/16   1.0         initial release
  2/25/16   1.1         second release
+ 5/30/16   1.2         third release (JMG)
 -->
 
 <Define var="$returnCode"     type="int" />
@@ -1153,10 +1154,10 @@ APIR3.1.2[120]	The API Health Monitor Function shall return whether an API
 
 <Subroutine name="fio_hm_heartbeat" description="Call fio_hm_heartbeat()" >
    <Function funcName="fio_hm_heartbeat"
-             return="$returnCode"
+             return="$hm_hbeat"
              errno="$errno"
-             p1="$hm_hbeat" />
-   <If expression="$returnCode EQ %-1">
+             p1="$fio_handle" />
+   <If expression="$hm_hbeat EQ %-1">
       <Then>
       <Print>Function fio_hm_heartbeat() failed</Print>
       <Call ref="Error_Handler" />
@@ -1280,15 +1281,15 @@ APIR3.1.2[120]	The API Health Monitor Function shall return whether an API
    <Call ref="fio_fiod_register" setUp="API_Init_Variables"/>
    <Set var="$fiod_handle_1" value="$fiod_handle"/>
    
-   <!-- setup SDLC response messages -->
-   <FIOResponse file="@C3020_r177_a.txt" frame="%177" description="(c49->r177)"/>
-   <FIOResponse file="@C3020_r181_a.txt" frame="%181" description="(c53->r181)"/>
-   <FIOResponse file="@C3020_r183_a.txt" frame="%183" description="(c55->r183)"/>
+   <!-- setup FIO332 SDLC response messages -->
+   <FIOResponse file="@Cxxxx_rsp177.txt" frame="%177" description="(FIO C49->R177)"/>
+   <FIOResponse file="@Cxxxx_rsp181a.txt" frame="%181" description="(FIO C53->R181)"/>
+   <FIOResponse file="@Cxxxx_rsp183.txt" frame="%183" description="(FIO C55->R183)"/>
    
    <!-- start comm -->
    <Call ref="fio_fiod_enable" setUp="API_Init_Variables"/>
    
-   <!-- register each app with the Health Monitor -->
+   <!-- register each app with the Health Monitor (APIR3.1.2[110], APIR3.1.2[111], APIR3.1.2[112])) -->
    <Set var="$hm_timeout" value="%50"/> <!-- App 1: 5s timeout -->
    <Set var="$fio_handle" value="$fio_handle_1"/>
    <Call ref="fio_hm_register" setUp="API_Init_Variables"/>
@@ -1296,7 +1297,7 @@ APIR3.1.2[120]	The API Health Monitor Function shall return whether an API
    <Set var="$fio_handle" value="$fio_handle_2"/>
    <Call ref="fio_hm_register" setUp="API_Init_Variables"/>
    
-   <!-- call heartbeat function and check responses -->
+   <!-- call heartbeat function and check responses (APIR3.1.2[109]) -->
    <Set var="$fio_handle" value="$fio_handle_1"/>
    <Call ref="fio_hm_heartbeat" setUp="API_Init_Variables"/> 
    <If expression="$hm_hbeat NE %0">
@@ -1320,19 +1321,25 @@ APIR3.1.2[120]	The API Health Monitor Function shall return whether an API
    <!-- heartbeat App 2 (to confirm it doesn't affect App 1) -->
    <Set var="$fio_handle" value="$fio_handle_2"/>
    <Call ref="fio_hm_heartbeat" setUp="API_Init_Variables"/> 
-
-   <!-- confirm that App 1 has timed out -->
-   <!-- heartbeat function should NOT restore health -->
-   <Set var="$fio_handle" value="$fio_handle_1"/>
-   <Call ref="fio_hm_heartbeat" setUp="API_Init_Variables"/> 
-   <If expression="$hm_hbeat NE %1">
+   <If expression="$hm_hbeat NE %0">
       <Then>
       <Print>HM fault condition (3)</Print>
       <Abort status="FAIL"/>
       </Then>
    </If>
+
+   <!-- confirm that App 1 has timed out -->
+   <!-- heartbeat function returns fault condition, does NOT reset fault (APIR3.1.2[119], APIR3.1.2[120]))-->
+   <Set var="$fio_handle" value="$fio_handle_1"/>
+   <Call ref="fio_hm_heartbeat" setUp="API_Init_Variables"/> 
+   <If expression="$hm_hbeat NE %1">
+      <Then>
+      <Print>HM fault condition (4)</Print>
+      <Abort status="FAIL"/>
+      </Then>
+   </If>
    
-   <!-- confirm that we no longer have access to our FIO device -->
+   <!-- confirm that we no longer have access to our FIO device (APIR3.1.2[113]) -->
    <Call ref="fio_fiod_status_get" setUp="API_Init_Variables"/>
    <If expression="$fiod_status.comm_enabled EQ #TRUE">
       <Then>
@@ -1341,22 +1348,37 @@ APIR3.1.2[120]	The API Health Monitor Function shall return whether an API
       </Then>
    </If>
    
-   <!-- confirm that we cannot just reenable our FIO device -->
+   <!-- confirm that we cannot just reenable our FIO device (APIR3.1.2[118]) -->
    <!-- (function call should fail) -->
    <Set var="$abort_mode" value="#FALSE"/>
    <Call ref="fio_fiod_enable" setUp="API_Init_Variables"/>
    <Set var="$abort_mode" value="#TRUE"/>
 
-   <!-- reset the fault and confirm it -->
-   <!-- confirm that we have access to our FIO device again -->
+   <!-- let App 2 also time out -->
+   <Sleep time="%11"/>
+
+   <!-- confirm that App 2 has timed out -->
+   <!-- heartbeat function should NOT restore health -->
+   <Set var="$fio_handle" value="$fio_handle_2"/>
+   <Call ref="fio_hm_heartbeat" setUp="API_Init_Variables"/> 
+   <If expression="$hm_hbeat NE %1">
+      <Then>
+      <Print>HM fault condition (5)</Print>
+      <Abort status="FAIL"/>
+      </Then>
+   </If>
+
+   <!-- reset APP1 fault condition and confirm it (APIR3.1.2[115]) -->
+   <Set var="$fio_handle" value="$fio_handle_1"/>
    <Call ref="fio_hm_fault_reset" setUp="API_Init_Variables"/>
    <Call ref="fio_hm_heartbeat" setUp="API_Init_Variables"/> 
    <If expression="$hm_hbeat NE %0">
       <Then>
-      <Print>HM fault condition (4)</Print>
+      <Print>HM fault condition (6)</Print>
       <Abort status="FAIL"/>
       </Then>
    </If>
+   <!-- confirm that we have access to our FIO device again (APIR3.1.2[117]) -->
    <Call ref="fio_fiod_status_get" setUp="API_Init_Variables"/>
    <If expression="$fiod_status.comm_enabled NE #TRUE">
       <Then>
@@ -1365,9 +1387,31 @@ APIR3.1.2[120]	The API Health Monitor Function shall return whether an API
       </Then>
    </If>
 
-   <!-- deregister (HM) and close both apps -->
+   <!-- confirm that App2 fault condition persists (APIR3.1.2[116]) -->
+   <Set var="$fio_handle" value="$fio_handle_2"/>
+   <Call ref="fio_hm_heartbeat" setUp="API_Init_Variables"/> 
+   <If expression="$hm_hbeat NE %1">
+      <Then>
+      <Print>HM fault condition (7)</Print>
+      <Abort status="FAIL"/>
+      </Then>
+   </If>
+   
+   <!-- deregister (HM) App1 (APIR3.1.2[114]) -->
    <Set var="$fio_handle"        value="$fio_handle_1"/>
    <Call ref="fio_hm_deregister" setUp="API_Init_Variables"/>
+   <!-- confirm App1 has Health Monitor disabled -->
+   <Set var="$abort_mode" value="#FALSE"/>
+   <Call ref="fio_hm_heartbeat" setUp="API_Init_Variables"/> 
+   <If expression="$errno NE %13"> <!-- EACCES -->
+      <Then>
+      <Print>HM fault condition (8)</Print>
+      <Abort status="FAIL"/>
+      </Then>
+   </If>
+   <Set var="$abort_mode" value="#TRUE"/>
+   
+   <!-- deregister (HM) App2 and close both apps -->
    <Call ref="fio_deregister"    setUp="API_Init_Variables"/>
    <Set var="$fio_handle"        value="$fio_handle_2"/>
    <Call ref="fio_hm_deregister" setUp="API_Init_Variables"/>
