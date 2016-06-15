@@ -1,10 +1,10 @@
 # ATC 5401 API Reference Implementation Project 
 # 
-#     Filename: Cxxxx_cmd49b.txt
+#     Filename: Cxxxx_cmd49d.txt
 #    File Type: APIVS flat file (text format)
 #    Test Case: APIRI.TCS.3xxx
-#  Description: file load of Command Frame 49 (reset all)
+#  Description: file load of Command Frame 49 (reset comm loss bit)
 # 
 # Date      Revision    Description
 # 2/24/16   1.0         initial release
-0x31 0xff
+0x31 0x40
