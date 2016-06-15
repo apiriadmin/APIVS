@@ -45,7 +45,9 @@ APIR3.1.2[127]	The notification shall be able to be set for a one time
 <Define var="$seq_number"     type="unsigned int" />
 <Define var="$read_buffer"    type="unsigned char []" size="%128" />
 <Define var="$bytes_read"     type="int" />
-<Define var="$frame_sched"    type="FIO_FRAME_SCHD" size="%1" />
+<Define var="$frame_schds"    type="FIO_FRAME_SCHD" size="%6"/>
+<Define var="$frame_schd_cnt" type="int"/>
+<Define var="$frame_schd"     type="FIO_FRAME_SCHD" size="%1" />
 <Define var="$frame_size"     type="int" />
 <Define var="$write_buffer"   type="unsigned char []" size="%128" />
 <Define var="$write_count"    type="unsigned int" />
@@ -71,7 +73,7 @@ APIR3.1.2[127]	The notification shall be able to be set for a one time
 <Define var="$time_offset"    type="int" />
 <Define var="$num_bytes"      type="unsigned int" />
 <Define var="$timeout"        type="unsigned int" />
-<Define var="$FIO_asyncsig"   type="boolean" />
+<Define var="$FIO_async"      type="int" />
 
 <Define var="$abort_mode"     type="boolean" />
 <Define var="$failed"         type="boolean" />
@@ -176,8 +178,7 @@ APIR3.1.2[127]	The notification shall be able to be set for a one time
 </Subroutine>
 
 <SignalHandler name="SigHandler" description="Signal handler for FIO_SIGIO">
-	<Print>FIO_SIGIO occurred</Print>
-	<Set var="$FIO_asyncsig" value="#TRUE"/>
+	<Set var="$FIO_async" value="%1"/>
 </SignalHandler>
 
 <!--
@@ -542,16 +543,15 @@ APIR3.1.2[127]	The notification shall be able to be set for a one time
              errno="$errno"
              p1="$fio_handle"
              p2="$fiod_handle"
-			    p3="$fio_view"
-             p4="$frame_sched"
-             p5="!sizeof($frame_sched)" />
+             p3="$fio_view"
+             p4="$frame_schds"
+             p5="$frame_schd_cnt" />
    <If expression="$returnCode EQ %-1">
       <Then>
       <Print>Function fio_fiod_frame_schedule_get() failed</Print>
       <Call ref="Error_Handler" />
       </Then>
    <Else>
-      <Format var="$frame_sched" />
       <Call ref="Success_Handler" />
    </Else>
    </If>
@@ -563,8 +563,8 @@ APIR3.1.2[127]	The notification shall be able to be set for a one time
              errno="$errno"
              p1="$fio_handle"
              p2="$fiod_handle"
-             p3="$frame_sched"
-             p4="!sizeof($frame_sched)" />
+             p3="$frame_schds"
+             p4="$frame_schd_cnt" />
    <If expression="$returnCode EQ %-1">
       <Then>
       <Print>Function fio_fiod_frame_schedule_set() failed</Print>
@@ -1237,68 +1237,161 @@ APIR3.1.2[127]	The notification shall be able to be set for a one time
    <Set var="$fio_device" value="#FIO332"/>
    <Call ref="fio_fiod_register" setUp="API_Init_Variables"/>
   
-    <!-- setup Type 177 Response Frame -->
-   <FIOResponse file="@C3120_r177" frame="%177"/>
-  
+   <!-- setup FIO332 SDLC response messages -->
+   <FIOResponse file="@Cxxxx_rsp177.txt" frame="%177" description="(FIO C49->R177)"/>
+
    <!-- enable signal handler -->
-   <Set var="$FIO_asyncsig" value="#FALSE"/>
+   <Set var="$FIO_async" value="%0"/>
    <Signal ref="SigHandler" signal="#FIO_SIGIO" action="enable"/>
    
    <!-- register for async notification (single) -->
+   <!-- identify by frame number and registered fiod (APIR3.1.2[124], APIR3.1.2[125]) -->
    <Set var="$frame_number" value="%177"/>
    <Set var="$notify_freq"  value="#FIO_NOTIFY_ONCE"/>
    <Call ref="fio_fiod_frame_notify_register" setUp="API_Init_Variables"/>
+
+   <!-- set the frame rate for command 49 module status to FIO_HZ_1 -->
+   <Set var="$frame_schds" index="%0" member="req_frame" value="%49"/>
+   <Set var="$frame_schds" index="%0" member="frequency" value="#FIO_HZ_1"/>
+   <Set var="$frame_schds" index="%1" member="req_frame" value="%53"/>
+   <Set var="$frame_schds" index="%1" member="frequency" value="#FIO_HZ_0"/>
+   <Set var="$frame_schds" index="%2" member="req_frame" value="%55"/>
+   <Set var="$frame_schds" index="%2" member="frequency" value="#FIO_HZ_0"/>
+   <Set var="$frame_schd_cnt" value="%3"/>
+   <Call ref="fio_fiod_frame_schedule_set" setUp="API_Init_Variables"/>
 
    <!-- enable the FIO332 -->
    <Call ref="fio_fiod_enable" setUp="API_Init_Variables"/>
    
    <!-- check for response frame -->
    <Sleep time="%1"/>
-   <If expression="$FIO_asyncsig NE #TRUE">
+   <If expression="$FIO_async EQ %0">
       <Then>
       <Print >No async notification (single)</Print>
       <Abort status="FAIL" />
       </Then>
-   <Else>
-      <Set var="$FIO_asyncsig" value="#FALSE"/>
-      <Call ref="fio_query_frame_notify_status" setUp="API_Init_Variables"/> 
-      <Format var="$notify_info"/>
-      <If expression="$notify_info.rx_frame NE %177">
-         <Then>
-         <Print >Invalid frame number (single)</Print>
-         <Abort status="FAIL" />
-         </Then>
-      </If>
-   </Else>
    </If>
-
-   <!-- re-register for async notification (continuous) -->
-   <Set var="$frame_number" value="%177"/>
-   <Call ref="fio_fiod_frame_notify_deregister" setUp="API_Init_Variables"/>
-   <Set var="$notify_freq" value="#FIO_NOTIFY_ALWAYS"/>
-   <Call ref="fio_fiod_frame_notify_register" setUp="API_Init_Variables"/>
-   
-   <!-- check for response frame (again) -->
-   <Sleep time="%1"/>
-   <If expression="$FIO_asyncsig NE #TRUE">
+   <Call ref="fio_query_frame_notify_status" setUp="API_Init_Variables"/>
+   <!-- verify all fields of $notify_info (APIR3.1.2[126]) -->
+   <If expression="$notify_info.fiod NE $fiod_handle">
       <Then>
-      <Print >No async notification (continuous)</Print>
+      <Print >Incorrect fiod (single)</Print>
       <Abort status="FAIL" />
       </Then>
-   <Else>
-      <Set var="$FIO_asyncsig" value="#FALSE"/>
-      <Call ref="fio_query_frame_notify_status" setUp="API_Init_Variables"/> 
-      <Format var="$notify_info"/>
-      <If expression="$notify_info.rx_frame NE %177">
-         <Then>
-         <Print >Invalid frame number (continuous)</Print>
-         <Abort status="FAIL" />
-         </Then>
-      </If>
-   </Else>
+   </If>
+   <If expression="$notify_info.rx_frame NE %177">
+      <Then>
+      <Print >Incorrect frame number (single)</Print>
+      <Abort status="FAIL" />
+      </Then>
+   </If>
+   <If expression="$notify_info.seq_number NE %1">
+      <Then>
+      <Print >Incorrect sequence number (single)</Print>
+      <Abort status="FAIL" />
+      </Then>
+   </If>
+   <If expression="$notify_info.count NE %8">
+      <Then>
+      <Print >Incorrect frame size (single)</Print>
+      <Abort status="FAIL" />
+      </Then>
+   </If>
+   <If expression="$notify_info.status NE %1">
+      <Then>
+      <Print >Incorrect frame status (single)</Print>
+      <Abort status="FAIL" />
+      </Then>
+   </If>
+   
+   <Set var="$FIO_async" value="%0"/>
+   <!-- check for response frame again (signal should not occur in single mode) -->
+   <Sleep time="%1"/>
+   <If expression="$FIO_async NE %0">
+      <Then>
+      <Print >Further async notification (single)</Print>
+      <Abort status="FAIL" />
+      </Then>
    </If>
 
+   <Call ref="fio_fiod_frame_notify_deregister" setUp="API_Init_Variables"/>
+
+   <!-- Repeat the notification for a frame with no response set (error notice) -->
+   <Set var="$FIO_async" value="%0"/>
+
+   <!-- register for async notification (single) frame 181 -->
+   <Set var="$frame_number" value="%181"/>
+   <Set var="$notify_freq"  value="#FIO_NOTIFY_ONCE"/>
+   <Call ref="fio_fiod_frame_notify_register" setUp="API_Init_Variables"/>
+
+   <Set var="$frame_schds" index="%0" member="req_frame" value="%53"/>
+   <Set var="$frame_schds" index="%0" member="frequency" value="#FIO_HZ_1"/>
+   <Set var="$frame_schd_cnt" value="%1"/>
+   <Call ref="fio_fiod_frame_schedule_set" setUp="API_Init_Variables"/>
+
+   <!-- check for response notification -->
+   <Sleep time="%1"/>
+   <If expression="$FIO_async EQ %0">
+      <Then>
+      <Print >No async notification (frame 181) </Print>
+      <Abort status="FAIL" />
+      </Then>
+   </If>
+
+   <Call ref="fio_query_frame_notify_status" setUp="API_Init_Variables"/>
+   <!-- verify the status field of $notify_info (error notice) -->
+   <If expression="$notify_info.fiod NE $fiod_handle">
+      <Then>
+      <Print >Incorrect fiod (frame 181)</Print>
+      <Abort status="FAIL" />
+      </Then>
+   </If>
+   <If expression="$notify_info.rx_frame NE %181">
+      <Then>
+      <Print >Incorrect frame number (181)</Print>
+      <Abort status="FAIL" />
+      </Then>
+   </If>
+   <If expression="$notify_info.status NE %0">
+      <Then>
+      <Print >Incorrect frame status (181)</Print>
+      <Abort status="FAIL" />
+      </Then>
+   </If>
+
+   <Call ref="fio_fiod_frame_notify_deregister" setUp="API_Init_Variables"/>
+
+   <!-- register for async notification (continuous) (APIR3.1.2[127]) -->
+   <Set var="$FIO_async" value="%0"/>
+
+   <Set var="$frame_number" value="%177"/>
+   <Set var="$notify_freq" value="#FIO_NOTIFY_ALWAYS"/>
+   <Call ref="fio_fiod_frame_notify_register" setUp="API_Init_Variables"/>
+
+   <!-- check for response frame -->
+   <Sleep time="%1"/>
+   <If expression="$FIO_async EQ %0">
+      <Then>
+      <Print >No initial async notification (continuous)</Print>
+      <Abort status="FAIL" />
+      </Then>
+   </If>
+
+   <Set var="$FIO_async" value="%0"/>
+   <!-- check for response frame again (continuous) -->
+   <Sleep time="%1"/>
+   <If expression="$FIO_async EQ %0">
+      <Then>
+      <Print >No further async notification (continuous)</Print>
+      <Abort status="FAIL" />
+      </Then>
+   </If>
+
+   <Call ref="fio_fiod_frame_notify_deregister" setUp="API_Init_Variables"/>
+
    <!-- deregister and exit -->
+   <Signal ref="SigHandler" signal="#FIO_SIGIO" action="disable"/>
+   <Call ref="fio_fiod_disable" setUp="API_Init_Variables"/>
    <Call ref="fio_deregister" setUp="API_Init_Variables" />
 </TestCase>
 
