@@ -52,7 +52,9 @@ APIR3.1.2[133]	The default value of the Load Switch Flash bit shall be 0.
 <Define var="$seq_number"     type="unsigned int" />
 <Define var="$read_buffer"    type="unsigned char []" size="%128" />
 <Define var="$bytes_read"     type="int" />
-<Define var="$frame_sched"    type="FIO_FRAME_SCHD" size="%1" />
+<Define var="$frame_schds"    type="FIO_FRAME_SCHD" size="%6"/>
+<Define var="$frame_schd_cnt" type="int"/>
+<Define var="$frame_schd"     type="FIO_FRAME_SCHD" size="%1" />
 <Define var="$frame_size"     type="int" />
 <Define var="$write_buffer"   type="unsigned char []" size="%128" />
 <Define var="$write_count"    type="unsigned int" />
@@ -549,16 +551,15 @@ APIR3.1.2[133]	The default value of the Load Switch Flash bit shall be 0.
              errno="$errno"
              p1="$fio_handle"
              p2="$fiod_handle"
-			    p3="$fio_view"
-             p4="$frame_sched"
-             p5="!sizeof($frame_sched)" />
+             p3="$fio_view"
+             p4="$frame_schds"
+             p5="$frame_schd_cnt" />
    <If expression="$returnCode EQ %-1">
       <Then>
       <Print>Function fio_fiod_frame_schedule_get() failed</Print>
       <Call ref="Error_Handler" />
       </Then>
    <Else>
-      <Format var="$frame_sched" />
       <Call ref="Success_Handler" />
    </Else>
    </If>
@@ -570,8 +571,8 @@ APIR3.1.2[133]	The default value of the Load Switch Flash bit shall be 0.
              errno="$errno"
              p1="$fio_handle"
              p2="$fiod_handle"
-             p3="$frame_sched"
-             p4="!sizeof($frame_sched)" />
+             p3="$frame_schds"
+             p4="$frame_schd_cnt" />
    <If expression="$returnCode EQ %-1">
       <Then>
       <Print>Function fio_fiod_frame_schedule_set() failed</Print>
@@ -1239,7 +1240,6 @@ APIR3.1.2[133]	The default value of the Load Switch Flash bit shall be 0.
    <!-- register two apps and an FIOCMU each app -->
    <Call ref="fio_register" setUp="API_Init_Variables"/>
    <Set var="$fio_handle_0" value="$fio_handle"/>
-   
    <Set var="$fio_port"   value="#FIO_SP5"/>
    <Set var="$fio_device" value="#FIOCMU"/>
    <Call ref="fio_fiod_register" setUp="API_Init_Variables"/>
@@ -1247,20 +1247,18 @@ APIR3.1.2[133]	The default value of the Load Switch Flash bit shall be 0.
 
    <Call ref="fio_register" setUp="API_Init_Variables"/>
    <Set var="$fio_handle_1" value="$fio_handle"/>
-   
    <Set var="$fio_port"   value="#FIO_SP5"/>
    <Set var="$fio_device" value="#FIOCMU"/>
    <Call ref="fio_fiod_register" setUp="API_Init_Variables"/>
    <Set var="$fiod_handle_1" value="$fiod_handle"/>
 
-   <!-- set the FIOCMU frame schedule to send Frame 61 @10Hz -->
-   <Set var="$frame_sched" file="@C3130_frame_sched.txt"/>
-   <Call ref="fio_fiod_frame_schedule_set" setUp="API_Init_Variables"/>
-
-   <!-- enable the FIOCMU -->
+   <!-- enable the FIOCMU (app 1) -->
+   <Set var="$fio_handle" value="$fio_handle_0"/>
+   <Set var="$fiod_handle" value="$fiod_handle_0"/>
    <Call ref="fio_fiod_enable" setUp="API_Init_Variables"/>
+   <Sleep time="%1"/>
 
-   <!-- confirm that the current (default) Dark Mask is FIO_CMU_DC_MASK1 -->
+   <!-- confirm that the current (default) Dark Mask is FIO_CMU_DC_MASK1 (APIR3.1.2[130]) -->
    <Call ref="fio_fiod_cmu_dark_channel_get" setUp="API_Init_Variables"/>
    <If expression="$dark_mask NE #FIO_CMU_DC_MASK1">
       <Then>
@@ -1269,7 +1267,7 @@ APIR3.1.2[133]	The default value of the Load Switch Flash bit shall be 0.
       </Then>
    </If>
    
-   <!-- second app: set the Dark Mask to FIO_CMU_DC_MASK3 and confirm -->
+   <!-- set the Dark Mask to FIO_CMU_DC_MASK3 and confirm (APIR3.1.2[128])-->
    <Set var="$dark_mask" value="#FIO_CMU_DC_MASK3"/>
    <Call ref="fio_fiod_cmu_dark_channel_set" setUp="API_Init_Variables"/> 
    <Call ref="fio_fiod_cmu_dark_channel_get" setUp="API_Init_Variables"/>
@@ -1279,22 +1277,29 @@ APIR3.1.2[133]	The default value of the Load Switch Flash bit shall be 0.
       <Abort status="FAIL" />
       </Then>
    </If>
+   <Sleep time="%1"/>
 
-   <!-- confirm proper Type 61 Command Frame (DM3) -->
-   <Dump dump="CMDMSG" file="@C3130_c61_DM3" frame="%61"/> 
-   <If expression="!CMDMSGCompare(@C3130_c61_DM3,%61) EQ #FALSE">
+   <!-- confirm proper Type 67 Command Frame (DM3) -->
+   <Dump dump="CMDMSG" file="@C3130_cmd67c.txt" frame="%67"/> 
+   <If expression="!CMDMSGCompare(@C3130_cmd67c.txt,%67) EQ #FALSE">
       <Then>
-      <Print>CMDMSG 61 incorrect (DM3)</Print>
-      <Dump dump="CMDMSG" force="#TRUE" file="@C3130_c61_DM3_err" frame="%61`"/>
+      <Print>CMDMSG 67 incorrect (DM3)</Print>
+      <Dump dump="CMDMSG" force="#TRUE" file="@C3130_cmd67c_err.txt" frame="%67"/>
       <Abort status="FAIL" />
       </Then>
    </If>
    
-   <!-- first app: set the Dark Mask to FIO_CMU_DC_MASK2 and confirm -->
-   <Set var="$fio_handle" value="$fio_handle_0"/>
-   <Set var="$fiod_handle" value="$fiod_handle_0"/>
+   <!-- enable the FIOCMU (app 2) -->
+   <Set var="$fio_handle" value="$fio_handle_1"/>
+   <Set var="$fiod_handle" value="$fiod_handle_1"/>
+   <Call ref="fio_fiod_enable" setUp="API_Init_Variables"/>
+   
+   <!-- second app: set the Dark Mask to FIO_CMU_DC_MASK2 -->
    <Set var="$dark_mask" value="#FIO_CMU_DC_MASK2"/>
    <Call ref="fio_fiod_cmu_dark_channel_set" setUp="API_Init_Variables"/> 
+   <Sleep time="%1"/>
+
+   <!-- verify that most recent setting is being used (APIR3.1.2[129]) -->
    <Call ref="fio_fiod_cmu_dark_channel_get" setUp="API_Init_Variables"/>
    <If expression="$dark_mask NE #FIO_CMU_DC_MASK2">
       <Then>
@@ -1303,42 +1308,43 @@ APIR3.1.2[133]	The default value of the Load Switch Flash bit shall be 0.
       </Then>
    </If>
 
-   <!-- confirm proper Type 61 Command Frame (DM2) -->
-   <Dump dump="CMDMSG" file="@C3130_c61_DM2" frame="%61"/> 
-   <If expression="!CMDMSGCompare(@C3130_c61_DM2,%61) EQ #FALSE">
+   <!-- confirm proper Type 67 Command Frame (DM2) -->
+   <Dump dump="CMDMSG" file="@C3130_cmd67b.txt" frame="%67"/> 
+   <If expression="!CMDMSGCompare(@C3130_cmd67b.txt,%67) EQ #FALSE">
       <Then>
-      <Print>CMDMSG 61 incorrect (DM3)</Print>
-      <Dump dump="CMDMSG" force="#TRUE" file="@C3130_c61_DM2_err" frame="%61`"/>
+      <Print>CMDMSG 67 incorrect (DM2)</Print>
+      <Dump dump="CMDMSG" force="#TRUE" file="@C3130_cmd67b_err.txt" frame="%67"/>
       <Abort status="FAIL" />
       </Then>
    </If>
    
-   <!-- deregister both apps -->
-   <Call ref="fio_deregister" setUp="API_Init_Variables"/>
-   <Set var="$fio_handle" value="$fio_handle_1"/>
-   <Call ref="fio_deregister" setUp="API_Init_Variables"/>
+   <!-- disable and deregister FIOCMU both apps -->
+   <Call ref="fio_fiod_disable" setUp="API_Init_Variables"/>
+   <Call ref="fio_fiod_deregister" setUp="API_Init_Variables"/>
+   <Set var="$fio_handle" value="$fio_handle_0"/>
+   <Set var="$fiod_handle" value="$fiod_handle_0"/>
+   <Call ref="fio_fiod_disable" setUp="API_Init_Variables"/>
+   <Call ref="fio_fiod_deregister" setUp="API_Init_Variables"/>
 
-   <!-- register two apps and an FIOMMU each app -->
-   <Call ref="fio_register" setUp="API_Init_Variables"/>
-   <Set var="$fio_handle_0" value="$fio_handle"/>
-   
+   <!-- register FIOMMU each app -->
    <Set var="$fio_port"   value="#FIO_SP5"/>
    <Set var="$fio_device" value="#FIOMMU"/>
    <Call ref="fio_fiod_register" setUp="API_Init_Variables"/>
    <Set var="$fiod_handle_0" value="$fiod_handle"/>
 
-   <Call ref="fio_register" setUp="API_Init_Variables"/>
-   <Set var="$fio_handle_1" value="$fio_handle"/>
-   
+   <Set var="$fio_handle" value="$fio_handle_1"/>
    <Set var="$fio_port"   value="#FIO_SP5"/>
    <Set var="$fio_device" value="#FIOMMU"/>
    <Call ref="fio_fiod_register" setUp="API_Init_Variables"/>
    <Set var="$fiod_handle_1" value="$fiod_handle"/>
 
-   <!-- enable the FIOMMU -->
+   <!-- enable the FIOMMU (app 1) -->
+   <Set var="$fio_handle" value="$fio_handle_0"/>
+   <Set var="$fiod_handle" value="$fiod_handle_0"/>
    <Call ref="fio_fiod_enable" setUp="API_Init_Variables"/>
+   <Sleep time="%1"/>
 
-   <!-- confirm that the current (default) Load Switch Flash bit is FIO_MMU_FLASH_BIT_OFF -->
+   <!-- confirm that the current (default) Load Switch Flash bit is FIO_MMU_FLASH_BIT_OFF (APIR3.1.2[133]) -->
    <Call ref="fio_fiod_mmu_flash_bit_get" setUp="API_Init_Variables"/>
    <If expression="$flash_bit NE #FIO_MMU_FLASH_BIT_OFF">
       <Then>
@@ -1347,7 +1353,7 @@ APIR3.1.2[133]	The default value of the Load Switch Flash bit shall be 0.
       </Then>
    </If>
    
-   <!-- second app: set the bit to FIO_MMU_FLASH_BIT_ON and confirm -->
+   <!-- first app: set the bit to FIO_MMU_FLASH_BIT_ON and confirm (APIR3.1.2[131]) -->
    <Set var="$flash_bit" value="#FIO_MMU_FLASH_BIT_ON"/>
    <Call ref="fio_fiod_mmu_flash_bit_set" setUp="API_Init_Variables"/> 
    <Call ref="fio_fiod_mmu_flash_bit_get" setUp="API_Init_Variables"/>
@@ -1357,22 +1363,30 @@ APIR3.1.2[133]	The default value of the Load Switch Flash bit shall be 0.
       <Abort status="FAIL" />
       </Then>
    </If>
+   <Sleep time="%1"/>
    
    <!-- confirm proper Type 0 Command Frame (LSF1) -->
-   <Dump dump="CMDMSG" file="@C3130_c0_LSF1" frame="%0"/> 
-   <If expression="!CMDMSGCompare(@C3130_c0_LSF1,%0) EQ #FALSE">
+   <Dump dump="CMDMSG" file="@C3130_cmd0b.txt" frame="%0"/> 
+   <If expression="!CMDMSGCompare(@C3130_cmd0b.txt,%0) EQ #FALSE">
       <Then>
       <Print>CMDMSG 0 incorrect (LSF1)</Print>
-      <Dump dump="CMDMSG" force="#TRUE" file="@C3130_c0_LSF1_err" frame="%0"/>
+      <Dump dump="CMDMSG" force="#TRUE" file="@C3130_cmd0b_err.txt" frame="%0"/>
       <Abort status="FAIL" />
       </Then>
    </If>
    
-   <!-- first app: set the bit to FIO_MMU_FLASH_BIT_OFF and confirm -->
-   <Set var="$fio_handle" value="$fio_handle_0"/>
-   <Set var="$fiod_handle" value="$fiod_handle_0"/>
+   <!-- enable the FIOMMU (app 2) -->
+   <Set var="$fio_handle" value="$fio_handle_1"/>
+   <Set var="$fiod_handle" value="$fiod_handle_1"/>
+   <Call ref="fio_fiod_enable" setUp="API_Init_Variables"/>
+   <Sleep time="%1"/>
+
+   <!-- second app: set the bit to FIO_MMU_FLASH_BIT_OFF -->
    <Set var="$flash_bit" value="#FIO_MMU_FLASH_BIT_OFF"/>
-   <Call ref="fio_fiod_mmu_flash_bit_set" setUp="API_Init_Variables"/> 
+   <Call ref="fio_fiod_mmu_flash_bit_set" setUp="API_Init_Variables"/>
+   <Sleep time="%1"/>
+
+   <!-- verify that most recent setting is being used (APIR3.1.2[132]) -->
    <Call ref="fio_fiod_mmu_flash_bit_get" setUp="API_Init_Variables"/>
    <If expression="$flash_bit NE #FIO_MMU_FLASH_BIT_OFF">
       <Then>
@@ -1381,15 +1395,22 @@ APIR3.1.2[133]	The default value of the Load Switch Flash bit shall be 0.
       </Then>
    </If>
    <!-- confirm proper Type 0 Command Frame (LSF0) -->
-   <Dump dump="CMDMSG" file="@C3130_c0_LSF0" frame="%0"/> 
-   <If expression="!CMDMSGCompare(@C3130_c0_LSF0,%0) EQ #FALSE">
+   <Dump dump="CMDMSG" file="@C3130_cmd0a.txt" frame="%0"/> 
+   <If expression="!CMDMSGCompare(@C3130_cmd0a.txt,%0) EQ #FALSE">
       <Then>
       <Print>CMDMSG 0 incorrect (LSF0)</Print>
-      <Dump dump="CMDMSG" force="#TRUE" file="@C3130_c0_LSF0_err" frame="%0"/>
+      <Dump dump="CMDMSG" force="#TRUE" file="@C3130_cmd0a_err.txt" frame="%0"/>
       <Abort status="FAIL" />
       </Then>
    </If>
   
+   <!-- disable and deregister FIOMMU both apps -->
+   <Call ref="fio_fiod_disable" setUp="API_Init_Variables"/>
+   <Call ref="fio_fiod_deregister" setUp="API_Init_Variables"/>
+   <Set var="$fio_handle" value="$fio_handle_0"/>
+   <Set var="$fiod_handle" value="$fiod_handle_0"/>
+   <Call ref="fio_fiod_disable" setUp="API_Init_Variables"/>
+   <Call ref="fio_fiod_deregister" setUp="API_Init_Variables"/>
    <!-- deregister both apps -->
    <Call ref="fio_deregister" setUp="API_Init_Variables"/>
    <Set var="$fio_handle" value="$fio_handle_1"/>
