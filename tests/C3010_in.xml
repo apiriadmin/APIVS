@@ -1399,14 +1399,15 @@ APIR3.1.2[27]	When the disable communications method is called, the API shall
    <Sleep time="%2"/>
    
    <!-- validate command messages -->
-   <Dump dump="CMDMSG" file="@Cxxxx_cmd49.txt" frame="%49"/> 
-   <Dump dump="CMDMSG" file="@Cxxxx_cmd53.txt" frame="%53"/> 
-   <Dump dump="CMDMSG" file="@Cxxxx_cmd55a.txt" frame="%55"/> 
-   <If expression="!CMDMSGCompare(@Cxxxx_cmd49.txt,%49) EQ #FALSE">
+   <If expression="!CMDMSGCompare(@Cxxxx_cmd49a.txt,%49) EQ #FALSE">
       <Then>
-      <Print>CMDMSG 49 incorrect</Print>
-      <Dump dump="CMDMSG" force="#TRUE" file="@C3010_cmd49_err.txt" frame="%49"/>
-      <Abort status="FAIL" />
+      <If expression="!CMDMSGCompare(@Cxxxx_cmd49b.txt,%49) EQ #FALSE">
+         <Then>
+         <Print>CMDMSG 49 incorrect</Print>
+         <Dump dump="CMDMSG" force="#TRUE" file="@C3010_cmd49_err.txt" frame="%49"/>
+         <Abort status="FAIL" />
+         </Then>
+      </If>
       </Then>
    </If>
    <If expression="!CMDMSGCompare(@Cxxxx_cmd53.txt,%53) EQ #FALSE">
