@@ -1412,7 +1412,7 @@ APIR3.1.2[108]	A response frame shall only be considered successful if it is
    <Set var="$frame_number" value="%129"/>
    <Call ref="fio_fiod_frame_size" setUp="API_Init_Variables"/>
    <!-- verify last response frame 129 size -->
-   <If expression="$frame_size NE %12">
+   <If expression="$frame_size NE %11">
       <Then>
       <Print>frame 1 response frame (129) size incorrect</Print>
       <Abort status="FAIL"/>
