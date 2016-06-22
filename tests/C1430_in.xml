@@ -42,6 +42,7 @@
 <Define var="$signal"         type="int" />
 <Define var="$sig_fd_oc"      type="int" />
 <Define var="$sig_fd_tick"    type="int" />
+<Define var="$time_change"    type="boolean" />
 
 <Define var="$abort_mode"     type="boolean" />
 <Define var="$failed"         type="boolean" />
@@ -142,6 +143,10 @@
       </Then>
    </If>
 </Subroutine>
+
+<SignalHandler name="SigHandler" description="Signal handler for SIGIO">
+	<Set var="$time_change" value="#TRUE"/>
+</SignalHandler>
 
 <!--
  subroutines to call API functions and verify return status
@@ -395,29 +400,38 @@
    <Call ref="tod_get"                       setUp="API_Init_Variables" />
    <Call ref="tod_set"                       setUp="API_Init_Variables" />
 
-   <Set var="$abort_mode" value="#FALSE"/>
-   <Set var="$dst_info" value="%0"/>
-   <Call ref="tod_get_dst_info"              setUp="API_Init_Variables" />
-   <Set var="$dst_info" value="%0"/>
-   <Call ref="tod_set_dst_info"              setUp="API_Init_Variables" />
-   
    <Set var="$dst_state" value="%0"/>
    <Call ref="tod_get_dst_state"             setUp="API_Init_Variables" />
-   <Set var="$dst_state" value="%0"/>
+   <Set var="$dst_state" value="%1"/>
    <Call ref="tod_set_dst_state"             setUp="API_Init_Variables" />
-<!--
-   <Call ref="tod_get_timesrc"               setUp="API_Init_Variables" /> -->
-   <Set var="$time_src" value="%1000"/>
-   <Call ref="tod_set_timesrc"               setUp="API_Init_Variables" />
-<!--
-   <Call ref="tod_get_timesrc_freq"          setUp="API_Init_Variables" /> -->
 
-   <Set var="$signal" value="#TOD_SIG"/>
+   <Call ref="tod_get_dst_info"              setUp="API_Init_Variables" />
+   <Call ref="tod_set_dst_info"              setUp="API_Init_Variables" />
+   
+   <Call ref="tod_get_timesrc_freq"          setUp="API_Init_Variables" />
+
+   <Call ref="tod_get_timesrc"               setUp="API_Init_Variables" />
+
+   <!-- allow validation of forced errors -->
+   <Set var="$abort_mode" value="#FALSE"/>
+   
+   <!-- set time source value for request to highest enum plus one -->
+   <Set var="$time_src" value="#TOD_TIMESRC_EXTERNAL2"/>
+   <Set var="$time_src" operation="add" value="%1"/>
+   <Call ref="tod_set_timesrc"               setUp="API_Init_Variables" />
+
+   <!-- set signal number for request to invalid signal (SIGRTMAX+1) -->
+   <Set var="$signal" value="%65"/>
    <Call ref="tod_request_onchange_signal"   setUp="API_Init_Variables" />
+   <!-- pass invalid handle to cancel -->
+   <Set var="$sig_fd_oc" value="%-1"/>
    <Call ref="tod_cancel_onchange_signal"    setUp="API_Init_Variables" />
    
-   <Set var="$signal" value="#TOD_SIG"/>
+   <!-- set signal number for request to invalid signal (SIGRTMAX+1) -->
+   <Set var="$signal" value="%65"/>
    <Call ref="tod_request_tick_signal"       setUp="API_Init_Variables" />
+   <!-- pass invalid handle to cancel -->
+   <Set var="$sig_fd_tick" value="%-1"/>
    <Call ref="tod_cancel_tick_signal"        setUp="API_Init_Variables" />
 
 </TestCase>
