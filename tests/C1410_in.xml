@@ -30,6 +30,7 @@
 <Define var="$signal"         type="int" />
 <Define var="$sig_fd_oc"      type="int" />
 <Define var="$sig_fd_tick"    type="int" />
+<Define var="$time_change"    type="boolean" />
 
 <Define var="$abort_mode"     type="boolean" />
 <Define var="$failed"         type="boolean" />
@@ -130,6 +131,10 @@
       </Then>
    </If>
 </Subroutine>
+
+<SignalHandler name="SigHandler" description="Signal handler for SIGIO">
+	<Set var="$time_change" value="#TRUE"/>
+</SignalHandler>
 
 <!--
  subroutines to call API functions and verify return status
@@ -393,11 +398,15 @@
    <Call ref="tod_set_timesrc"               setUp="API_Init_Variables" />
    <Call ref="tod_get_timesrc_freq"          setUp="API_Init_Variables" />
 
-   <Set var="$signal" value="#TOD_SIG"/>
+   <!-- enable signal handler on time changes -->
+   <Set var="$time_change" value="#FALSE"/>
+   <Signal ref="SigHandler" signal="%29" action="enable"/> <!-- 29:SIGIO -->
+
+   <Set var="$signal" value="%29"/>
    <Call ref="tod_request_onchange_signal"   setUp="API_Init_Variables" />
    <Call ref="tod_cancel_onchange_signal"    setUp="API_Init_Variables" />
    
-   <Set var="$signal" value="#TOD_SIG"/>
+   <Set var="$signal" value="%29"/>
    <Call ref="tod_request_tick_signal"       setUp="API_Init_Variables" />
    <Call ref="tod_cancel_tick_signal"        setUp="API_Init_Variables" />
 </TestCase>
