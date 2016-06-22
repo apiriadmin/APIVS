@@ -1151,8 +1151,10 @@
 
    <!-- attach to the FPUI API  -->
    <Set var="$regname"   value="@C2010_00"/>
+   <Set var="$flags"     value="#O_RDWR"/>
    <Call ref="fpui_open" setUp="API_Init_Variables"/>
-
+   <Sleep time="%1"/>
+   
    <!-- clear the screen -->
    <Call ref="fpui_clear" setUp="API_Init_Variables"/>
 
@@ -1164,9 +1166,14 @@
    
    <!-- select FPM 'app' (0) and verify proper VD content -->
    <FPUIInput file="@Cxxxx_key0.txt" description="Provide keypress [0] input" />
-   <Sleep time="%1" />
-   <Dump dump="VD" file="@C1150_vd" /> 
-   <If expression="!VDCompare(@C1150_vd) EQ #FALSE">
+   <Set var="$focus" value="%0"/>
+   <While expression="$focus NE %1">
+      <Sleep time="%1"/>
+      <Call ref="fpui_get_focus" setUp="API_Init_Variables"/>
+   </While>
+
+   <Dump dump="VD" file="@C1150_vd.txt" /> 
+   <If expression="!VDCompare(@C1150_vd.txt) EQ #FALSE">
       <Then>
       <Print>App screen incorrect</Print>
       <Dump dump="VD" force="#TRUE" file="@C1150_vd_err"/>
@@ -1178,7 +1185,7 @@
    <FPUIInput file="@Cxxxx_key1.txt" description="Provide keypress [1] input" />
    <Sleep time="%1" />
    <Call ref="fpui_read_char" setUp="API_Init_Variables"/>
-   <If expression="$read_chr NE %49">
+   <If expression="$read_chr NE @1">
       <Then>
       <Print>Keypress read failed (1)</Print>
       <Abort status="FAIL" />
