@@ -33,6 +33,7 @@
 <Define var="$signal"         type="int" />
 <Define var="$sig_fd_oc"      type="int" />
 <Define var="$sig_fd_tick"    type="int" />
+<Define var="$time_change"    type="boolean" />
 
 <Define var="$abort_mode"     type="boolean" />
 <Define var="$failed"         type="boolean" />
@@ -133,6 +134,10 @@
       </Then>
    </If>
 </Subroutine>
+
+<SignalHandler name="SigHandler" description="Signal handler for SIGIO">
+	<Set var="$time_change" value="#TRUE"/>
+</SignalHandler>
 
 <!--
  subroutines to call API functions and verify return status
@@ -312,8 +317,8 @@
    <Function funcName="tod_set"
              return="$returnCode"
              errno="$errno"
-             p1="$s_tv"
-             p2="$s_tzsec_offset" />
+             p1="$tv"
+             p2="$tzsec_offset" />
    <If expression="$returnCode EQ %-1">
       <Then>
       <Print >Function tod_set() failed</Print>
@@ -408,6 +413,13 @@
    <!-- set time source to LINESYNC and confirm -->
    <Set var="$time_src" value="#TOD_TIMESRC_LINESYNC"/>
    <Call ref="tod_set_timesrc"      setUp="API_Init_Variables" />
+   <Call ref="tod_get_timesrc" setUp="API_Init_Variables" />
+   <If expression="$time_src NE #TOD_TIMESRC_LINESYNC">
+      <Then>
+      <Print >LINESYNC: time source incorrect</Print>
+      <Abort status="FAIL" />
+      </Then>
+   </If>
    <Call ref="tod_get_timesrc_freq" setUp="API_Init_Variables" />
    <If expression="$timesrc_freq NE %60">
       <Then>
@@ -427,6 +439,14 @@
    <Set var="$dst_state"   value="%0"/>
    <Call ref="tod_set_dst_state" setUp="API_Init_Variables" />
    
+   <Call ref="tod_get_dst_state" setUp="API_Init_Variables" />
+   <If expression="$dst_state NE %0">
+      <Then>
+      <Print >DST not disabled</Print>
+      <Abort status="FAIL" />
+      </Then>
+   </If>
+
    <!-- confirm DST adjustment is zero (0) -->
    <Call ref="tod_get" setUp="API_Init_Variables" /> 
    <If expression="$dst_offset NE %0">
@@ -436,46 +456,37 @@
       </Then>
    </If>
 
-   <!-- adjust time forward five (5) seconds -->
-   <Call ref="tod_get" setUp="API_Init_Variables" /> 
-   <Call ref="tod_get_s" setUp="API_Init_Variables" /> 
-   <Set var="$tv" member="tv_sec" operation="add" value="%5"/>
+   <!-- set date/time back to DST-active date window (June 1, 2015) -->
+   <Set var="$tv" member="tv_sec"  value="%1433163600"/>
    <Set var="$tv" member="tv_usec" value="%0"/>
    <Call ref="tod_set" setUp="API_Init_Variables" />
-
-   <!-- get the current date/time and confirm ~5s adjustment -->
    <Call ref="tod_get" setUp="API_Init_Variables" /> 
-   <If expression="$tv.tv_sec NE $s_tv.tv_sec">
-      <Then>
-      <Print >Clock not adjusting</Print>
-      <Abort status="FAIL" />
-      </Then>
-   </If>
-   
+
    <!-- sleep for five (5) seconds) -->
    <Sleep time="%5"/> 
    
    <!-- get the current date/time and confirm ~5s advance -->
-   <Set var="$s_tv" member="tv_sec" operation="add" value="%5"/>
    <Call ref="tod_get" setUp="API_Init_Variables" /> 
-   <If expression="$tv.tv_sec NE $s_tv.tv_sec">
+   <If expression="$tv.tv_sec NE %1433163605">
       <Then>
       <Print >Clock not advancing</Print>
       <Abort status="FAIL" />
       </Then>
    </If>
    
-   <!-- turn DST on, confirm setting -->
+   <!-- turn DST on -->
    <Set var="$dst_state" value="%1"/>
    <Call ref="tod_set_dst_state" setUp="API_Init_Variables" />
-   <Call ref="tod_get_dst_state" setUp="API_Init_Variables" />
-   <If expression="$dst_state NE %1">
+
+   <!-- confirm DST adjustment is now 3600 (one hour) -->
+   <Call ref="tod_get" setUp="API_Init_Variables" /> 
+   <If expression="$dst_offset NE %3600">
       <Then>
-      <Print >DST enable failed</Print>
+      <Print >DTS adjustment not one hour when enabled</Print>
       <Abort status="FAIL" />
       </Then>
    </If>
-   
+
    <!-- set time source to CRYSTAL and confirm -->
    <Set var="$time_src" value="#TOD_TIMESRC_CRYSTAL"/>
    <Call ref="tod_set_timesrc"      setUp="API_Init_Variables" />
@@ -491,9 +502,47 @@
    <Set var="$time_src" value="$s_time_src"/>
    <Call ref="tod_set_timesrc" setUp="API_Init_Variables" />
 
-   <!-- set date/time to original value -->
-   <Set var="$s_tv" member="tv_sec" operation="subtract" value="%10"/>
+   <!-- install handler and request tick signal for signal SIGIO (29) -->
+   <Signal ref="SigHandler" signal="%29" action="enable"/>
+   <Set var="$signal" value="%29"/>
+   <Set var="$time_change" value="#FALSE"/>
+   <Call ref="tod_request_tick_signal"       setUp="API_Init_Variables" />
+   <Sleep time="%1"/>
+   <If expression="$time_change NE #TRUE">
+      <Then>
+      <Print >No tick signal received</Print>
+      <Abort status="FAIL" />
+      </Then>
+   </If>   
+   <Call ref="tod_cancel_tick_signal"        setUp="API_Init_Variables" />
+   
+   <!-- request onchange signal for signal SIGIO (29) -->
+   <Set var="$signal" value="%29"/>
+   <Set var="$time_change" value="#FALSE"/>
+   <Call ref="tod_request_onchange_signal"   setUp="API_Init_Variables" />
+   <Sleep time="%5"/>
+   <If expression="$time_change NE #FALSE">
+      <Then>
+      <Print >On-change signal received with no tod change</Print>
+      <Abort status="FAIL" />
+      </Then>
+   </If>   
+   <!-- restore original date/time -->
    <Call ref="tod_set_s" setUp="API_Init_Variables" />
+   <Sleep time="%1"/>
+   <If expression="$time_change NE #TRUE">
+      <Then>
+      <Print >No on-change signal received</Print>
+      <Abort status="FAIL" />
+      </Then>
+   </If>   
+
+   <Call ref="tod_cancel_onchange_signal" setUp="API_Init_Variables" />
+   <Signal ref="SigHandler" signal="%29" action="disable"/>
+
+   <!-- restore original DST rule -->
+   <Call ref="tod_set_dst_info" setUp="API_Init_Variables" />
+
 </TestCase>
 
 <!--
