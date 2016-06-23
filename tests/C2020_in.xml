@@ -1190,7 +1190,8 @@ APIR3.1.1.1[20]	The Operational User shall have the capability to put a
    <Set var="$failed"      value="#FALSE"/>
    <Set var="$flags"       value="#O_RDWR"/>
    
-   <!-- check default FPM screen -->
+   <!-- check default FPM screen (APIR3.1.1.1[1], APIR3.1.1.1[4],
+        APIR3.1.1.1[6], APIR3.1.1.1[15]) -->
    <Dump dump="VD" file="@C2020_vd_fpm_clr.txt" />
    <If expression="!VDCompare(@C2020_vd_fpm_clr.txt) EQ #FALSE">
       <Then>
@@ -1284,7 +1285,8 @@ APIR3.1.1.1[20]	The Operational User shall have the capability to put a
    <Set var="$write_buf" value="$regname"/>
    <Call ref="fpui_write_string_at" setUp="API_Init_Variables" />
    
-   <!-- verify FPM screen with 16 'apps' -->
+   <!-- verify FPM screen with 16 'app' names listed (APIR3.1.1.1[2], APIR3.1.1.1[3],
+         APIR3.1.1.1[5]) -->
    <Dump dump="VD" file="@C2020_vd_fpm_1.txt" />
    <If expression="!VDCompare(@C2020_vd_fpm_1.txt) EQ #FALSE">
       <Then>
@@ -1294,7 +1296,7 @@ APIR3.1.1.1[20]	The Operational User shall have the capability to put a
       </Then>
    </If>
 
-   <!-- scroll down three rows to see last six 'apps' -->
+   <!-- scroll down three rows to see last six 'apps' (APIR3.1.1.1[19]) -->
    <FPUIInput file="@Cxxxx_keyDN.txt" description="Provide keypress [DN] input to FPM" />
    <Sleep time="%1" />
    <FPUIInput file="@Cxxxx_keyDN.txt" description="Provide keypress [DN] input to FPM" />
@@ -1312,13 +1314,54 @@ APIR3.1.1.1[20]	The Operational User shall have the capability to put a
       </Then>
    </If>
 
-   <!-- return to FPM -->
+   <!-- scroll back up three rows to see original apps display (APIR3.1.1.1[19]) -->
+   <FPUIInput file="@Cxxxx_keyUP.txt" description="Provide keypress [UP] input to FPM" />
+   <Sleep time="%1" />
+   <FPUIInput file="@Cxxxx_keyUP.txt" description="Provide keypress [UP] input to FPM" />
+   <Sleep time="%1" />
+   <FPUIInput file="@Cxxxx_keyUP.txt" description="Provide keypress [UP] input to FPM" />
+   <Sleep time="%1" />
+   
+   <If expression="!VDCompare(@C2020_vd_fpm_1.txt) EQ #FALSE">
+      <Then>
+      <Print>FPM screen (16 apps #3) incorrect</Print>
+      <Dump dump="VD" force="#TRUE" file="@C2020_vd_fpm_3_err.txt" />
+      <Abort status="FAIL" />
+      </Then>
+   </If>
+
+   <!-- return to FPM (APIR3.1.1.1[10])-->
    <Call ref="Return_To_FPM" />
 
-   <!-- select 'app' (0) and verify proper VD -->
+   <!-- set 'app' (0) as default window and verify VD (APIR3.1.1.1[7], APIR3.1.1.1[9]) -->
+   <FPUIInput file="@Cxxxx_keyStar.txt" />
+   <FPUIInput file="@Cxxxx_key0.txt" />
+   <FPUIInput file="@Cxxxx_keyENT.txt" />
+   <Sleep time="%1" />
+   <Dump dump="VD" file="@C2020_vd_fpm_default_app0.txt" />
+   <If expression="!VDCompare(@C2020_vd_fpm_default_app0.txt) EQ #FALSE">
+      <Then>
+      <Print>FPM screen (app 0 default) incorrect</Print>
+      <Dump dump="VD" force="#TRUE" file="@C2020_vd_fpm_default_app0_err.txt" />
+      <Abort status="FAIL" />
+      </Then>
+   </If>
+   
+   <!-- set FPM as default window and verify VD (APIR3.1.1.1[8], APIR3.1.1.1[11]) -->
+   <FPUIInput file="@Cxxxx_keyStar.txt" />
+   <FPUIInput file="@Cxxxx_keyENT.txt" />
+   <Sleep time="%1" />
+   <If expression="!VDCompare(@C2020_vd_fpm_1.txt) EQ #FALSE">
+      <Then>
+      <Print>FPM screen (16 apps #4) incorrect</Print>
+      <Dump dump="VD" force="#TRUE" file="@C2020_vd_fpm_4_err.txt" />
+      <Abort status="FAIL" />
+      </Then>
+   </If>
+   
+   <!-- select 'app' (0) and verify proper VD (APIR3.1.1.1[13]) -->
    <FPUIInput file="@Cxxxx_key0.txt" description="Provide keypress [0] input" />
    <Sleep time="%1" />
-   <Dump dump="VD" file="@C2020_vd_00.txt" />
    <If expression="!VDCompare(@C2020_vd_00.txt) EQ #FALSE">
       <Then>
       <Print>App (0) screen incorrect</Print>
@@ -1327,7 +1370,37 @@ APIR3.1.1.1[20]	The Operational User shall have the capability to put a
       </Then>
    </If>
 
-   <!-- return to FPM -->
+   <!-- attempt to return to FPM but delay completion of {**} sequence
+        for more than 1.0 seconds (APIR3.1.1.1[12]) -->
+   <FPUIInput file="@Cxxxx_keyStar.txt" />
+   <Sleep time="%2" />
+   <FPUIInput file="@Cxxxx_keyStar.txt" />
+   <FPUIInput file="@Cxxxx_keyESC.txt" />
+   <Sleep time="%1" />
+   <If expression="!VDCompare(@C2020_vd_00.txt) EQ #FALSE">
+      <Then>
+      <Print>FPM screen (16 apps #5) incorrect</Print>
+      <Dump dump="VD" force="#TRUE" file="@C2020_vd_fpm_5_err.txt" />
+      <Abort status="FAIL" />
+      </Then>
+   </If>
+   
+   <!-- attempt to return to FPM but delay completion of {**},<ESC> sequence
+        for more than 1.0 seconds (APIR3.1.1.1[12]) -->
+   <FPUIInput file="@Cxxxx_keyStar.txt" />
+   <FPUIInput file="@Cxxxx_keyStar.txt" />
+   <Sleep time="%2" />
+   <FPUIInput file="@Cxxxx_keyESC.txt" />
+   <Sleep time="%1" />
+   <If expression="!VDCompare(@C2020_vd_00.txt) EQ #FALSE">
+      <Then>
+      <Print>FPM screen (16 apps #6) incorrect</Print>
+      <Dump dump="VD" force="#TRUE" file="@C2020_vd_fpm_6_err.txt" />
+      <Abort status="FAIL" />
+      </Then>
+   </If>
+   
+   <!-- return to FPM (APIR3.1.1.1[10])-->
    <Call ref="Return_To_FPM" />
    
    <!-- select 'app' (1) and verify proper VD -->
@@ -1551,6 +1624,20 @@ APIR3.1.1.1[20]	The Operational User shall have the capability to put a
       <Abort status="FAIL" />
       </Then>
    </If>
+
+   <!-- select 'app' (0) directly from 'app' (15) and verify VD (APIR3.1.1.1[20]) -->
+   <FPUIInput file="@Cxxxx_keyStar.txt" />
+   <FPUIInput file="@Cxxxx_keyStar.txt" />
+   <FPUIInput file="@Cxxxx_key0.txt" />
+   <Sleep time="%1" />
+   <If expression="!VDCompare(@C2020_vd_00.txt) EQ #FALSE">
+      <Then>
+      <Print>App (0) screen incorrect (direct select)</Print>
+      <Dump dump="VD" force="#TRUE" file="@C2020_vd_00_direct_err.txt" />
+      <Abort status="FAIL" />
+      </Then>
+   </If>
+   
 </TestCase>
 
 <!--
