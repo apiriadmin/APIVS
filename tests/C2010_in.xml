@@ -1201,13 +1201,14 @@ APIR3.1.1.2[26]	The API shall allow application programs to illuminate or
    <Set var="$row"    value="%3"/>
    <Set var="$column" value="%5"/>
 
-   <!-- setup 16 'apps' and their VD contents  -->
+   <!-- open 16 'apps' and their VD contents (APIR3.1.1[1], APIR3.1.1[2], APIR3.1.1.2[2]) -->
    <Set var="$regname"     value="@C2010_00"/>
    <Call ref="fpui_open"   setUp="API_Init_Variables" />
    <Set var="$fpui_hdl_00" value="$fpui_handle"/>
    <Set var="$write_buf"   value="$regname"/>
    <Call ref="fpui_write_string_at" setUp="API_Init_Variables" />
 
+   <!-- multiple calls to fpui_open() (APIR3.1.1.2[3]) -->
    <Set var="$regname"     value="@C2010_01"/>
    <Call ref="fpui_open"   setUp="API_Init_Variables" />
    <Set var="$fpui_hdl_01" value="$fpui_handle"/>
@@ -1523,7 +1524,7 @@ APIR3.1.1.2[26]	The API shall allow application programs to illuminate or
    <!-- return to FPM -->
    <Call ref="Return_To_FPM" />
    
-   <!-- select 'app' (15) and verify proper VD -->
+   <!-- select 'app' (15) and verify proper VD (APIR3.1.1[6], APIR3.1.1[7]) -->
    <FPUIInput file="@Cxxxx_keyF.txt" description="Provide keypress [F] input" />
    <Sleep time="%1" />
    <Dump dump="VD" file="@C2010_vd_15.txt" />
@@ -1535,7 +1536,7 @@ APIR3.1.1.2[26]	The API shall allow application programs to illuminate or
       </Then>
    </If>
    
-   <!-- input a keypress and read on 'app' (15) -->
+   <!-- input a keypress and verify read by 'app' (15) (APIR3.1.1[8]) -->
    <FPUIInput file="@Cxxxx_key1.txt" description="Provide keypress [1] input" />
    <Sleep time="%1" />
    <Call ref="fpui_read_char" setUp="API_Init_Variables" />
@@ -1546,7 +1547,7 @@ APIR3.1.1.2[26]	The API shall allow application programs to illuminate or
       </Then>
    </If>
 
-   <!-- get the window size -->
+   <!-- get window size, verify same as physical size (8x40) (APIR3.1.1[3], APIR3.1.1.2[1]) -->
    <Call ref="fpui_get_window_size" setUp="API_Init_Variables" />
    <If expression="$row NE %8">
       <Then>
@@ -1561,7 +1562,11 @@ APIR3.1.1.2[26]	The API shall allow application programs to illuminate or
       </Then>
    </If>
    
-   <!-- turn on backlight -->
+   <!-- set backlight timeout -->
+   <Set var="$timeout" value="%120"/>
+   <Call ref="fpui_set_backlight_timeout" setUp="API_Init_Variables"/>
+
+   <!-- turn on backlight (APIR3.1.1.2[26])-->
    <Set var="$backlight" value="#TRUE"/>
    <Call ref="fpui_set_backlight" setUp="API_Init_Variables" />
    <Sleep time="%1" />
@@ -1573,7 +1578,7 @@ APIR3.1.1.2[26]	The API shall allow application programs to illuminate or
       </Then>
    </If>
    
-   <!-- turn off backlight -->
+   <!-- turn off backlight (APIR3.1.1.2[26]) -->
    <Set var="$backlight" value="#FALSE"/>
    <Call ref="fpui_set_backlight" setUp="API_Init_Variables" />
    <Sleep time="%1" />
@@ -1585,7 +1590,7 @@ APIR3.1.1.2[26]	The API shall allow application programs to illuminate or
       </Then>
    </If>
    
-   <!-- refresh and clear screen and confirm -->
+   <!-- refresh and clear in-focus screen and confirm (APIR3.1.1.2[22], APIR3.1.1.2[23]) -->
    <Call ref="fpui_refresh" setUp="API_Init_Variables" />
    <Call ref="fpui_clear"   setUp="API_Init_Variables" />
    <Sleep time="%1" />
@@ -1597,7 +1602,7 @@ APIR3.1.1.2[26]	The API shall allow application programs to illuminate or
       </Then>
    </If>
 
-   <!-- refresh and clear screen for 'app' (1) and confirm -->
+   <!-- refresh and clear screen for out of focus 'app' (1) and confirm -->
    <Set var="$fpui_handle"  value="$fpui_hdl_01"/> 
    <Call ref="fpui_refresh" setUp="API_Init_Variables" />
    <Call ref="fpui_clear"   setUp="API_Init_Variables" />
@@ -1605,7 +1610,7 @@ APIR3.1.1.2[26]	The API shall allow application programs to illuminate or
    <!-- return to FPM -->
    <Call ref="Return_To_FPM" />
    
-   <!-- select 'app' (1) and verify proper VD -->
+   <!-- select 'app' (1) and verify proper VD (APIR3.1.1.2[22], APIR3.1.1.2[23]) -->
    <FPUIInput file="@Cxxxx_key1.txt" description="Provide keypress [1] input" />
    <Sleep time="%1" />
    <Dump dump="VD" file="@C2010_vd_clr.txt" />
@@ -1616,7 +1621,7 @@ APIR3.1.1.2[26]	The API shall allow application programs to illuminate or
       </Then>
    </If>
 
-   <!-- close 'app' (1) and confirm that it's closed -->
+   <!-- close 'app' (1) and confirm that it's closed (APIR3.1.1.2[6]) -->
    <Call ref="fpui_close" setUp="API_Init_Variables" />
    <Set var="$abort_mode" value="#FALSE"/>
    <Call ref="fpui_get_window_size" setUp="API_Init_Variables" />
