@@ -1190,7 +1190,7 @@ APIR3.1.1.2[19]	If a window was registered with access to the Aux Switch, the AP
       <Call ref="fpui_get_focus" setUp="API_Init_Variables"/>
    </While>
 
-   <!--  verify VD attributes of first app match defaults -->
+   <!--  verify VD attributes of first app match defaults (APIR3.1.1[12]) -->
    <Dump dump="VD" file="@C2030_vd_default.txt"/>
    <If expression="!VDCompare(@C2030_vd_default.txt) EQ #FALSE">
       <Then>
@@ -1201,7 +1201,7 @@ APIR3.1.1.2[19]	If a window was registered with access to the Aux Switch, the AP
    </If>
 
    <Set var="$attr_default" value="%393216"/>
-   <!-- verify screen attributes match defaults (0x60000) -->
+   <!-- verify screen attributes match defaults (0x60000) (APIR3.1.1[12], APIR3.1.1.2[27]) -->
    <Call ref="fpui_get_window_attr" setUp="API_Init_Variables"/>
    <If expression="$w_attr NE $attr_default">
       <Then>
@@ -1211,7 +1211,7 @@ APIR3.1.1.2[19]	If a window was registered with access to the Aux Switch, the AP
       </Then>
    </If>
    
-   <!--  set display for auto-wrap and confirm -->
+   <!--  set display for auto-wrap and confirm (APIR3.1.1.2[7], APIR3.1.1.2[8], APIR3.1.1.2[27])-->
    <Set var="$auto_wrap" value="#TRUE"/>
    <Call ref="fpui_set_auto_wrap" setUp="API_Init_Variables"/>
    <Call ref="fpui_get_auto_wrap" setUp="API_Init_Variables"/>
@@ -1222,7 +1222,7 @@ APIR3.1.1.2[19]	If a window was registered with access to the Aux Switch, the AP
       </Then>
    </If>
 
-   <!--  set display for auto-scroll and confirm -->
+   <!--  set display for auto-scroll and confirm (APIR3.1.1.2[7], APIR3.1.1.2[8], APIR3.1.1.2[27])-->
    <Set var="$auto_scr" value="#TRUE"/>
    <Call ref="fpui_set_auto_scroll" setUp="API_Init_Variables"/>
    <Call ref="fpui_get_auto_scroll" setUp="API_Init_Variables"/>
@@ -1233,7 +1233,7 @@ APIR3.1.1.2[19]	If a window was registered with access to the Aux Switch, the AP
       </Then>
    </If>
 
-   <!--  set display for auto-repeat and confirm -->
+   <!--  set display for auto-repeat and confirm (APIR3.1.1.2[7], APIR3.1.1.2[8], APIR3.1.1.2[27])-->
    <Set var="$auto_rpt" value="#TRUE"/>
    <Call ref="fpui_set_auto_repeat" setUp="API_Init_Variables"/>
    <Call ref="fpui_get_auto_repeat" setUp="API_Init_Variables"/>
@@ -1244,7 +1244,7 @@ APIR3.1.1.2[19]	If a window was registered with access to the Aux Switch, the AP
       </Then>
    </If>
 
-   <!-- turn on backlight for 120 seconds -->
+   <!-- turn on backlight for 120 seconds (APIR3.1.1.2[7], APIR3.1.1.2[8], APIR3.1.1.2[27])-->
    <Set var="$timeout" value="%120"/>
    <Call ref="fpui_set_backlight_timeout" setUp="API_Init_Variables"/>
    <Set var="$backlight" value="#TRUE"/>
@@ -1292,7 +1292,7 @@ APIR3.1.1.2[19]	If a window was registered with access to the Aux Switch, the AP
       <Abort status="FAIL" />
       </Then>
    </If>
-   
+   <!-- (APIR3.1.1.2[7], APIR3.1.1.2[8], APIR3.1.1.2[27]) -->
    <Set var="$cursor" value="#TRUE"/>
    <Call ref="fpui_set_cursor" setUp="API_Init_Variables"/>
    <Call ref="fpui_get_cursor" setUp="API_Init_Variables"/>
@@ -1303,6 +1303,7 @@ APIR3.1.1.2[19]	If a window was registered with access to the Aux Switch, the AP
       </Then>
    </If>
    
+   <!-- (APIR3.1.1.2[7], APIR3.1.1.2[8], APIR3.1.1.2[27]) -->
    <Set var="$blink" value="#TRUE"/>
    <Call ref="fpui_set_cursor_blink" setUp="API_Init_Variables"/>
    <Call ref="fpui_get_cursor_blink" setUp="API_Init_Variables"/>
@@ -1313,7 +1314,7 @@ APIR3.1.1.2[19]	If a window was registered with access to the Aux Switch, the AP
       </Then>
    </If>
    
-   <!-- set and confirm various text attributes -->
+   <!-- set and confirm various text attributes (APIR3.1.1.2[7], APIR3.1.1.2[8], APIR3.1.1.2[27]) -->
    <Set var="$blink" value="#TRUE"/>
    <Call ref="fpui_set_character_blink" setUp="API_Init_Variables"/>
    <Set var="$row"    value="%5"/>
@@ -1329,6 +1330,7 @@ APIR3.1.1.2[19]	If a window was registered with access to the Aux Switch, the AP
       </Then>
    </If>
 
+   <!-- (APIR3.1.1.2[7], APIR3.1.1.2[8], APIR3.1.1.2[27]) -->
    <Set var="$rev_video" value="#TRUE"/>
    <Call ref="fpui_set_reverse_video" setUp="API_Init_Variables"/>
    <Set var="$row"    value="%5"/>
@@ -1344,6 +1346,7 @@ APIR3.1.1.2[19]	If a window was registered with access to the Aux Switch, the AP
       </Then>
    </If>
 
+   <!-- (APIR3.1.1.2[7], APIR3.1.1.2[8], APIR3.1.1.2[27]) -->
    <Set var="$uline" value="#TRUE"/>
    <Call ref="fpui_set_underline" setUp="API_Init_Variables"/>
    <Set var="$row"    value="%5"/>
@@ -1387,7 +1390,8 @@ APIR3.1.1.2[19]	If a window was registered with access to the Aux Switch, the AP
       <Call ref="fpui_get_focus" setUp="API_Init_Variables"/>
    </While>
 
-   <!--  verify attributes match defaults (distinct from first window) -->
+   <!--  verify attributes match defaults (distinct from first window)
+         (APIR3.1.1[10], APIR3.1.1[11]) -->
    <Call ref="fpui_get_window_attr" setUp="API_Init_Variables"/>
    <If expression="$w_attr NE $attr_default">
       <Then>
@@ -1418,10 +1422,10 @@ APIR3.1.1.2[19]	If a window was registered with access to the Aux Switch, the AP
       <Call ref="fpui_get_focus" setUp="API_Init_Variables"/>
    </While>
    
-   <!--  reset character attributes  -->
+   <!--  reset character attributes  (APIR3.1.1.2[27]) -->
    <Call ref="fpui_reset_all_attributes" setUp="API_Init_Variables"/> 
 
-   <!--  write full character set at 5,1 -->
+   <!--  write full character set at 5,1 (APIR3.1.1.2[9]) -->
    <Set var="$row"       value="%5"/>
    <Set var="$column"    value="%1"/>
    <Set var="$write_buf" file="@C2030_allchar.txt"/>
@@ -1467,11 +1471,11 @@ APIR3.1.1.2[19]	If a window was registered with access to the Aux Switch, the AP
       <Call ref="fpui_get_focus" setUp="API_Init_Variables"/>
    </While>
 
-   <!-- have first app (non-focus) reserve AUX switch -->
+   <!-- have first app (non-focus) reserve AUX switch (APIR3.1.1.2[4], APIR3.1.1.2[5])) -->
    <Call ref="fpui_open_aux_switch" setUp="API_Init_Variables"/>
    <Set var="$aux_hdl_00" value="$aux_handle"/>
    
-   <!-- set the switch to ON, read and confirm -->
+   <!-- set the switch to ON, read and confirm (APIR3.1.1.2[19]) -->
    <Aux flip="#ON"/>
    <Call ref="fpui_read_aux_switch" setUp="API_Init_Variables" />
    <If expression="$aux_sw EQ #OFF">
@@ -1481,7 +1485,7 @@ APIR3.1.1.2[19]	If a window was registered with access to the Aux Switch, the AP
       </Then>
    </If>
    
-   <!-- set the switch to OFF, read and confirm -->
+   <!-- set the switch to OFF, read and confirm (APIR3.1.1.2[19]) -->
    <Aux flip="#OFF"/>
    <Call ref="fpui_read_aux_switch" setUp="API_Init_Variables" />
    <If expression="$aux_sw EQ #ON">
@@ -1491,7 +1495,7 @@ APIR3.1.1.2[19]	If a window was registered with access to the Aux Switch, the AP
       </Then>
    </If>
 
-   <!-- have second app attempt to reserve AUX switch (should FAIL) -->
+   <!-- have second app attempt to reserve AUX switch (should FAIL) (APIR3.1.1.2[4]) -->
    <Set var="$abort_mode" value="#FALSE"/> <!-- allow failure confirmation -->
    <Call ref="fpui_open_aux_switch" setUp="API_Init_Variables"/>
    <Set var="$abort_mode" value="#TRUE"/> <!-- restore normal failure mode -->
