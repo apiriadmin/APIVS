@@ -1161,7 +1161,7 @@ APIR3.1.1.2[33]	The API shall provide a function which application programs
    <Call ref="fpui_open"   setUp="API_Init_Variables"/>
    <Set var="$fpui_hdl_01" value="$fpui_handle"/>
 
-   <!-- put the first app in focus, wait for confirmation -->
+   <!-- put the first app in focus, wait for confirmation of focus (APIR3.1.1.2[33]) -->
    <Set var="$fpui_handle" value="$fpui_hdl_00"/>
    <FPUIInput file="@Cxxxx_key0.txt" description="Provide keypress [0] input" />
    <Set var="$focus" value="%0"/>
@@ -1170,7 +1170,7 @@ APIR3.1.1.2[33]	The API shall provide a function which application programs
       <Call ref="fpui_get_focus" setUp="API_Init_Variables"/>
    </While>
    
-   <!-- confirm async notification of first app 'in focus' -->
+   <!-- confirm async notification of first app 'in focus' (APIR3.1.1.2[32]) -->
    <If expression="$panel_change NE #TRUE">
       <Then>
       <Print>SIGWINCH signal failed (1)</Print>
@@ -1187,7 +1187,7 @@ APIR3.1.1.2[33]	The API shall provide a function which application programs
       <Call ref="fpui_get_focus" setUp="API_Init_Variables"/>
    </While>
 
-   <!-- confirm async notification of first app 'lost focus' -->
+   <!-- confirm async notification of first app 'lost focus' (APIR3.1.1.2[32]) -->
    <If expression="$panel_change NE #TRUE">
       <Then>
       <Print>SIGWINCH signal failed (2)</Print>
@@ -1196,7 +1196,7 @@ APIR3.1.1.2[33]	The API shall provide a function which application programs
    </If>
    <Set var="$panel_change" value="#FALSE"/>
 
-   <!-- put the second app in focus, wait for confirmation -->
+   <!-- put the second app in focus, wait for confirmation of focus (APIR3.1.1.2[33]) -->
    <Set var="$fpui_handle" value="$fpui_hdl_01"/>
    <FPUIInput file="@Cxxxx_key1.txt" description="Provide keypress [1] input" />
    <Set var="$focus" value="%0"/>
@@ -1205,7 +1205,7 @@ APIR3.1.1.2[33]	The API shall provide a function which application programs
       <Call ref="fpui_get_focus" setUp="API_Init_Variables"/>
    </While>
    
-   <!-- confirm async notification of second app 'in focus' -->
+   <!-- confirm async notification of second app 'in focus' (APIR3.1.1.2[32]) -->
    <If expression="$panel_change NE #TRUE">
       <Then>
       <Print>SIGWINCH signal failed (3)</Print>
