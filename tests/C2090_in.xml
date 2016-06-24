@@ -1150,13 +1150,13 @@ APIR3.1.1.2[49]	This function shall return raw data from the input buffer
    <Set var="$abort_mode" value="#TRUE"/>
    <Set var="$failed"     value="#FALSE"/>
 
-   <!-- create app (RAW mode) -->
+   <!-- create app (RAW mode) (APIR3.1.1.2[45]) -->
    <Set var="$flags"     value="#O_RDWR"/>
    <Set var="$flags"     value="#O_DIRECT" operation="add"/>
    <Set var="$regname"   value="@C2090_00"/>
    <Call ref="fpui_open" setUp="API_Init_Variables"/>
    
-   <!-- app does NOT have focus (FPM): send 'raw' data to the display -->
+   <!-- app does NOT have focus (FPM): send 'raw' data to the display (APIR3.1.1.2[45]) -->
    <Set var="$write_buf" value="@C2090"/> 
    <Set var="$write_len" value="%5"/>
    <Call ref="fpui_write" setUp="API_Init_Variables"/>
@@ -1169,7 +1169,8 @@ APIR3.1.1.2[49]	This function shall return raw data from the input buffer
       <Call ref="fpui_get_focus" setUp="API_Init_Variables"/>
    </While>
 
-   <!-- confirm that the display data was ignored (since the app was not in focus) -->
+   <!-- confirm that the display data was ignored (since the app was not in focus)
+        (APIR3.1.1.2[47]) -->
    <Dump dump="VD" file="@C2090_vd_blank.txt"/>
    <If expression="!VDCompare(@C2090_vd_blank.txt) EQ #FALSE">
       <Then>
@@ -1186,7 +1187,8 @@ APIR3.1.1.2[49]	This function shall return raw data from the input buffer
    <Set var="$write_len" value="%5"/>
    <Call ref="fpui_write" setUp="API_Init_Variables"/>
 
-   <!-- confirm that the data was displayed (since the app is now in focus) -->
+   <!-- confirm that the data was displayed (since the app is now in focus)
+        (APIR3.1.1.2[46]) -->
    <Dump dump="VD" file="@C2090_vd_raw.txt"/>
    <If expression="!VDCompare(@C2090_vd_raw.txt) EQ #FALSE">
       <Then>
@@ -1196,7 +1198,7 @@ APIR3.1.1.2[49]	This function shall return raw data from the input buffer
       </Then>
    </If>
 
-   <!-- attempt to read and verify a 'raw' keystroke -->
+   <!-- attempt to read and verify a 'raw' keystroke (APIR3.1.1.2[48], APIR3.1.1.2[49]) -->
    <!-- [YES] key: raw keycode is 0x1B 0x4F 0x51 or (27)(79)(81)-->
    <FPUIInput file="@Cxxxx_keyYES.txt" description="Provide keypress [YES] input"/>
    <Sleep time="%1"/>
