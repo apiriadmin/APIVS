@@ -4423,6 +4423,12 @@ argCastInt(uint16_t		lineNumber,
 				}
 				break;
 
+				case VAR_CHAR:
+				{
+					*pInt = (int)pArg->arg.data.value.charValue;
+				}
+				break;
+				
 				case VAR_FPUIH:
 				{
 					*pInt = (int)pArg->arg.data.value.fpuiHandle;
@@ -4526,7 +4532,6 @@ argCastInt(uint16_t		lineNumber,
 				break;
 
 				case VAR_VOID:
-				case VAR_CHAR:
 				case VAR_PCHAR:
 				case VAR_UCHAR:
 				case VAR_PUCHAR:
@@ -6134,7 +6139,10 @@ argCastPchar(uint16_t		lineNumber,
 
 				case VAR_PCHAR:
 				{
-					strncpy(pTo->arg.data.value.pCharValue,
+					if (pFrom->arg.data.value.pCharValue == NULL)
+						pTo->arg.data.value.pCharValue = NULL;
+					else
+						strncpy(pTo->arg.data.value.pCharValue,
 							pFrom->arg.data.value.pCharValue,
 							pTo->arg.data.size);
 				}
