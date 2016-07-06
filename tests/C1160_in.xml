@@ -161,7 +161,7 @@
 <Subroutine name="Return_To_FPM">
    <FPUIInput file="@Cxxxx_keyStar.txt" description="Provide keypresses for return to FPM" />
    <FPUIInput file="@Cxxxx_keyStar.txt" />
-   <FPUIInput file="@Cxxxx_keyEsc.txt" />
+   <FPUIInput file="@Cxxxx_keyESC.txt" />
    <Sleep time="%1" />
 </Subroutine>
 
