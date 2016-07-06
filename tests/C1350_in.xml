@@ -22,6 +22,7 @@
 <Define var="$errno"          type="int" />
 <Define var="$fio_handle"     type="FIO_APP_HANDLE" />
 <Define var="$fiod_handle"    type="FIO_DEV_HANDLE" />
+<Define var="$fiod_hdl_332"   type="FIO_DEV_HANDLE" />
 <Define var="$fio_ver"        type="FIO_VERSION" />
 <Define var="$fio_view"       type="FIO_VIEW" />
 <Define var="$map_count"      type="int" />
@@ -146,6 +147,8 @@
       <Then> <Print>ERANGE: Math result not representable</Print> </Then> </If>
    <If expression="$errno EQ %110" >
       <Then> <Print>ETIMEDOUT: Connection timed out</Print> </Then> </If>
+   <If expression="$errno EQ %111" >
+      <Then> <Print>ECONNREFUSED: Incompatible device</Print> </Then> </If>
       
    <Format var="$errno" />
    <Set var="$failed" value="#TRUE"/>
@@ -1239,31 +1242,31 @@
    <Set var="$failed"     value="#FALSE"/>
    
    <Set var="$fio_view"   value="#FIO_VIEW_SYSTEM"/>
-   <Set var="$input_type" value="#FIO_INPUTS_RAW"/>
+   <Set var="$input_type" value="#FIO_INPUTS_FILTERED"/>
 
    <!-- FIO 332 testing: register with the FIO API -->
-   <Call ref="fio_register" setup="API_Init_Variables"/>
+   <Call ref="fio_register" setUp="API_Init_Variables"/>
    
    <!-- query a 332-type FIO on SP5 -->
    <Set var="$fio_port"   value="#FIO_SP5"/>
    <Set var="$fio_device" value="#FIO332"/>
-   <Call ref="fio_query_fiod" setup="API_Init_Variables"/>
+   <Call ref="fio_query_fiod" setUp="API_Init_Variables"/>
    <If expression="$fiod_query NE %1">
       <Then>
       <Print >FIO332 not available on SP5</Print>
-      <Abort status="FAIL" />
       </Then>
    </If>
    
    <!-- register a 332-type FIO on SP5 -->
    <Set var="$fio_port"   value="#FIO_SP5"/>
    <Set var="$fio_device" value="#FIO332"/>
-   <Call ref="fio_fiod_register" setup="API_Init_Variables"/>
+   <Call ref="fio_fiod_register" setUp="API_Init_Variables"/>
+   <Set var="$fiod_hdl_332" value="$fiod_handle"/>
    
    <!-- confirm that no communications are occuring yet -->
-   <Call ref="fio_fiod_status_reset" setup="API_Init_Variables"/>
+   <Call ref="fio_fiod_status_reset" setUp="API_Init_Variables"/>
    <Sleep time="%5"/>
-   <Call ref="fio_fiod_status_get" setup="API_Init_Variables"/>
+   <Call ref="fio_fiod_status_get" setUp="API_Init_Variables"/>
    <If expression="$fiod_status.success_rx NE %0">
       <Then>
       <Print >Comm prior to enable (332-1)</Print>
@@ -1281,8 +1284,8 @@
    <Set var="$abort_mode" value="#FALSE"/>
    <Set var="$fio_port"   value="#FIO_SP5"/>
    <Set var="$fio_device" value="#FIODR1"/>
-   <Call ref="fio_fiod_register" setup="API_Init_Variables"/>
-   <If expression="$errno NE %61"> <!-- ECONNREFUSED -->
+   <Call ref="fio_fiod_register" setUp="API_Init_Variables"/>
+   <If expression="$errno NE %111"> <!-- ECONNREFUSED -->
       <Then>
       <Print >Incompatible assignment succeeded</Print>
       <Abort status="FAIL" />
@@ -1291,42 +1294,48 @@
    <Set var="$abort_mode" value="#TRUE"/>
    
    <!-- setup FIO332 SDLC response messages -->
-   <FIOResponse file="@FIO_r177" frame="%177" description="(FIO C49->R177)"/>
-   <FIOResponse file="@FIO_r180" frame="%180" description="(FIO C52->R180)"/>
-   <FIOResponse file="@FIO_r183" frame="%183" description="(FIO C55->R183)"/>
+   <FIOResponse file="@Cxxxx_rsp177.txt" frame="%177" description="(FIO C49->R177)"/>
+   <FIOResponse file="@Cxxxx_rsp181a.txt" frame="%181" description="(FIO C53->R181)"/>
+   <FIOResponse file="@Cxxxx_rsp183.txt" frame="%183" description="(FIO C55->R183)"/>
   
    <!-- enable comm -->
-   <Call ref="fio_fiod_enable" setup="API_Init_Variables"/>
+   <Set var="$fiod_handle" value="$fiod_hdl_332"/>
+   <Call ref="fio_fiod_enable" setUp="API_Init_Variables"/>
    <Sleep time="%1"/>
    
    <!-- validate command messages -->
-   <Dump dump="CMDMSG" file="@FIO_c49" frame="%49"/> 
-   <Dump dump="CMDMSG" file="@FIO_c52" frame="%52"/> 
-   <Dump dump="CMDMSG" file="@FIO_c55" frame="%55"/> 
-   <If expression="!CMDMSGCompare(@FIO_c49,%49) EQ #FALSE">
+   <If expression="!CMDMSGCompare(@Cxxxx_cmd49a.txt,%49) EQ #FALSE">
       <Then>
-      <Print>CMDMSG 49 incorrect</Print>
-      <Dump dump="CMDMSG" force="#TRUE" file="@FIO_c49_err" frame="%49"/>
+      <If expression="!CMDMSGCompare(@Cxxxx_cmd49b.txt,%49) EQ #FALSE">
+         <Then>
+         <Print>CMDMSG 49 incorrect</Print>
+         <Dump dump="CMDMSG" force="#TRUE" file="@C1350_cmd49_err.txt" frame="%49"/>
+         <Abort status="FAIL" />
+         </Then>
+      </If>
+      </Then>
+   </If>
+   <If expression="!CMDMSGCompare(@Cxxxx_cmd53.txt,%53) EQ #FALSE">
+      <Then>
+      <Print>CMDMSG 53 incorrect</Print>
+      <Dump dump="CMDMSG" force="#TRUE" file="@C1350_cmd53_err.txt" frame="%52"/>
       <Abort status="FAIL" />
       </Then>
    </If>
-   <If expression="!CMDMSGCompare(@FIO_c52,%52) EQ #FALSE">
-      <Then>
-      <Print>CMDMSG 52 incorrect</Print>
-      <Dump dump="CMDMSG" force="#TRUE" file="@FIO_c52_err" frame="%52"/>
-      <Abort status="FAIL" />
-      </Then>
-   </If>
-   <If expression="!CMDMSGCompare(@FIO_c55,%55) EQ #FALSE">
+   <If expression="!CMDMSGCompare(@Cxxxx_cmd55a.txt,%55) EQ #FALSE">
       <Then>
       <Print>CMDMSG 55 incorrect</Print>
-      <Dump dump="CMDMSG" force="#TRUE" file="@FIO_c55_err" frame="%55"/>
+      <Dump dump="CMDMSG" force="#TRUE" file="@C1350_cmd55_err.txt" frame="%55"/>
       <Abort status="FAIL" />
       </Then>
    </If>
 
-   <!-- check comm status -->
+    <!-- reset frame count status -->
+   <Call ref="fio_fiod_status_reset" setUp="API_Init_Variables"/>
+
    <Sleep time="%10"/>
+
+   <!-- check comm status -->
    <Call ref="fio_fiod_status_get" setUp="API_Init_Variables"/>
    <If expression="$fiod_status.success_rx EQ %0">
       <Then>

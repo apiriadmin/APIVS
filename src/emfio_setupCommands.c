@@ -633,6 +633,23 @@ int16_t emfio_setupCommands()
 		return -1;
 	}
 
+	// CMU_GET_CONFIGURATION_COMMAND.
+	pCommand = &emfio_commands[CMU_GET_CONFIGURATION_COMMAND];
+	if (pthread_mutex_init(&pCommand->mutex, 0) == -1)
+	{
+		emfio_setErrorCode(EMFIO_MUTEX_INIT_FAILED);
+		return -1;
+	}
+	pCommand->initialized = 1;
+	pCommand->possibleResponses = 1;
+	pCommand->commandType = CMU_GET_CONFIGURATION_COMMAND;
+	pCommand->maxCommandSize = CMU_GET_CONFIGURATION_COMMAND_SIZE;
+	if ((pCommand->lastCommandBuffer = (unsigned char *)calloc(1, pCommand->maxCommandSize)) == 0)
+	{
+		emfio_setErrorCode(EMFIO_ALLOC_FAILED);
+		return -1;
+	}
+
 	// CMU_SWITCH_PACK_DRIVERS_SHORT_STATUS_COMMAND.
 	pCommand = &emfio_commands[CMU_SWITCH_PACK_DRIVERS_SHORT_STATUS_COMMAND];
 	if (pthread_mutex_init(&pCommand->mutex, 0) == -1)
@@ -703,6 +720,7 @@ int16_t emfio_setupResponses()
 	pResponse->initialized = 1;
 	pResponse->responseType = LOAD_SWITCH_DRIVERS_RESPONSE;
 	pResponse->responseSize = pResponse->responseAllocSize = LOAD_SWITCH_DRIVERS_RESPONSE_SIZE;
+	pResponse->responseDelay = 500;
 	if ((pResponse->responseBuffer = (unsigned char *)calloc(1, pResponse->responseAllocSize)) == 0)
 	{
 		emfio_setErrorCode(EMFIO_ALLOC_FAILED);
@@ -719,6 +737,7 @@ int16_t emfio_setupResponses()
 	pResponse->initialized = 1;
 	pResponse->responseType = MMU_INPUTS_STATUS_REQUEST_RESPONSE;
 	pResponse->responseSize = pResponse->responseAllocSize = MMU_INPUTS_STATUS_REQUEST_RESPONSE_SIZE;
+	pResponse->responseDelay = 500;
 	if ((pResponse->responseBuffer = (unsigned char *)calloc(1, pResponse->responseAllocSize)) == 0)
 	{
 		emfio_setErrorCode(EMFIO_ALLOC_FAILED);
@@ -735,6 +754,7 @@ int16_t emfio_setupResponses()
 	pResponse->initialized = 1;
 	pResponse->responseType = MMU_PROGRAMMING_REQUEST_RESPONSE;
 	pResponse->responseSize = pResponse->responseAllocSize = MMU_PROGRAMMING_REQUEST_RESPONSE_SIZE;
+	pResponse->responseDelay = 500;
 	if ((pResponse->responseBuffer = (unsigned char *)calloc(1, pResponse->responseAllocSize)) == 0)
 	{
 		emfio_setErrorCode(EMFIO_ALLOC_FAILED);
@@ -751,6 +771,7 @@ int16_t emfio_setupResponses()
 	pResponse->initialized = 1;
 	pResponse->responseType = BIU_1_OUTPUTS_INPUTS_REQUEST_RESPONSE;
 	pResponse->responseSize = pResponse->responseAllocSize = BIU_1_OUTPUTS_INPUTS_REQUEST_RESPONSE_SIZE;
+	pResponse->responseDelay = 500;
 	if ((pResponse->responseBuffer = (unsigned char *)calloc(1, pResponse->responseAllocSize)) == 0)
 	{
 		emfio_setErrorCode(EMFIO_ALLOC_FAILED);
@@ -767,6 +788,7 @@ int16_t emfio_setupResponses()
 	pResponse->initialized = 1;
 	pResponse->responseType = BIU_2_OUTPUTS_INPUTS_REQUEST_RESPONSE;
 	pResponse->responseSize = pResponse->responseAllocSize = BIU_2_OUTPUTS_INPUTS_REQUEST_RESPONSE_SIZE;
+	pResponse->responseDelay = 500;
 	if ((pResponse->responseBuffer = (unsigned char *)calloc(1, pResponse->responseAllocSize)) == 0)
 	{
 		emfio_setErrorCode(EMFIO_ALLOC_FAILED);
@@ -783,6 +805,7 @@ int16_t emfio_setupResponses()
 	pResponse->initialized = 1;
 	pResponse->responseType = BIU_3_OUTPUTS_INPUTS_REQUEST_RESPONSE;
 	pResponse->responseSize = pResponse->responseAllocSize = BIU_3_OUTPUTS_INPUTS_REQUEST_RESPONSE_SIZE;
+	pResponse->responseDelay = 500;
 	if ((pResponse->responseBuffer = (unsigned char *)calloc(1, pResponse->responseAllocSize)) == 0)
 	{
 		emfio_setErrorCode(EMFIO_ALLOC_FAILED);
@@ -799,6 +822,7 @@ int16_t emfio_setupResponses()
 	pResponse->initialized = 1;
 	pResponse->responseType = BIU_4_OUTPUTS_INPUTS_REQUEST_RESPONSE;
 	pResponse->responseSize = pResponse->responseAllocSize = BIU_4_OUTPUTS_INPUTS_REQUEST_RESPONSE_SIZE;
+	pResponse->responseDelay = 500;
 	if ((pResponse->responseBuffer = (unsigned char *)calloc(1, pResponse->responseAllocSize)) == 0)
 	{
 		emfio_setErrorCode(EMFIO_ALLOC_FAILED);
@@ -815,6 +839,7 @@ int16_t emfio_setupResponses()
 	pResponse->initialized = 1;
 	pResponse->responseType = DR_BIU_1_CALL_DATA_REQUEST_RESPONSE;
 	pResponse->responseSize = pResponse->responseAllocSize = DR_BIU_1_CALL_DATA_REQUEST_RESPONSE_SIZE;
+	pResponse->responseDelay = 500;
 	if ((pResponse->responseBuffer = (unsigned char *)calloc(1, pResponse->responseAllocSize)) == 0)
 	{
 		emfio_setErrorCode(EMFIO_ALLOC_FAILED);
@@ -831,6 +856,7 @@ int16_t emfio_setupResponses()
 	pResponse->initialized = 1;
 	pResponse->responseType = DR_BIU_2_CALL_DATA_REQUEST_RESPONSE;
 	pResponse->responseSize = pResponse->responseAllocSize = DR_BIU_2_CALL_DATA_REQUEST_RESPONSE_SIZE;
+	pResponse->responseDelay = 500;
 	if ((pResponse->responseBuffer = (unsigned char *)calloc(1, pResponse->responseAllocSize)) == 0)
 	{
 		emfio_setErrorCode(EMFIO_ALLOC_FAILED);
@@ -847,6 +873,7 @@ int16_t emfio_setupResponses()
 	pResponse->initialized = 1;
 	pResponse->responseType = DR_BIU_3_CALL_DATA_REQUEST_RESPONSE;
 	pResponse->responseSize = pResponse->responseAllocSize = DR_BIU_3_CALL_DATA_REQUEST_RESPONSE_SIZE;
+	pResponse->responseDelay = 500;
 	if ((pResponse->responseBuffer = (unsigned char *)calloc(1, pResponse->responseAllocSize)) == 0)
 	{
 		emfio_setErrorCode(EMFIO_ALLOC_FAILED);
@@ -863,6 +890,7 @@ int16_t emfio_setupResponses()
 	pResponse->initialized = 1;
 	pResponse->responseType = DR_BIU_4_CALL_DATA_REQUEST_RESPONSE;
 	pResponse->responseSize = pResponse->responseAllocSize = DR_BIU_4_CALL_DATA_REQUEST_RESPONSE_SIZE;
+	pResponse->responseDelay = 500;
 	if ((pResponse->responseBuffer = (unsigned char *)calloc(1, pResponse->responseAllocSize)) == 0)
 	{
 		emfio_setErrorCode(EMFIO_ALLOC_FAILED);
@@ -879,6 +907,7 @@ int16_t emfio_setupResponses()
 	pResponse->initialized = 1;
 	pResponse->responseType = DR_BIU_1_RESET_DIAG_REQUEST_RESPONSE;
 	pResponse->responseSize = pResponse->responseAllocSize = DR_BIU_1_RESET_DIAG_REQUEST_RESPONSE_SIZE;
+	pResponse->responseDelay = 500;
 	if ((pResponse->responseBuffer = (unsigned char *)calloc(1, pResponse->responseAllocSize)) == 0)
 	{
 		emfio_setErrorCode(EMFIO_ALLOC_FAILED);
@@ -895,6 +924,7 @@ int16_t emfio_setupResponses()
 	pResponse->initialized = 1;
 	pResponse->responseType = DR_BIU_2_RESET_DIAG_REQUEST_RESPONSE;
 	pResponse->responseSize = pResponse->responseAllocSize = DR_BIU_2_RESET_DIAG_REQUEST_RESPONSE_SIZE;
+	pResponse->responseDelay = 500;
 	if ((pResponse->responseBuffer = (unsigned char *)calloc(1, pResponse->responseAllocSize)) == 0)
 	{
 		emfio_setErrorCode(EMFIO_ALLOC_FAILED);
@@ -911,6 +941,7 @@ int16_t emfio_setupResponses()
 	pResponse->initialized = 1;
 	pResponse->responseType = DR_BIU_3_RESET_DIAG_REQUEST_RESPONSE;
 	pResponse->responseSize = pResponse->responseAllocSize = DR_BIU_3_RESET_DIAG_REQUEST_RESPONSE_SIZE;
+	pResponse->responseDelay = 500;
 	if ((pResponse->responseBuffer = (unsigned char *)calloc(1, pResponse->responseAllocSize)) == 0)
 	{
 		emfio_setErrorCode(EMFIO_ALLOC_FAILED);
@@ -927,6 +958,7 @@ int16_t emfio_setupResponses()
 	pResponse->initialized = 1;
 	pResponse->responseType = DR_BIU_4_RESET_DIAG_REQUEST_RESPONSE;
 	pResponse->responseSize = pResponse->responseAllocSize = DR_BIU_4_RESET_DIAG_REQUEST_RESPONSE_SIZE;
+	pResponse->responseDelay = 500;
 	if ((pResponse->responseBuffer = (unsigned char *)calloc(1, pResponse->responseAllocSize)) == 0)
 	{
 		emfio_setErrorCode(EMFIO_ALLOC_FAILED);
@@ -943,6 +975,7 @@ int16_t emfio_setupResponses()
 	pResponse->initialized = 1;
 	pResponse->responseType = DIAGNOSTICS_RESPONSE;
 	pResponse->responseSize = pResponse->responseAllocSize = DIAGNOSTICS_RESPONSE_SIZE;
+	pResponse->responseDelay = 500;
 	if ((pResponse->responseBuffer = (unsigned char *)calloc(1, pResponse->responseAllocSize)) == 0)
 	{
 		emfio_setErrorCode(EMFIO_ALLOC_FAILED);
@@ -959,6 +992,7 @@ int16_t emfio_setupResponses()
 	pResponse->initialized = 1;
 	pResponse->responseType = POLL_FOR_SERVICE_NO_SERVICE_RESPONSE;
 	pResponse->responseSize = pResponse->responseAllocSize = POLL_FOR_SERVICE_NO_SERVICE_RESPONSE_SIZE;
+	pResponse->responseDelay = 500;
 	if ((pResponse->responseBuffer = (unsigned char *)calloc(1, pResponse->responseAllocSize)) == 0)
 	{
 		emfio_setErrorCode(EMFIO_ALLOC_FAILED);
@@ -975,6 +1009,7 @@ int16_t emfio_setupResponses()
 	pResponse->initialized = 1;
 	pResponse->responseType = SECONDARY_DEST_MESSAGE_NACK_RESPONSE;
 	pResponse->responseSize = pResponse->responseAllocSize = SECONDARY_DEST_MESSAGE_NACK_RESPONSE_SIZE;
+	pResponse->responseDelay = 500;
 	if ((pResponse->responseBuffer = (unsigned char *)calloc(1, pResponse->responseAllocSize)) == 0)
 	{
 		emfio_setErrorCode(EMFIO_ALLOC_FAILED);
@@ -991,6 +1026,7 @@ int16_t emfio_setupResponses()
 	pResponse->initialized = 1;
 	pResponse->responseType = SECONDARY_EXCHANGE_STATUS_RESPONSE;
 	pResponse->responseSize = pResponse->responseAllocSize = SECONDARY_EXCHANGE_STATUS_RESPONSE_SIZE;
+	pResponse->responseDelay = 500;
 	if ((pResponse->responseBuffer = (unsigned char *)calloc(1, pResponse->responseAllocSize)) == 0)
 	{
 		emfio_setErrorCode(EMFIO_ALLOC_FAILED);
@@ -1007,6 +1043,7 @@ int16_t emfio_setupResponses()
 	pResponse->initialized = 1;
 	pResponse->responseType = REQUEST_MODULE_STATUS_RESPONSE;
 	pResponse->responseSize = pResponse->responseAllocSize = REQUEST_MODULE_STATUS_RESPONSE_SIZE;
+	pResponse->responseDelay = 0;
 	if ((pResponse->responseBuffer = (unsigned char *)calloc(1, pResponse->responseAllocSize)) == 0)
 	{
 		emfio_setErrorCode(EMFIO_ALLOC_FAILED);
@@ -1023,6 +1060,7 @@ int16_t emfio_setupResponses()
 	pResponse->initialized = 1;
 	pResponse->responseType = MILLISECOND_COUNTER_MANAGEMENT_RESPONSE;
 	pResponse->responseSize = pResponse->responseAllocSize = MILLISECOND_COUNTER_MANAGEMENT_RESPONSE_SIZE;
+	pResponse->responseDelay = 1000;
 	if ((pResponse->responseBuffer = (unsigned char *)calloc(1, pResponse->responseAllocSize)) == 0)
 	{
 		emfio_setErrorCode(EMFIO_ALLOC_FAILED);
@@ -1039,6 +1077,7 @@ int16_t emfio_setupResponses()
 	pResponse->initialized = 1;
 	pResponse->responseType = CONFIGURE_INPUTS_RESPONSE;
 	pResponse->responseSize = pResponse->responseAllocSize = CONFIGURE_INPUTS_RESPONSE_SIZE;
+	pResponse->responseDelay = 1000;
 	if ((pResponse->responseBuffer = (unsigned char *)calloc(1, pResponse->responseAllocSize)) == 0)
 	{
 		emfio_setErrorCode(EMFIO_ALLOC_FAILED);
@@ -1056,6 +1095,7 @@ int16_t emfio_setupResponses()
 	pResponse->responseVariableLength = 1;
 	pResponse->responseType = POLL_RAW_INPUT_DATA_RESPONSE;
 	pResponse->responseSize = pResponse->responseAllocSize = POLL_RAW_INPUT_DATA_RESPONSE_SIZE;
+	pResponse->responseDelay = 1000;
 	if ((pResponse->responseBuffer = (unsigned char *)calloc(1, pResponse->responseAllocSize)) == 0)
 	{
 		emfio_setErrorCode(EMFIO_ALLOC_FAILED);
@@ -1073,6 +1113,7 @@ int16_t emfio_setupResponses()
 	pResponse->responseVariableLength = 1;
 	pResponse->responseType = POLL_FILTERED_INPUT_DATA_RESPONSE;
 	pResponse->responseSize = pResponse->responseAllocSize = POLL_FILTERED_INPUT_DATA_RESPONSE_SIZE;
+	pResponse->responseDelay = 1000;
 	if ((pResponse->responseBuffer = (unsigned char *)calloc(1, pResponse->responseAllocSize)) == 0)
 	{
 		emfio_setErrorCode(EMFIO_ALLOC_FAILED);
@@ -1090,6 +1131,7 @@ int16_t emfio_setupResponses()
 	pResponse->responseVariableLength = 1;
 	pResponse->responseType = POLL_INPUT_TRANSITION_BUFFER_RESPONSE;
 	pResponse->responseSize = pResponse->responseAllocSize = POLL_INPUT_TRANSITION_BUFFER_RESPONSE_SIZE;
+	pResponse->responseDelay = 1000;
 	if ((pResponse->responseBuffer = (unsigned char *)calloc(1, pResponse->responseAllocSize)) == 0)
 	{
 		emfio_setErrorCode(EMFIO_ALLOC_FAILED);
@@ -1106,6 +1148,7 @@ int16_t emfio_setupResponses()
 	pResponse->initialized = 1;
 	pResponse->responseType = SET_OUTPUTS_RESPONSE;
 	pResponse->responseSize = pResponse->responseAllocSize = SET_OUTPUTS_RESPONSE_SIZE;
+	pResponse->responseDelay = 1000;
 	if ((pResponse->responseBuffer = (unsigned char *)calloc(1, pResponse->responseAllocSize)) == 0)
 	{
 		emfio_setErrorCode(EMFIO_ALLOC_FAILED);
@@ -1122,6 +1165,7 @@ int16_t emfio_setupResponses()
 	pResponse->initialized = 1;
 	pResponse->responseType = CONFIGURE_INPUT_TRACKING_FUNCS_RESPONSE;
 	pResponse->responseSize = pResponse->responseAllocSize = CONFIGURE_INPUT_TRACKING_FUNCS_RESPONSE_SIZE;
+	pResponse->responseDelay = 1000;
 	if ((pResponse->responseBuffer = (unsigned char *)calloc(1, pResponse->responseAllocSize)) == 0)
 	{
 		emfio_setErrorCode(EMFIO_ALLOC_FAILED);
@@ -1138,6 +1182,7 @@ int16_t emfio_setupResponses()
 	pResponse->initialized = 1;
 	pResponse->responseType = CONFIGURE_COMPLEX_OUTPUT_FUNCS_RESPONSE;
 	pResponse->responseSize = pResponse->responseAllocSize = CONFIGURE_COMPLEX_OUTPUT_FUNCS_RESPONSE_SIZE;
+	pResponse->responseDelay = 1000;
 	if ((pResponse->responseBuffer = (unsigned char *)calloc(1, pResponse->responseAllocSize)) == 0)
 	{
 		emfio_setErrorCode(EMFIO_ALLOC_FAILED);
@@ -1154,6 +1199,7 @@ int16_t emfio_setupResponses()
 	pResponse->initialized = 1;
 	pResponse->responseType = CONFIGURE_WATCHDOG_RESPONSE;
 	pResponse->responseSize = pResponse->responseAllocSize = CONFIGURE_WATCHDOG_RESPONSE_SIZE;
+	pResponse->responseDelay = 1000;
 	if ((pResponse->responseBuffer = (unsigned char *)calloc(1, pResponse->responseAllocSize)) == 0)
 	{
 		emfio_setErrorCode(EMFIO_ALLOC_FAILED);
@@ -1170,6 +1216,7 @@ int16_t emfio_setupResponses()
 	pResponse->initialized = 1;
 	pResponse->responseType = IO_MODULE_IDENTICATION_RESPONSE;
 	pResponse->responseSize = pResponse->responseAllocSize = IO_MODULE_IDENTICATION_RESPONSE_SIZE;
+	pResponse->responseDelay = 1000;
 	if ((pResponse->responseBuffer = (unsigned char *)calloc(1, pResponse->responseAllocSize)) == 0)
 	{
 		emfio_setErrorCode(EMFIO_ALLOC_FAILED);
@@ -1186,6 +1233,24 @@ int16_t emfio_setupResponses()
 	pResponse->initialized = 1;
 	pResponse->responseType = CMU_SWITCH_PACK_DRIVERS_RESPONSE;
 	pResponse->responseSize = pResponse->responseAllocSize = CMU_SWITCH_PACK_DRIVERS_RESPONSE_SIZE;
+	pResponse->responseDelay = 1000;
+	if ((pResponse->responseBuffer = (unsigned char *)calloc(1, pResponse->responseAllocSize)) == 0)
+	{
+		emfio_setErrorCode(EMFIO_ALLOC_FAILED);
+		return -1;
+	}
+
+	// CMU_GET_CONFIGURATION_RESPONSE.
+	pResponse = &emfio_responses[CMU_GET_CONFIGURATION_RESPONSE - EMFIO_SDLC_RESPONSE_OFFSET];
+	if (pthread_mutex_init(&pResponse->mutex, 0) == -1)
+	{
+		emfio_setErrorCode(EMFIO_MUTEX_INIT_FAILED);
+		return -1;
+	}
+	pResponse->initialized = 1;
+	pResponse->responseType = CMU_GET_CONFIGURATION_RESPONSE;
+	pResponse->responseSize = pResponse->responseAllocSize = CMU_GET_CONFIGURATION_RESPONSE_SIZE;
+	pResponse->responseDelay = 1000;
 	if ((pResponse->responseBuffer = (unsigned char *)calloc(1, pResponse->responseAllocSize)) == 0)
 	{
 		emfio_setErrorCode(EMFIO_ALLOC_FAILED);
@@ -1202,6 +1267,7 @@ int16_t emfio_setupResponses()
 	pResponse->initialized = 1;
 	pResponse->responseType = CMU_SWITCH_PACK_DRIVERS_SHORT_STATUS_RESPONSE;
 	pResponse->responseSize = pResponse->responseAllocSize = CMU_SWITCH_PACK_DRIVERS_SHORT_STATUS_RESPONSE_SIZE;
+	pResponse->responseDelay = 1000;
 	if ((pResponse->responseBuffer = (unsigned char *)calloc(1, pResponse->responseAllocSize)) == 0)
 	{
 		emfio_setErrorCode(EMFIO_ALLOC_FAILED);

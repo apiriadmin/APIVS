@@ -400,21 +400,39 @@ exprEvaluate(uint16_t ln, EXPR_P *pExpr, boolean *result)
 	}
 	else
 	{
-		// Cast arguments to char *
-		pLeft.arg.data.size = sizeof(cLeft);
-		pLeft.arg.data.value.pCharValue = cLeft;
-		if (STATUS_FAIL == argCastPchar(ln, pExpr->left, &pLeft))
-		{
-			return(STATUS_FAIL);
-		}
-		pRight.arg.data.size = sizeof(cRight);
-		pRight.arg.data.value.pCharValue = cRight;
-		if (STATUS_FAIL == argCastPchar(ln, pExpr->right, &pRight))
-		{
-			return(STATUS_FAIL);
+		if (pExpr->left->varType == VAR_PUCHAR) {
+			// Cast arguments to unsigned char *
+			pLeft.arg.data.size = sizeof(cLeft);
+			pLeft.arg.data.value.pUcharValue = cLeft;
+			if (STATUS_FAIL == argCastPuchar(ln, pExpr->left, &pLeft)){
+				return(STATUS_FAIL);
+			}
+			pRight.arg.data.size = sizeof(cRight);
+			pRight.arg.data.value.pUcharValue = cRight;
+			if (STATUS_FAIL == argCastPuchar(ln, pExpr->right, &pRight)) {
+				return(STATUS_FAIL);
+			}
+		} else {
+			// Cast arguments to char *
+			pLeft.arg.data.size = sizeof(cLeft);
+			pLeft.arg.data.value.pCharValue = cLeft;
+			if (STATUS_FAIL == argCastPchar(ln, pExpr->left, &pLeft)) {
+				return(STATUS_FAIL);
+			}
+			pRight.arg.data.size = sizeof(cRight);
+			pRight.arg.data.value.pCharValue = cRight;
+			if (STATUS_FAIL == argCastPchar(ln, pExpr->right, &pRight)) {
+				return(STATUS_FAIL);
+			}
+			// Test for NULL PCHAR value
+			if ((pLeft.arg.data.value.pCharValue == NULL)
+				|| (pRight.arg.data.value.pCharValue == NULL)) {
+				left = pLeft.arg.data.value.pCharValue;
+				right = pRight.arg.data.value.pCharValue;
+				compareInt = true;
+			}
 		}
 	}
-
 
 	// Now process according to OP required
 	switch(pExpr->op)
@@ -427,7 +445,10 @@ exprEvaluate(uint16_t ln, EXPR_P *pExpr, boolean *result)
 			}
 			else
 			{
-				*result = (0 == strcmp(cLeft, cRight));
+				if (pLeft.varType == VAR_PUCHAR)
+					*result = (0 == memcmp(cLeft, cRight, pLeft.arg.data.size));
+				else
+					*result = (0 == strcmp(cLeft, cRight));
 			}
 		}
 		break;
@@ -440,7 +461,10 @@ exprEvaluate(uint16_t ln, EXPR_P *pExpr, boolean *result)
 			}
 			else
 			{
-				*result = (0 != strcmp(cLeft, cRight));
+				if (pLeft.varType == VAR_PUCHAR)
+					*result = (0 != memcmp(cLeft, cRight, pLeft.arg.data.size));
+				else
+					*result = (0 != strcmp(cLeft, cRight));
 			}
 		}
 		break;
@@ -453,7 +477,10 @@ exprEvaluate(uint16_t ln, EXPR_P *pExpr, boolean *result)
 			}
 			else
 			{
-				*result = (strcmp(cLeft, cRight) < 0);
+				if (pLeft.varType == VAR_PUCHAR)
+					*result = (memcmp(cLeft, cRight, pLeft.arg.data.size) < 0);
+				else
+					*result = (strcmp(cLeft, cRight) < 0);
 			}
 		}
 		break;
@@ -466,7 +493,10 @@ exprEvaluate(uint16_t ln, EXPR_P *pExpr, boolean *result)
 			}
 			else
 			{
-				*result = (strcmp(cLeft, cRight) <= 0);
+				if (pLeft.varType == VAR_PUCHAR)
+					*result = (memcmp(cLeft, cRight, pLeft.arg.data.size) <= 0);
+				else
+					*result = (strcmp(cLeft, cRight) <= 0);
 			}
 		}
 		break;
@@ -479,7 +509,10 @@ exprEvaluate(uint16_t ln, EXPR_P *pExpr, boolean *result)
 			}
 			else
 			{
-				*result = (strcmp(cLeft, cRight) > 0);
+				if (pLeft.varType == VAR_PUCHAR)
+					*result = (memcmp(cLeft, cRight, pLeft.arg.data.size) > 0);
+				else
+					*result = (strcmp(cLeft, cRight) > 0);
 			}
 		}
 		break;
@@ -492,7 +525,10 @@ exprEvaluate(uint16_t ln, EXPR_P *pExpr, boolean *result)
 			}
 			else
 			{
-				*result = (strcmp(cLeft, cRight) >= 0);
+				if (pLeft.varType == VAR_PUCHAR)
+					*result = (memcmp(cLeft, cRight, pLeft.arg.data.size) >= 0);
+				else
+					*result = (strcmp(cLeft, cRight) >= 0);
 			}
 		}
 		break;

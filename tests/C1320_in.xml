@@ -48,7 +48,9 @@
 <Define var="$seq_number"     type="unsigned int" />
 <Define var="$read_buffer"    type="unsigned char []" size="%128" />
 <Define var="$bytes_read"     type="int" />
-<Define var="$frame_sched"    type="FIO_FRAME_SCHD" size="%1" />
+<Define var="$frame_schds"    type="FIO_FRAME_SCHD" size="%6"/>
+<Define var="$frame_schd_cnt" type="int"/>
+<Define var="$frame_schd"     type="FIO_FRAME_SCHD" size="%1" />
 <Define var="$frame_size"     type="int" />
 <Define var="$write_buffer"   type="unsigned char []" size="%128" />
 <Define var="$write_count"    type="unsigned int" />
@@ -179,7 +181,6 @@
 </Subroutine>
 
 <SignalHandler name="SigHandler" description="Signal handler for FIO_SIGIO">
-	<Print>FIO_SIGIO occurred</Print>
 	<Set var="$FIO_asyncsig" value="#TRUE"/>
 </SignalHandler>
 
@@ -564,16 +565,15 @@
              errno="$errno"
              p1="$fio_handle"
              p2="$fiod_handle"
-			    p3="$fio_view"
-             p4="$frame_sched"
-             p5="!sizeof($frame_sched)" />
+             p3="$fio_view"
+             p4="$frame_schds"
+             p5="$frame_schd_cnt" />
    <If expression="$returnCode EQ %-1">
       <Then>
       <Print>Function fio_fiod_frame_schedule_get() failed</Print>
       <Call ref="Error_Handler" />
       </Then>
    <Else>
-      <Format var="$frame_sched" />
       <Call ref="Success_Handler" />
    </Else>
    </If>
@@ -585,8 +585,8 @@
              errno="$errno"
              p1="$fio_handle"
              p2="$fiod_handle"
-             p3="$frame_sched"
-             p4="!sizeof($frame_sched)" />
+             p3="$frame_schds"
+             p4="$frame_schd_cnt" />
    <If expression="$returnCode EQ %-1">
       <Then>
       <Print>Function fio_fiod_frame_schedule_set() failed</Print>
@@ -1250,7 +1250,7 @@
    <Set var="$abort_mode" value="#TRUE"/>
    <Set var="$failed"     value="#FALSE"/>
    <Set var="$fio_view"   value="#FIO_VIEW_SYSTEM"/>
-   <Set var="$input_type" value="#FIO_INPUTS_RAW"/>
+   <Set var="$input_type" value="#FIO_INPUTS_FILTERED"/>
 
    <Call ref="fio_register"                     setUp="API_Init_Variables" />
    
@@ -1277,11 +1277,12 @@
    <Call ref="fio_fiod_register"                setUp="API_Init_Variables" />
    
    <!-- setup SDLC response messages -->
-   <FIOResponse file="@FIO_r177.txt" frame="%177" description="(FIO C49->R177)"/>
-   <FIOResponse file="@FIO_r180.txt" frame="%180" description="(FIO C52->R180)"/>
-   <FIOResponse file="@FIO_r183.txt" frame="%183" description="(FIO C55->R183)"/>
+   <FIOResponse file="@Cxxxx_rsp177.txt" frame="%177" description="(FIO C49->R177)"/>
+   <FIOResponse file="@Cxxxx_rsp181a.txt" frame="%181" description="(FIO C53->R181)"/>
+   <FIOResponse file="@Cxxxx_rsp183.txt" frame="%183" description="(FIO C55->R183)"/>
    
    <Call ref="fio_fiod_enable"                  setUp="API_Init_Variables" />
+   <Sleep time="%2"/>
    
    <Set var="$output_point" value="%22"/>
    <Call ref="fio_fiod_wd_register"             setUp="API_Init_Variables" />
@@ -1293,24 +1294,25 @@
    <Call ref="fio_fiod_status_get"              setUp="API_Init_Variables" />
    <Call ref="fio_fiod_status_reset"            setUp="API_Init_Variables" />
 
-   <Set var="$frame_number" value="%183"/>
+   <Set var="$frame_number" value="%177"/>
    <Call ref="fio_fiod_frame_size"              setUp="API_Init_Variables" />
-   <Set var="$timeout" value="%1000"/>
+   <Set var="$timeout" value="%10"/>
    <Call ref="fio_fiod_frame_read"              setUp="API_Init_Variables" />
 
    <Set var="$frame_number" value="%60"/> <!-- I/O Module Identification -->
-   <Set var="$write_buffer" file="@Cxxxx_null_x16.txt"/>
-   <Set var="$write_count"  value="%1"/>
+   <Set var="$write_buffer" file="@Cxxxx_cmd60.txt"/>
+   <Set var="$write_count"  value="%0"/>
    <Call ref="fio_fiod_frame_write"             setUp="API_Init_Variables" />
 
-   <Set var="$frame_sched" file="@Cxxxx_null_x16.txt"/>
+   <Set var="$frame_schds" index="%0" member="req_frame" value="%55"/>
+   <Set var="$frame_schd_cnt" value="%1"/>
    <Call ref="fio_fiod_frame_schedule_get"      setUp="API_Init_Variables" />
-   <Set var="$frame_sched" file="@C1310_frame_sched.txt"/>
+   <Set var="$frame_schds" index="%0" member="frequency" value="#FIO_HZ_ONCE"/>
    <Call ref="fio_fiod_frame_schedule_set"      setUp="API_Init_Variables" />
    
-   <Set var="$inputs" file="@Cxxxx_null_x16.txt"/>
+   <Set var="$inputs" file="@Cxxxx_inputs_null.txt"/>
    <Call ref="fio_fiod_inputs_filter_get"       setUp="API_Init_Variables" />
-   <Set var="$input_filter" file="@Cxxxx_null_x16.txt"/>
+   <Set var="$input_filter" file="@Cxxxx_inputs_null.txt"/>
    <Call ref="fio_fiod_inputs_filter_set"       setUp="API_Init_Variables" />
    <Call ref="fio_fiod_inputs_get"              setUp="API_Init_Variables" />
    <Call ref="fio_fiod_inputs_trans_get"        setUp="API_Init_Variables" />
@@ -1318,7 +1320,7 @@
    <Call ref="fio_fiod_inputs_trans_read"       setUp="API_Init_Variables" />
    
    <Call ref="fio_fiod_outputs_get"             setUp="API_Init_Variables" />
-   <Set var="$outputs" file="@Cxxxx_null_x16.txt"/>
+   <Set var="$outputs" file="@Cxxxx_outputs_null.txt"/>
    <Call ref="fio_fiod_outputs_reservation_get" setUp="API_Init_Variables" />
    <Call ref="fio_fiod_outputs_reservation_set" setUp="API_Init_Variables" />
    <Call ref="fio_fiod_begin_outputs_set"       setUp="API_Init_Variables" />
@@ -1352,7 +1354,7 @@
    
    <Call ref="fio_fiod_mmu_flash_bit_get"       setUp="API_Init_Variables" />
    <Call ref="fio_fiod_mmu_flash_bit_set"       setUp="API_Init_Variables" />
-   <Set var="$chan_res" file="@Cxxxx_null_x16.txt"/>
+   <Set var="$chan_res" file="@Cxxxx_channels_null.txt"/>
    <Call ref="fio_fiod_channel_reservation_get" setUp="API_Init_Variables" />
    <Call ref="fio_fiod_channel_reservation_set" setUp="API_Init_Variables" />
 
@@ -1376,12 +1378,20 @@
    <Set var="$FIO_asyncsig" value="#FALSE"/>
    <Signal ref="SigHandler" signal="#FIO_SIGIO" action="enable"/>
 
-   <Set var="$frame_number" value="%188"/>
+   <Set var="$frame_number" value="%177"/>
    <Set var="$notify_freq"  value="#FIO_NOTIFY_ONCE"/>
    <Call ref="fio_fiod_frame_notify_register"   setUp="API_Init_Variables" />
+   <Sleep time="%1"/>
+   <If expression="$FIO_asyncsig EQ #FALSE">
+      <Then>
+      <Print >No async notification (frame 177) </Print>
+      <Abort status="FAIL" />
+      </Then>
+   </If>
    <Call ref="fio_query_frame_notify_status"    setUp="API_Init_Variables" />
    <Call ref="fio_fiod_frame_notify_deregister" setUp="API_Init_Variables" /> 
 
+   <Signal ref="SigHandler" signal="#FIO_SIGIO" action="disable"/>
    <Call ref="fio_fiod_disable"                 setUp="API_Init_Variables" />
    <Call ref="fio_fiod_deregister"              setUp="API_Init_Variables" />
    <Call ref="fio_deregister"                   setUp="API_Init_Variables" />

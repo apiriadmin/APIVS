@@ -304,7 +304,8 @@ configFileParse(char	*fileName,
 
 	// Eliminate lines we don't care about
 	if (   (*pFrom == CF_COMMENT_LINE_CHAR)
-		|| (*pFrom == CF_EOL_CHAR))
+		|| (*pFrom == CF_CR_CHAR)
+		|| (*pFrom == CF_LF_CHAR))
 	{
 		return(STATUS_PASS);
 	}
@@ -325,7 +326,8 @@ configFileParse(char	*fileName,
 	pTo = name;
 	while (   (*pFrom != CF_SPACE_CHAR)
 		   && (*pFrom != CF_TAB_CHAR)
-		   && (*pFrom != CF_EOL_CHAR)
+		   && (*pFrom != CF_CR_CHAR)
+		   && (*pFrom != CF_LF_CHAR)
 		   && (*pFrom != CF_NULL_CHAR)
 		   && (*pFrom != CF_SEPARATOR_CHAR))
 
@@ -362,7 +364,8 @@ configFileParse(char	*fileName,
 	pTo = value;
 	while (   (*pFrom != CF_SPACE_CHAR)
 		   && (*pFrom != CF_TAB_CHAR)
-		   && (*pFrom != CF_EOL_CHAR)
+		   && (*pFrom != CF_CR_CHAR)
+		   && (*pFrom != CF_LF_CHAR)
 		   && (*pFrom != CF_NULL_CHAR))
 
 	{
@@ -376,7 +379,8 @@ configFileParse(char	*fileName,
 		pFrom++;
 	}
 
-	if (   (*pFrom != CF_EOL_CHAR)
+	if (   (*pFrom != CF_CR_CHAR)
+	    && (*pFrom != CF_LF_CHAR)
 	    && (*pFrom != CF_NULL_CHAR))
 	{
 		// Bad Syntax

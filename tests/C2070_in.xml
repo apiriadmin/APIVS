@@ -1147,7 +1147,7 @@ APIR3.1.1.2[29]	The escape sequences representing keys that do not have
       <Call ref="fpui_get_focus" setUp="API_Init_Variables"/>
    </While>
    
-   <!-- simulate each keystroke, confirm keycode read -->
+   <!-- generate each key press, confirm individual keycode read for each (APIR3.1.1.2[28]) -->
    <FPUIInput file="@Cxxxx_key1.txt" description="Provide keypress [1] input" />
    <Sleep time="%1"/>
    <Call ref="fpui_read_char" setUp="API_Init_Variables"/>
@@ -1308,6 +1308,51 @@ APIR3.1.1.2[29]	The escape sequences representing keys that do not have
       </Then>
    </If>
 
+   <FPUIInput file="@Cxxxx_keyStar.txt" description="Provide keypress [*] input" />
+   <Set var="$key" value="%42"/>
+   <Sleep time="%1"/>
+   <Call ref="fpui_read_char" setUp="API_Init_Variables"/>
+   <If expression="$read_chr NE $key">
+      <Then>
+      <Print>Key [*] read error</Print>
+      <Abort status="FAIL"/>
+      </Then>
+   </If>
+
+   <FPUIInput file="@Cxxxx_keyPlus.txt" description="Provide keypress [+] input" />
+   <Set var="$key" value="%43"/>
+   <Sleep time="%1"/>
+   <Call ref="fpui_read_char" setUp="API_Init_Variables"/>
+   <If expression="$read_chr NE $key">
+      <Then>
+      <Print>Key [+] read error</Print>
+      <Abort status="FAIL"/>
+      </Then>
+   </If>
+
+   <FPUIInput file="@Cxxxx_keyMinus.txt" description="Provide keypress [-] input" />
+   <Set var="$key" value="%45"/>
+   <Sleep time="%1"/>
+   <Call ref="fpui_read_char" setUp="API_Init_Variables"/>
+   <If expression="$read_chr NE $key">
+      <Then>
+      <Print>Key [-] read error</Print>
+      <Abort status="FAIL"/>
+      </Then>
+   </If>
+
+   <FPUIInput file="@Cxxxx_keyENT.txt" description="Provide keypress [ENT] input" />
+   <Set var="$key" value="%13"/>
+   <Sleep time="%1"/>
+   <Call ref="fpui_read_char" setUp="API_Init_Variables"/>
+   <If expression="$read_chr NE $key">
+      <Then>
+      <Print>Key [ENT] read error</Print>
+      <Abort status="FAIL"/>
+      </Then>
+   </If>
+
+   <!-- mapped individual key codes from Table 1 of ATC5401 (APIR3.1.1.2[29]) -->
    <FPUIInput file="@Cxxxx_keyUP.txt" description="Provide keypress [UP] input" />
    <Set var="$key" value="%128"/>
    <Sleep time="%1"/>
@@ -1381,50 +1426,6 @@ APIR3.1.1.2[29]	The escape sequences representing keys that do not have
    <If expression="$read_chr NE $key">
       <Then>
       <Print>Key [NO] read error</Print>
-      <Abort status="FAIL"/>
-      </Then>
-   </If>
-
-   <FPUIInput file="@Cxxxx_keyStar.txt" description="Provide keypress [*] input" />
-   <Set var="$key" value="%42"/>
-   <Sleep time="%1"/>
-   <Call ref="fpui_read_char" setUp="API_Init_Variables"/>
-   <If expression="$read_chr NE $key">
-      <Then>
-      <Print>Key [*] read error</Print>
-      <Abort status="FAIL"/>
-      </Then>
-   </If>
-
-   <FPUIInput file="@Cxxxx_keyPlus.txt" description="Provide keypress [+] input" />
-   <Set var="$key" value="%43"/>
-   <Sleep time="%1"/>
-   <Call ref="fpui_read_char" setUp="API_Init_Variables"/>
-   <If expression="$read_chr NE $key">
-      <Then>
-      <Print>Key [+] read error</Print>
-      <Abort status="FAIL"/>
-      </Then>
-   </If>
-
-   <FPUIInput file="@Cxxxx_keyMinus.txt" description="Provide keypress [-] input" />
-   <Set var="$key" value="%45"/>
-   <Sleep time="%1"/>
-   <Call ref="fpui_read_char" setUp="API_Init_Variables"/>
-   <If expression="$read_chr NE $key">
-      <Then>
-      <Print>Key [-] read error</Print>
-      <Abort status="FAIL"/>
-      </Then>
-   </If>
-
-   <FPUIInput file="@Cxxxx_keyENT.txt" description="Provide keypress [ENT] input" />
-   <Set var="$key" value="%13"/>
-   <Sleep time="%1"/>
-   <Call ref="fpui_read_char" setUp="API_Init_Variables"/>
-   <If expression="$read_chr NE $key">
-      <Then>
-      <Print>Key [ENT] read error</Print>
       <Abort status="FAIL"/>
       </Then>
    </If>

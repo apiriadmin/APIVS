@@ -787,6 +787,7 @@ char *pRowAttribs = NULL;
 			
 			
 		case SET_AUTO_MODES:
+//printf("\nprocess_ESC_Seq() - [?%d h - SET_AUTO_MODES\n", seqValue);
 			switch (seqValue)
 			{
 			case 5:    
@@ -819,6 +820,7 @@ char *pRowAttribs = NULL;
 				break;
 			case 27:     // set Reverse Video 
 				vt100_set_reverseVideo((int16_t) ON );
+				currentAttribs |= ATTRIB_REVERSE;
 				break;
 			case 33:       // Cursor Blink ON 
 				vt100_set_cursorBlink(ON);
@@ -864,6 +866,7 @@ char *pRowAttribs = NULL;
 				break;
 			case 27:     // Turn Off Reverse Video 
 				vt100_set_reverseVideo((int16_t) OFF );
+				currentAttribs &= ~ATTRIB_REVERSE;
 				break;
 			case 33:       // Cursor Blink OFF 
 				vt100_set_cursorBlink(OFF);

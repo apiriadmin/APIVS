@@ -40,10 +40,13 @@ APIR3.1.2[123]	Anytime a response to a Request Module Status frame has Module
 <Define var="$seq_number"     type="unsigned int" />
 <Define var="$read_buffer"    type="unsigned char []" size="%128" />
 <Define var="$bytes_read"     type="int" />
-<Define var="$frame_sched"    type="FIO_FRAME_SCHD" size="%1" />
+<Define var="$frame_schds"    type="FIO_FRAME_SCHD" size="%6"/>
+<Define var="$frame_schd_cnt" type="int"/>
+<Define var="$frame_schd"     type="FIO_FRAME_SCHD" size="%1" />
 <Define var="$frame_size"     type="int" />
 <Define var="$write_buffer"   type="unsigned char []" size="%128" />
 <Define var="$write_count"    type="unsigned int" />
+<Define var="$input_filters"  type="FIO_INPUT_FILTER" size="%1" />
 <Define var="$input_filter"   type="FIO_INPUT_FILTER" size="%1" />
 <Define var="$input_type"     type="FIO_INPUTS_TYPE" />
 <Define var="$inputs"         type="unsigned char []" size="#FIO_INPUT_POINTS_BYTES" />
@@ -537,16 +540,15 @@ APIR3.1.2[123]	Anytime a response to a Request Module Status frame has Module
              errno="$errno"
              p1="$fio_handle"
              p2="$fiod_handle"
-			    p3="$fio_view"
-             p4="$frame_sched"
-             p5="!sizeof($frame_sched)" />
+             p3="$fio_view"
+             p4="$frame_schds"
+             p5="$frame_schd_cnt" />
    <If expression="$returnCode EQ %-1">
       <Then>
       <Print>Function fio_fiod_frame_schedule_get() failed</Print>
       <Call ref="Error_Handler" />
       </Then>
    <Else>
-      <Format var="$frame_sched" />
       <Call ref="Success_Handler" />
    </Else>
    </If>
@@ -558,8 +560,8 @@ APIR3.1.2[123]	Anytime a response to a Request Module Status frame has Module
              errno="$errno"
              p1="$fio_handle"
              p2="$fiod_handle"
-             p3="$frame_sched"
-             p4="!sizeof($frame_sched)" />
+             p3="$frame_schds"
+             p4="$frame_schd_cnt" />
    <If expression="$returnCode EQ %-1">
       <Then>
       <Print>Function fio_fiod_frame_schedule_set() failed</Print>
@@ -618,16 +620,16 @@ APIR3.1.2[123]	Anytime a response to a Request Module Status frame has Module
              errno="$errno"
              p1="$fio_handle"
              p2="$fiod_handle"
-			    p3="$fio_view"
-             p4="$input_filter"
-             p5="!sizeof($input_filter)" />
+             p3="$fio_view"
+             p4="$input_filters"
+             p5="!sizeof($input_filters)" />
    <If expression="$returnCode EQ %-1">
       <Then>
       <Print>Function fio_fiod_inputs_filter_get() failed</Print>
       <Call ref="Error_Handler" />
       </Then>
    <Else>
-      <Format var="$input_filter" />
+      <Format var="$input_filters" />
       <Call ref="Success_Handler" />
    </Else>
    </If>
@@ -639,15 +641,15 @@ APIR3.1.2[123]	Anytime a response to a Request Module Status frame has Module
              errno="$errno"
              p1="$fio_handle"
              p2="$fiod_handle"
-             p3="$input_filter"
-             p4="!sizeof($input_filter)" />
+             p3="$input_filters"
+             p4="!sizeof($input_filters)" />
    <If expression="$returnCode EQ %-1">
       <Then>
       <Print>Function fio_fiod_inputs_filter_set() failed</Print>
       <Call ref="Error_Handler" />
       </Then>
    <Else>
-      <Format var="$input_filter" />
+      <Format var="$input_filters" />
       <Call ref="Success_Handler" />
    </Else>
    </If>
@@ -1232,23 +1234,296 @@ APIR3.1.2[123]	Anytime a response to a Request Module Status frame has Module
    <Set var="$fio_device" value="#FIO332"/>
    <Call ref="fio_fiod_register" setUp="API_Init_Variables"/>
   
-    <!-- setup Type 177 Response Frame (no status bits set) -->
-   <FIOResponse file="@C3110_r177_clr" frame="%177"/>
-  
+   <!-- setup FIO332 SDLC response messages -->
+   <!-- setup Type 177 Response Frame (no status bits set) -->
+   <FIOResponse file="@Cxxxx_rsp177.txt" frame="%177" description="(FIO C49->R177)"/>
+
+   <!-- set the frame rate for command 49 module status to FIO_HZ_ONCE, disable others -->
+   <Set var="$frame_schds" index="%0" member="req_frame" value="%49"/>
+   <Set var="$frame_schds" index="%0" member="frequency" value="#FIO_HZ_1"/>
+   <Set var="$frame_schds" index="%1" member="req_frame" value="%53"/>
+   <Set var="$frame_schds" index="%1" member="frequency" value="#FIO_HZ_0"/>
+   <Set var="$frame_schds" index="%2" member="req_frame" value="%55"/>
+   <Set var="$frame_schds" index="%2" member="frequency" value="#FIO_HZ_0"/>
+   <Set var="$frame_schd_cnt" value="%3"/>
+   <Call ref="fio_fiod_frame_schedule_set" setUp="API_Init_Variables"/>
+   
    <!-- enable the FIO332 -->
    <Call ref="fio_fiod_enable" setUp="API_Init_Variables"/>
    
-   <!-- confirm proper Type 49 Command Frame (status bits set on enable) -->
-   <Dump dump="CMDMSG" file="@C3110_c49" frame="%49"/> 
-   <If expression="!CMDMSGCompare(@C3110_c49,%49) EQ #FALSE">
+   <!-- verify first frame 49 after enable has reset of module status bits (APIR3.1.2[122]) -->
+   <If expression="!CMDMSGCompare(@Cxxxx_cmd49b.txt,%49) EQ #FALSE">
       <Then>
-      <Print>CMDMSG 49 incorrect (MSR)</Print>
-      <Dump dump="CMDMSG" force="#TRUE" file="@C3110_c49_err" frame="%49`"/>
+      <Print>CMDMSG 49 incorrect (1)</Print>
+      <Dump dump="CMDMSG" force="#TRUE" file="@C3110_c49b_err" frame="%49`"/>
       <Abort status="FAIL" />
       </Then>
    </If>
 
+   <!-- generate a second module status command frame -->
+   <!-- set the frame rate for command 49 module status to FIO_HZ_ONCE -->
+<!--   <Set var="$frame_schds" index="%0" member="req_frame" value="%49"/>
+   <Set var="$frame_schds" index="%0" member="frequency" value="#FIO_HZ_ONCE"/>
+   <Set var="$frame_schd_cnt" value="%1"/>
+   <Call ref="fio_fiod_frame_schedule_set" setUp="API_Init_Variables"/>
+-->   
+   <Sleep time="%1"/>
+
+   <!-- verify that the following frame 49 is normal (no reset bits) -->
+   <If expression="!CMDMSGCompare(@Cxxxx_cmd49a.txt,%49) EQ #FALSE">
+      <Then>
+      <Print>CMDMSG 49 incorrect (2)</Print>
+      <Dump dump="CMDMSG" force="#TRUE" file="@C3110_c49a_err" frame="%49`"/>
+      <Abort status="FAIL" />
+      </Then>
+   </If>
+
+   <!-- get input filters: confirm defaults are 5 samples -->
+   <Call ref="fio_fiod_inputs_filter_get" setUp="API_Init_Variables" />
+   <Set var="$input_filter" value="$input_filters" index="%0"/> 
+   <If expression="$input_filter.leading NE %5">
+      <Then>
+      <Print>Default leading edge filter value not 5</Print>
+      <Abort status="FAIL"/>
+      </Then>
+   </If>
+   <If expression="$input_filter.trailing NE %5">
+      <Then>
+      <Print>Default trailing edge filter value not 5</Print>
+      <Abort status="FAIL"/>
+      </Then>
+   </If>
+
+<!-- Repeat for each of hardware reset, comm loss and watchdog reset status bits --> 
+
+   <!-- change lead filter to 3, trailing filter to 3 -->
+   <Set var="$input_filters" index="%0" member="input_point" value="%0"/>
+   <Set var="$input_filters" index="%0" member="leading" value="%3"/>
+   <Set var="$input_filters" index="%0" member="trailing" value="%3"/>
+   <Call ref="fio_fiod_inputs_filter_set" setUp="API_Init_Variables" />
+   <!-- verify new values -->
+   <Call ref="fio_fiod_inputs_filter_get" setUp="API_Init_Variables" />
+   <Set var="$input_filter" value="$input_filters" index="%0"/> 
+   <If expression="$input_filter.leading NE %3">
+      <Then>
+      <Print>Leading edge filter value not 3</Print>
+      <Abort status="FAIL"/>
+      </Then>
+   </If>
+   <If expression="$input_filter.trailing NE %3">
+      <Then>
+      <Print>Trailing edge filter value not 3</Print>
+      <Abort status="FAIL"/>
+      </Then>
+   </If>
+   
+   <!-- enable transition reporting for input 0 -->
+   <Set var="$inputs" file="@C3040_inputs_a.txt"/>
+   <Call ref="fio_fiod_inputs_trans_set" setUp="API_Init_Variables" /> 
+   <!-- verify test input transition point set -->
+   <Call ref="fio_fiod_inputs_trans_get" setUp="API_Init_Variables" /> 
+   <If expression="!FIO_BIT_TEST($inputs,%0) NE #TRUE">
+      <Then>
+      <Print>Input transition point set error</Print>
+      <Abort status="FAIL"/>
+      </Then>
+   </If>
+
+   <!-- Set the type 177 module status response frame to indicate hardware reset -->
+   <FIOResponse file="@Cxxxx_rsp177a.txt" frame="%177" description="(FIO C49->R177)"/>
+   <Sleep time="%3"/>
+
+   <!-- verify that the input filter settings are now reset to defaults (APIR3.1.2[123]) -->
+   <!-- get input filters: confirm defaults are 5 samples -->
+   <Call ref="fio_fiod_inputs_filter_get" setUp="API_Init_Variables" />
+   <Set var="$input_filter" value="$input_filters" index="%0"/> 
+   <If expression="$input_filter.leading NE %5">
+      <Then>
+      <Print>Leading edge filter value not 5 (hw reset)</Print>
+      <Abort status="FAIL"/>
+      </Then>
+   </If>
+   <If expression="$input_filter.trailing NE %5">
+      <Then>
+      <Print>Trailing edge filter value not 5 (hw reset)</Print>
+      <Abort status="FAIL"/>
+      </Then>
+   </If>
+   
+   <!-- verify that the input transition reporting is now reset to defaults (APIR3.1.2[123]) -->
+   <Call ref="fio_fiod_inputs_trans_get" setUp="API_Init_Variables" /> 
+   <If expression="!FIO_BIT_TEST($inputs,%0) NE #FALSE">
+      <Then>
+      <Print>Input transition point not reset (hw reset)</Print>
+      <Abort status="FAIL"/>
+      </Then>
+   </If>
+   
+   <!-- verify next frame 49 has reset of hardware reset status bit (APIR3.1.2[123]) -->
+   <If expression="!CMDMSGCompare(@Cxxxx_cmd49c.txt,%49) EQ #FALSE">
+      <Then>
+      <Print>CMDMSG 49 incorrect (3)</Print>
+      <Dump dump="CMDMSG" force="#TRUE" file="@C3110_c49c_err" frame="%49`"/>
+      <Abort status="FAIL" />
+      </Then>
+   </If>
+
+   <!-- setup Type 177 Response Frame (no status bits set) -->
+   <FIOResponse file="@Cxxxx_rsp177.txt" frame="%177" description="(FIO C49->R177)"/>
+   <Sleep time="%3"/>
+
+   <!-- change lead filter to 3, trailing filter to 3 -->
+   <Set var="$input_filters" index="%0" member="input_point" value="%0"/>
+   <Set var="$input_filters" index="%0" member="leading" value="%3"/>
+   <Set var="$input_filters" index="%0" member="trailing" value="%3"/>
+   <Call ref="fio_fiod_inputs_filter_set" setUp="API_Init_Variables" />
+   <!-- verify new values -->
+   <Call ref="fio_fiod_inputs_filter_get" setUp="API_Init_Variables" />
+   <Set var="$input_filter" value="$input_filters" index="%0"/> 
+   <If expression="$input_filter.leading NE %3">
+      <Then>
+      <Print>Leading edge filter value not 3</Print>
+      <Abort status="FAIL"/>
+      </Then>
+   </If>
+   <If expression="$input_filter.trailing NE %3">
+      <Then>
+      <Print>Trailing edge filter value not 3</Print>
+      <Abort status="FAIL"/>
+      </Then>
+   </If>
+   
+   <!-- enable transition reporting for input 0 -->
+   <Set var="$inputs" file="@C3040_inputs_a.txt"/>
+   <Call ref="fio_fiod_inputs_trans_set" setUp="API_Init_Variables" /> 
+   <!-- verify test input transition point set -->
+   <Call ref="fio_fiod_inputs_trans_get" setUp="API_Init_Variables" /> 
+   <If expression="!FIO_BIT_TEST($inputs,%0) NE #TRUE">
+      <Then>
+      <Print>Input transition point set error</Print>
+      <Abort status="FAIL"/>
+      </Then>
+   </If>
+
+   <!-- Set the type 177 module status response frame to indicate comm loss -->
+   <FIOResponse file="@Cxxxx_rsp177b.txt" frame="%177" description="(FIO C49->R177)"/>
+   <Sleep time="%3"/>
+   
+   <!-- verify that the input filter settings are now reset to defaults (APIR3.1.2[123]) -->
+   <!-- get input filters: confirm defaults are 5 samples -->
+   <Call ref="fio_fiod_inputs_filter_get" setUp="API_Init_Variables" />
+   <Set var="$input_filter" value="$input_filters" index="%0"/> 
+   <If expression="$input_filter.leading NE %5">
+      <Then>
+      <Print>Leading edge filter value not 5 (comm loss)</Print>
+      <Abort status="FAIL"/>
+      </Then>
+   </If>
+   <If expression="$input_filter.trailing NE %5">
+      <Then>
+      <Print>Trailing edge filter value not 5 (comm loss)</Print>
+      <Abort status="FAIL"/>
+      </Then>
+   </If>
+   
+   <!-- verify that the input transition reporting is now reset to defaults (APIR3.1.2[123]) -->
+   <Call ref="fio_fiod_inputs_trans_get" setUp="API_Init_Variables" /> 
+   <If expression="!FIO_BIT_TEST($inputs,%0) NE #FALSE">
+      <Then>
+      <Print>Input transition point not reset (comm loss)</Print>
+      <Abort status="FAIL"/>
+      </Then>
+   </If>
+   
+   <!-- verify next frame 49 has reset of corresponding module status bits (APIR3.1.2[123]) -->
+   <If expression="!CMDMSGCompare(@Cxxxx_cmd49d.txt,%49) EQ #FALSE">
+      <Then>
+      <Print>CMDMSG 49 incorrect (3)</Print>
+      <Dump dump="CMDMSG" force="#TRUE" file="@C3110_c49c_err" frame="%49`"/>
+      <Abort status="FAIL" />
+      </Then>
+   </If>
+
+   <!-- setup Type 177 Response Frame (no status bits set) -->
+   <FIOResponse file="@Cxxxx_rsp177.txt" frame="%177" description="(FIO C49->R177)"/>
+   <Sleep time="%3"/>
+
+   <!-- change lead filter to 3, trailing filter to 3 -->
+   <Set var="$input_filters" index="%0" member="input_point" value="%0"/>
+   <Set var="$input_filters" index="%0" member="leading" value="%3"/>
+   <Set var="$input_filters" index="%0" member="trailing" value="%3"/>
+   <Call ref="fio_fiod_inputs_filter_set" setUp="API_Init_Variables" />
+   <!-- verify new values -->
+   <Call ref="fio_fiod_inputs_filter_get" setUp="API_Init_Variables" />
+   <Set var="$input_filter" value="$input_filters" index="%0"/> 
+   <If expression="$input_filter.leading NE %3">
+      <Then>
+      <Print>Leading edge filter value not 3</Print>
+      <Abort status="FAIL"/>
+      </Then>
+   </If>
+   <If expression="$input_filter.trailing NE %3">
+      <Then>
+      <Print>Trailing edge filter value not 3</Print>
+      <Abort status="FAIL"/>
+      </Then>
+   </If>
+   
+   <!-- enable transition reporting for input 0 -->
+   <Set var="$inputs" file="@C3040_inputs_a.txt"/>
+   <Call ref="fio_fiod_inputs_trans_set" setUp="API_Init_Variables" /> 
+   <!-- verify test input transition point set -->
+   <Call ref="fio_fiod_inputs_trans_get" setUp="API_Init_Variables" /> 
+   <If expression="!FIO_BIT_TEST($inputs,%0) NE #TRUE">
+      <Then>
+      <Print>Input transition point set error</Print>
+      <Abort status="FAIL"/>
+      </Then>
+   </If>
+
+   <!-- Set the type 177 module status response frame to indicate watchdog reset -->
+   <FIOResponse file="@Cxxxx_rsp177c.txt" frame="%177" description="(FIO C49->R177)"/>
+   <Sleep time="%3"/>
+
+   <!-- verify that the input filter settings are now reset to defaults (APIR3.1.2[123]) -->
+   <!-- get input filters: confirm defaults are 5 samples -->
+   <Call ref="fio_fiod_inputs_filter_get" setUp="API_Init_Variables" />
+   <Set var="$input_filter" value="$input_filters" index="%0"/> 
+   <If expression="$input_filter.leading NE %5">
+      <Then>
+      <Print>Leading edge filter value not 5 (wd reset)</Print>
+      <Abort status="FAIL"/>
+      </Then>
+   </If>
+   <If expression="$input_filter.trailing NE %5">
+      <Then>
+      <Print>Trailing edge filter value not 5 (wd reset)</Print>
+      <Abort status="FAIL"/>
+      </Then>
+   </If>
+   
+   <!-- verify that the input transition reporting is now reset to defaults (APIR3.1.2[123]) -->
+   <Call ref="fio_fiod_inputs_trans_get" setUp="API_Init_Variables" /> 
+   <If expression="!FIO_BIT_TEST($inputs,%0) NE #FALSE">
+      <Then>
+      <Print>Input transition point not reset (wd reset)</Print>
+      <Abort status="FAIL"/>
+      </Then>
+   </If>
+   
+   <!-- verify next frame 49 has reset of corresponding module status bits (APIR3.1.2[123]) -->
+   <If expression="!CMDMSGCompare(@Cxxxx_cmd49e.txt,%49) EQ #FALSE">
+      <Then>
+      <Print>CMDMSG 49 incorrect (3)</Print>
+      <Dump dump="CMDMSG" force="#TRUE" file="@C3110_c49c_err" frame="%49`"/>
+      <Abort status="FAIL" />
+      </Then>
+   </If>
+
+
    <!-- deregister and exit -->
+   <Call ref="fio_fiod_disable" setUp="API_Init_Variables"/>
+   <Call ref="fio_fiod_deregister" setUp="API_Init_Variables"/>
    <Call ref="fio_deregister" setUp="API_Init_Variables" />
 </TestCase>
 

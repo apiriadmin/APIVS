@@ -1,0 +1,10 @@
+# ATC 5401 API Reference Implementation Project 
+# 
+#     Filename: Cxxxx_sc1.txt
+#    File Type: APIVS flat file (text format)
+#    Test Case: APIVS.TCS.1110
+#  Description: special bit-mapped character (1)
+# 
+# Date      Revision    Description
+# 2/24/16   1.0         initial release
+0x11 0x12 0x13 0x14 0x15 0x16 0x17 0x18

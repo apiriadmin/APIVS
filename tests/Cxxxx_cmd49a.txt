@@ -1,6 +1,6 @@
 # ATC 5401 API Reference Implementation Project 
 # 
-#     Filename: Cxxxx_cmd49.txt
+#     Filename: Cxxxx_cmd49a.txt
 #    File Type: APIVS flat file (text format)
 #    Test Case: APIRI.TCS.3xxx
 #  Description: file load of Command Frame 49

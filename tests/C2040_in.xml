@@ -1192,14 +1192,20 @@ APIR3.1.1.2[18]	The API shall provide a function to return the cursor
    <Set var="$write_len" value="%1"/>
    <Set var="$row"       value="%4"/>
    <Set var="$column"    value="%6"/>
+   <!-- (APIR3.1.1.2[15]) -->
    <Call ref="fpui_write"           setUp="API_Init_Variables"/>
+   <!-- (APIR3.1.1.2[16]) -->
    <Call ref="fpui_write_at"        setUp="API_Init_Variables"/>
+   <!-- (APIR3.1.1.2[11]) -->
    <Call ref="fpui_write_char"      setUp="API_Init_Variables"/>
+   <!-- (APIR3.1.1.2[12]) -->
    <Call ref="fpui_write_char_at"   setUp="API_Init_Variables"/>
+   <!-- (APIR3.1.1.2[13]) -->
    <Call ref="fpui_write_string"    setUp="API_Init_Variables"/>
+   <!-- (APIR3.1.1.2[14]) -->
    <Call ref="fpui_write_string_at" setUp="API_Init_Variables"/>
 
-   <!-- re-position the cursor and confirm -->>
+   <!-- re-position the cursor and confirm (APIR3.1.1.2[17], APIR3.1.1.2[18]) -->
    <Set var="$row"    value="%5"/>
    <Set var="$column" value="%1"/>
    <Call ref="fpui_set_cursor_pos" setUp="API_Init_Variables"/>
@@ -1228,6 +1234,7 @@ APIR3.1.1.2[18]	The API shall provide a function to return the cursor
    </If>
 
    <!-- read and validate keystrokes using all read methods -->
+   <!-- (APIR3.1.1.2[9]) -->
    <FPUIInput file="@Cxxxx_key0.txt" description="Provide keypress [0] input"/>
    <Sleep time="%1"/>
    <Call ref="fpui_poll" setUp="API_Init_Variables"/>
@@ -1253,6 +1260,7 @@ APIR3.1.1.2[18]	The API shall provide a function to return the cursor
       </Then>
    </If>
 
+   <!-- (APIR3.1.1.2[10]) -->
    <FPUIInput file="@Cxxxx_key1.txt" description="Provide keypress [1] input"/>
    <Sleep time="%1" />
    <Call ref="fpui_read_char" setUp="API_Init_Variables"/>

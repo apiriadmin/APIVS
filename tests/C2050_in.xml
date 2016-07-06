@@ -1151,7 +1151,7 @@ APIR3.1.1.2[21]	The API shall support the display of a composed character in
    <Set var="$column" value="%1"/>
    <Call ref="fpui_set_cursor_pos" setUp="API_Init_Variables"/>
    
-   <!-- compose and display eight (8) special characters -->
+   <!-- compose and display eight (8) special characters (APIR3.1.1.2[20], APIR3.1.1.2[21])-->
    <Set var="$char_buf"   file="@C2050_sc1.txt"/>
    <Set var="$char_index" value="%1"/>
    <Call ref="fpui_compose_special_char" setUp="API_Init_Variables"/>

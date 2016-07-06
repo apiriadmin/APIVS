@@ -1230,7 +1230,7 @@
    <Call ref="fpui_del_keymap"            setUp="API_Init_Variables" />
    <Call ref="fpui_reset_keymap"          setUp="API_Init_Variables" />
 
-   <Set var="$char_buf"   file="@Cxxxx_null.txt"/>
+   <Set var="$char_buf"   file="@Cxxxx_sc1.txt"/>
    <Set var="$char_index" value="%1"/>
    <Call ref="fpui_compose_special_char"  setUp="API_Init_Variables" />
    <Call ref="fpui_display_special_char"  setUp="API_Init_Variables" />

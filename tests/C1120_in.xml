@@ -26,6 +26,7 @@
         
  Date      Revision    Description
  2/22/16   1.0         initial release
+ 2/24/16   1.1         second release
 -->
 
 <Define var="$fpui_handle"  type="fpui_handle" />
@@ -665,8 +666,15 @@
              p1="$aux_handle" />
    <If expression="$aux_sw EQ %-1">
       <Then>
+         <If expression="$errno EQ %0">
+         <Then>
+         <Print>No AUX switch present</Print>
+         </Then>
+         <Else>
       <Print>Function fpui_read_aux_switch() failed</Print>
       <Call ref="Error_Handler" />
+         </Else>
+         </If>
       </Then>
    <Else>
       <Format var="$aux_sw" />
@@ -1235,7 +1243,7 @@
    <Call ref="fpui_del_keymap"            setUp="API_Init_Variables" />
    <Call ref="fpui_reset_keymap"          setUp="API_Init_Variables" />
 
-   <Set var="$char_buf"   file="@Cxxxx_null.txt"/>
+   <Set var="$char_buf"   file="@Cxxxx_sc1.txt"/>
    <Set var="$char_index" value="%1"/>
    <Call ref="fpui_compose_special_char"  setUp="API_Init_Variables" />
    <Call ref="fpui_display_special_char"  setUp="API_Init_Variables" />

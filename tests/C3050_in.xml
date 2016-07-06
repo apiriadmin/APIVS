@@ -1711,7 +1711,7 @@ APIR3.1.2[76]	The API shall provide a method to send a frame from either
    <If expression="!CMDMSGCompare(@Cxxxx_cmd60.txt,%60) EQ #FALSE">
       <Then>
       <Print>CMDMSG 60 incorrect</Print>
-      <Dump dump="CMDMSG" force="#TRUE" file="@C3050_cmd51_err.txt" frame="%60"/>
+      <Dump dump="CMDMSG" force="#TRUE" file="@Cxxxx_cmd60_err.txt" frame="%60"/>
       <Abort status="FAIL" />
       </Then>
    </If>

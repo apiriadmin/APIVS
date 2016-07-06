@@ -13,6 +13,7 @@ APIR3.2[1]	The API shall provide a method to determine the version number(s)
 
  Date      Revision    Description
  2/22/16   1.0         initial release
+ 2/24/16   1.1         second release
 -->
 
 <Define var="$fpui_handle"  type="fpui_handle" />
@@ -239,7 +240,7 @@ APIR3.2[1]	The API shall provide a method to determine the version number(s)
    <Set var="$regname" value="@C2100"/>
    <Call ref="fpui_open" setUp="API_Init_Variables" />
 
-   <!-- get FPUI versions -->
+   <!-- get FPUI versions (APIR3.2[1]) -->
    <Set var="$ver_string" value="@Cxxxx_null.txt"/>
    <Set var="$fpui_ver" value="%1"/>
    <Call ref="fpui_apiver" setUp="API_Init_Variables" />
@@ -252,7 +253,7 @@ APIR3.2[1]	The API shall provide a method to determine the version number(s)
 
    <Call ref="fio_register" setUp="API_Init_Variables" />
 
-   <!-- get FIO versions -->
+   <!-- get FIO versions (APIR3.2[1]) -->
    <Set var="$ver_string" value="@Cxxxx_null.txt"/>
    <Set var="$fio_ver" value="#FIO_VERSION_LIBRARY"/>
    <Call ref="fio_apiver" setUp="API_Init_Variables" />
@@ -263,7 +264,7 @@ APIR3.2[1]	The API shall provide a method to determine the version number(s)
 
    <Call ref="fio_deregister" setUp="API_Init_Variables" />
 
-   <!-- get TOD version -->
+   <!-- get TOD version (APIR3.2[1]) -->
    <Set var="$ver_string" value="@Cxxxx_null.txt"/>
    <Call ref="tod_apiver" setUp="API_Init_Variables" />
 </TestCase>

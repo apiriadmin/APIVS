@@ -26,6 +26,7 @@
 
  Date      Revision    Description
  2/22/16   1.0         initial release
+ 2/24/16   1.1         second release
 -->
 
 <Define var="$fpui_handle"  type="fpui_handle" />
@@ -68,7 +69,7 @@
 <Define var="$write_cnt"    type="ssize_t" />
 <Define var="$write_chr"    type="char" />
 <Define var="$panel"        type="int" />
-
+<Define var="$tmp_chr"      type="char"/>
 <Define var="$abort_mode"   type="boolean" />
 <Define var="$failed"       type="boolean" />
 
@@ -680,7 +681,8 @@
              return="$read_chr"
              errno="$errno"
              p1="$fpui_handle" />
-   <If expression="$read_chr EQ @-1">
+   <Set var="$tmp_chr" value="%-1"/>
+   <If expression="$read_chr EQ $tmp_chr">
       <Then>
       <Print>Function fpui_read_char() failed</Print>
       <Call ref="Error_Handler" />
@@ -1154,9 +1156,9 @@
    <Set var="$abort_mode"  value="#FALSE"/>
    <Set var="$failed"      value="#FALSE"/>
 
-   <!-- test all function calls with no fpui_open call -->
+   <!-- test function calls with no fpui_open call (invalid file handle) -->
    <!-- (most function calls should fail) -->
-   <Set var="$fpui_handle" value="%0"/>
+   <Set var="$fpui_handle" value="%-1"/>
    <!--
    <Set var="$flags"   value="#O_RDWR"/>
    <Set var="$regname" value="@C1130"/>
@@ -1231,27 +1233,28 @@
    <Call ref="fpui_del_keymap"            setUp="API_Init_Variables" />
    <Call ref="fpui_reset_keymap"          setUp="API_Init_Variables" />
 
-   <Set var="$char_buf"   file="@Cxxxx_null.txt"/>
+   <Set var="$char_buf"   file="@Cxxxx_sc1.txt"/>
    <Set var="$char_index" value="%1"/>
    <Call ref="fpui_compose_special_char"  setUp="API_Init_Variables" />
    <Call ref="fpui_display_special_char"  setUp="API_Init_Variables" />
 
-   <!-- (these functions do not require an FPUI handle) -->
-   <!--
-   <Call ref="fpui_open_aux_switch"       setUp="API_Init_Variables" />
-   <Call ref="fpui_read_aux_switch"       setUp="API_Init_Variables" />
-   <Call ref="fpui_close_aux_switch"      setUp="API_Init_Variables" />
-   -->
-   
    <Call ref="fpui_panel_present"         setUp="API_Init_Variables" />
    <Call ref="fpui_set_emergency"         setUp="API_Init_Variables" />
    <Call ref="fpui_close"                 setUp="API_Init_Variables" />
 
-   <Set var="$flags"   value="#O_RDWR"/>
+   <!-- test aux switch functions with no fpui_open_aux_switch() call -->
+   <!--
+   <Call ref="fpui_open_aux_switch"       setUp="API_Init_Variables" />
+   -->
+   <Set var="$aux_handle" value="%-1"/>
+   <Call ref="fpui_read_aux_switch"       setUp="API_Init_Variables" />
+   <Call ref="fpui_close_aux_switch"      setUp="API_Init_Variables" />
+   
+<!--   <Set var="$flags"   value="#O_RDWR"/>
    <Set var="$flags"   value="#O_NONBLOCK" operation="add" />
    <Set var="$regname" value="@C1130"/>
    <Call ref="fpui_open"                  setUp="API_Init_Variables" />
-
+-->
    <FPUIInput file="@Cxxxx_key0.txt" description="Provide keypress [0] input" />
    <Sleep time="%1" />
    <Call ref="fpui_poll"                  setUp="API_Init_Variables" />
@@ -1286,6 +1289,7 @@
    <Set var="$row"    value="%10"/> <!-- valid values should be 0-23 -->
    <Set var="$column" value="%100"/> <!-- valid values should be 0-79 -->
    <Call ref="fpui_set_cursor_pos" setUp="API_Init_Variables" />
+
 </TestCase>
 
 <!--

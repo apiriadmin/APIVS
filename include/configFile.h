@@ -99,26 +99,27 @@ extern	const char	*configFileGetFIOLBDEV();
 #define	CF_SCREEN_HEIGHT	(8)
 #define	CF_SCREEN_WIDTH		(40)
 
-#define	CF_COMMENT_LINE_CHAR	'#'
-#define	CF_EOL_CHAR				'\r'
-#define	CF_SPACE_CHAR			' '
-#define	CF_TAB_CHAR				'\t'
-#define	CF_NULL_CHAR			'\0'
-#define	CF_SEPARATOR_CHAR		'='
+#define	CF_COMMENT_LINE_CHAR    '#'
+#define	CF_CR_CHAR              '\r'
+#define CF_LF_CHAR              '\012'
+#define	CF_SPACE_CHAR           ' '
+#define	CF_TAB_CHAR             '\t'
+#define	CF_NULL_CHAR            '\0'
+#define	CF_SEPARATOR_CHAR       '='
 
-#define	CF_XIFP					"XMLInputFilePath"
-#define	CF_XOFP					"XMLOutputFilePath"
-#define	CF_SFP					"SetFilePath"
-#define	CF_SH					"ScreenHeight"
-#define	CF_SW					"ScreenWidth"
-#define	CF_FPUICFP				"FPUICompareFilePath"
-#define	CF_FPUIIFP				"FPUIInputFilePath"
-#define	CF_FPUIDFP				"FPUIDumpFilePath"
-#define	CF_FPUILBDEV			"FPUILoopbackDevice"
-#define	CF_FIOCFP				"FIOCompareFilePath"
-#define	CF_FIORFP				"FIOResponseFilePath"
-#define	CF_FIODFP				"FIODumpFilePath"
-#define	CF_FIOLBDEV				"FIOLoopbackDevice"
+#define	CF_XIFP                 "XMLInputFilePath"
+#define	CF_XOFP                 "XMLOutputFilePath"
+#define	CF_SFP                  "SetFilePath"
+#define	CF_SH                   "ScreenHeight"
+#define	CF_SW                   "ScreenWidth"
+#define	CF_FPUICFP              "FPUICompareFilePath"
+#define	CF_FPUIIFP              "FPUIInputFilePath"
+#define	CF_FPUIDFP              "FPUIDumpFilePath"
+#define	CF_FPUILBDEV            "FPUILoopbackDevice"
+#define	CF_FIOCFP               "FIOCompareFilePath"
+#define	CF_FIORFP               "FIOResponseFilePath"
+#define	CF_FIODFP               "FIODumpFilePath"
+#define	CF_FIOLBDEV             "FIOLoopbackDevice"
 
 #endif	/* CONFIGFILE_H */
 

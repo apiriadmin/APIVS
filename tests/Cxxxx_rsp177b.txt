@@ -1,0 +1,11 @@
+# ATC 5401 API Reference Implementation Project 
+# 
+#     Filename: Cxxxx_rsp177b.txt
+#    File Type: APIVS flat file (text format)
+#    Test Case: APIRI.TCS.3110
+#  Description: file load of Response Frame 177 (comm loss bit set)
+#               (CF 49: Request Module Status)
+# 
+# Date      Revision    Description
+# 2/24/16   1.0         initial release
+0xB1 0x40 0x00 0x00 0x00 0x00 0x00 0x00
