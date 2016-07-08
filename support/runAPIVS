@@ -40,7 +40,7 @@ clear_test_line() {
    printf "\x1B[3;1f" >/dev/sp6
    printf "                                        " >/dev/sp6
    printf "\x1B[3;1f" >/dev/sp6
-   }
+}
 print_test_result() {
    if [ "$?" == "0" ]; then
       printf "PASS" >/dev/sp6
@@ -53,7 +53,7 @@ print_test_result() {
 #  keep backlight on
    printf "\033[<5h" >/dev/sp6
    sleep 1
-   }
+}
 reset_modules() {
 #  start the API Front Panel Manager (loopback mode)
    killall MasterSelection
@@ -62,9 +62,46 @@ reset_modules() {
    modprobe front_panel
    FrontPanelManager /dev/sp6_loopback_a 1>/dev/null 2>&1 &
    MasterSelection 1>/dev/null 2>&1 &
-#  start fio driver; add symbolic links
+#  start fio driver
    rmmod fiodriver
    insmod /media/sda1/APIVS/bin/fiodriver.ko apivs=1
+}
+misc_test_C6020() {
+   #Check for uClibc load object identifier (APIVS[3.8])
+   LD_TRACE_LOADED_OBJECTS=1 vse | grep -q "ld-uClibc"
+   if [ $? != 0 ]
+   then
+        echo "$(date -u): vse is not compatible with uClibc" >/tmp/C6020_log.txt
+        retval=1
+   else
+        echo "$(date -u): vse is compatible with uClibc" >/tmp/C6020_log.txt
+        retval=0
+   fi
+   mv /tmp/C6020_log.txt ./
+   sync
+   return $retval
+}
+misc_test_C6030() {
+   #Check for ELF format (APIR3.5.2[5])
+   elfmagic="7f454c46"
+
+   FILES="/usr/lib/libfpui.so
+   /usr/lib/libfio.so
+   /usr/lib/libtod.so"
+
+   for f in $FILES
+   do
+   if [ $(od -An -N4 -tx4 <$f) == $elfmagic ]; then
+      echo "$(date -u): $f is ELF format file" >>/tmp/C6030_log.txt
+      retval=0
+   else
+      echo "$(date -u): $f is not ELF format file" >>/tmp/C6030_log.txt
+      retval=1
+   fi
+   done
+   mv /tmp/C6030_log.txt ./
+   sync
+   return $retval
 }
 
 # set the conformance level this run (1,2,3)
@@ -230,8 +267,21 @@ do
    clear_test_line; printf "Testing APIRI.TCS.3130... " >/dev/sp6
    vse -L $LEVEL -c ./VS_config_1.txt -i C3130_in.xml -o C3130_log.xml
    print_test_result
+
+   reset_modules   
+   if [ "$DELETE_LOGS" == TRUE ]; then rm C6020_log.txt; fi
+   clear_test_line; printf "Testing APIRI.TCS.6020... " >/dev/sp6
+   misc_test_C6020
+   print_test_result
    
+   reset_modules   
+   if [ "$DELETE_LOGS" == TRUE ]; then rm C6030_log.txt; fi
+   clear_test_line; printf "Testing APIRI.TCS.6030... " >/dev/sp6
+   misc_test_C6030
+   print_test_result   
+      
    mv /tmp/*log.xml ./
    sync
+   
    loop_count=$((loop_count - 1))
 done
