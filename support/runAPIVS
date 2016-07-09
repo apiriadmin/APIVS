@@ -269,6 +269,12 @@ do
    print_test_result
 
    reset_modules   
+   if [ "$DELETE_LOGS" == TRUE ]; then rm C6010_log.xml; fi
+   clear_test_line; printf "Testing APIRI.TCS.6010... " >/dev/sp6
+   vse -L $LEVEL -c ./VS_config_1.txt -i C6010_in.xml -o C6010_log.xml
+   print_test_result
+
+   reset_modules   
    if [ "$DELETE_LOGS" == TRUE ]; then rm C6020_log.txt; fi
    clear_test_line; printf "Testing APIRI.TCS.6020... " >/dev/sp6
    misc_test_C6020
