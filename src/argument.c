@@ -189,11 +189,12 @@ static	ARG_NC	s_NCtable[] =
 	{ NC_ON,				NC_ON_VALUE,				VAR_BOOL },
 	{ NC_OFF,				NC_OFF_VALUE,				VAR_BOOL },
 
-	{ NC_ORDWR,				O_RDWR,						VAR_INT },
-	{ NC_ORDONLY,			O_RDONLY,					VAR_INT },
-	{ NC_OWRONLY,			O_WRONLY,					VAR_INT },
-	{ NC_ODIRECT,			O_DIRECT,					VAR_INT },
-	{ NC_ONONBLOCK,			O_NONBLOCK,					VAR_INT },
+	{ NC_ORDWR,                     O_RDWR,                                         VAR_INT },
+	{ NC_ORDONLY,                   O_RDONLY,                                       VAR_INT },
+	{ NC_OWRONLY,                   O_WRONLY,                                       VAR_INT },
+	{ NC_ODIRECT,                   O_DIRECT,                                       VAR_INT },
+	{ NC_ONONBLOCK,                 O_NONBLOCK,                                     VAR_INT },
+	{ NC_OEXCL,                     O_EXCL,                                         VAR_INT },
 
 	{ NC_FIO_VERLIB,		FIO_VERSION_LIBRARY,		VAR_INT },
 	{ NC_FIO_VERLKM,		FIO_VERSION_LKM,			VAR_INT },

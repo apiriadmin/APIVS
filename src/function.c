@@ -79,6 +79,10 @@ static	int16_t	funcFpuiClose(uint16_t		ln,
 static	int16_t	funcFpuiCloseAuxSwitch(uint16_t		ln,
 						      		   C_FUNC		*pCF);
 
+/** \brief fpui_close_config_window handler */
+static	int16_t	funcFpuiCloseConfigWindow(uint16_t		ln,
+						      C_FUNC		*pCF);
+
 /** \brief fpui_clear handler */
 static	int16_t	funcFpuiClear(uint16_t		ln,
 						      C_FUNC		*pCF);
@@ -170,6 +174,10 @@ static	int16_t	funcFpuiOpen(uint16_t		ln,
 /** \brief fpui_open_aux_switch handler */
 static	int16_t	funcFpuiOpenAuxSwitch(uint16_t		ln,
 						      		  C_FUNC		*pCF);
+
+/** \brief fpui_open_config_window handler */
+static	int16_t	funcFpuiOpenConfigWindow(uint16_t		ln,
+						     C_FUNC			*pCF);
 
 /** \brief fpui_panel_present handler */
 static	int16_t	funcFpuiPanelPresent(uint16_t		ln,
@@ -595,6 +603,9 @@ static	FUNC_P	s_funcTable[] =
 	{ "fpui_close_aux_switch", funcFpuiCloseAuxSwitch, VAR_INT,
 		1, { VAR_FPUIAUXH, VAR_VOID, VAR_VOID, VAR_VOID, VAR_VOID, VAR_VOID },
 		   { FUNC_IN,        0,        0,        0,        0,        0 } },
+	{ "fpui_close_config_window", funcFpuiCloseConfigWindow, VAR_INT,
+		1, { VAR_FPUIH, VAR_VOID, VAR_VOID, VAR_VOID, VAR_VOID, VAR_VOID },
+		   { FUNC_IN,   0,        0,        0,        0,        0 } },
 	{ "fpui_compose_special_char", funcFpuiComposeSpecialChar, VAR_INT,
 		3, { VAR_FPUIH, VAR_INT, VAR_PUCHAR, VAR_VOID, VAR_VOID, VAR_VOID },
 		   { FUNC_IN,   FUNC_IN, FUNC_IN,    0,        0,        0 } },
@@ -658,6 +669,9 @@ static	FUNC_P	s_funcTable[] =
 	{ "fpui_open_aux_switch", funcFpuiOpenAuxSwitch, VAR_FPUIAUXH,
 		0, { VAR_VOID, VAR_VOID, VAR_VOID, VAR_VOID, VAR_VOID, VAR_VOID },
 		   { 0,        0,        0,        0,        0,        0 } },
+	{ "fpui_open_config_window", funcFpuiOpenConfigWindow, VAR_FPUIH,
+		1, { VAR_INT, VAR_VOID, VAR_VOID, VAR_VOID, VAR_VOID, VAR_VOID },
+		   { FUNC_IN, 0,        0,        0,        0,        0 } },
 	{ "fpui_panel_present", funcFpuiPanelPresent, VAR_INT,
 		1, { VAR_FPUIH, VAR_VOID, VAR_VOID, VAR_VOID, VAR_VOID, VAR_VOID },
 		   { FUNC_IN,   0,        0,        0,        0,        0 } },
@@ -1190,7 +1204,6 @@ funcFpuiApiver(uint16_t	lineNumber,
 
 	argReturn = fpui_apiver(argHandle, argType);
 	argErrno = errno;
-
 	if (pCF->returnValue)
 	{
 		if (argReturn != NULL)
@@ -1376,6 +1389,49 @@ funcFpuiCloseAuxSwitch(uint16_t	lineNumber, C_FUNC *pCF)
 	}
 
 	argReturn = fpui_close_aux_switch(argHandle);
+	argErrno = errno;
+
+	if (pCF->returnValue)
+	{
+		pCF->returnValue->arg.data.value.intValue = argReturn;
+	}
+
+	if (pCF->errnoValue)
+	{
+		pCF->errnoValue->arg.data.value.intValue = argErrno;
+	}
+
+	return(STATUS_PASS);
+}
+
+//=============================================================================
+/**
+ * \brief This function handles call fpui_close_config_window()
+ *
+ * \param[in]	lineNumber - Line number in XML file
+ * \param[in]	pCF - Pointer to function calling info
+ * \return		STATUS_PASS - Test conformance (PASS)
+ * 				STATUS_FAIL - Test nonconformance (FAIL)
+ */
+static int16_t
+funcFpuiCloseConfigWindow(uint16_t lineNumber, C_FUNC *pCF)
+{
+	// Call fpui_close_config_window()
+	int                argReturn;
+	int                argErrno;
+	fpui_handle        argHandle = 0;
+
+	if (pCF->arg[0])
+	{
+		if (STATUS_FAIL == argCastFpuiHandle(lineNumber,
+							pCF->arg[0],
+							&argHandle))
+		{
+			return(STATUS_FAIL);
+		}
+	}
+
+	argReturn = fpui_close_config_window(argHandle);
 	argErrno = errno;
 
 	if (pCF->returnValue)
@@ -2438,6 +2494,47 @@ funcFpuiOpenAuxSwitch(uint16_t lineNumber, C_FUNC *pCF)
 	if (pCF->returnValue)
 	{
 		pCF->returnValue->arg.data.value.fpuiAuxHandle = argHandle;
+	}
+
+	if (pCF->errnoValue)
+	{
+		pCF->errnoValue->arg.data.value.intValue = argErrno;
+	}
+
+	return(STATUS_PASS);
+}
+
+//=============================================================================
+/**
+ * \brief This function handles call fpui_open_config_window()
+ *
+ * \param[in]	lineNumber - Line number in XML file
+ * \param[in]	pCF - Pointer to function calling info
+ * \return		STATUS_PASS - Test conformance (PASS)
+ * 				STATUS_FAIL - Test nonconformance (FAIL)
+ */
+static int16_t
+funcFpuiOpenConfigWindow(uint16_t lineNumber, C_FUNC *pCF)
+{
+	// Call fpui_open_config_window()
+	int                argErrno;
+	fpui_handle        argHandle;
+	int                argFlags = 0;
+
+	if (pCF->arg[0])
+	{
+		if (STATUS_FAIL == argCastInt(lineNumber, pCF->arg[0], &argFlags))
+		{
+			return(STATUS_FAIL);
+		}
+	}
+
+	argHandle = fpui_open_config_window(argFlags);
+	argErrno = errno;
+
+	if (pCF->returnValue)
+	{
+		pCF->returnValue->arg.data.value.fpuiHandle = argHandle;
 	}
 
 	if (pCF->errnoValue)
@@ -4712,7 +4809,6 @@ funcTodSet(uint16_t	lineNumber,
 			return(STATUS_FAIL);
 		}
 	}
-
 	argReturn = tod_set(&argTv, &argTzsec_offset);
 	argErrno = errno;
 
@@ -7668,8 +7764,6 @@ funcFioFiodStatusGet(uint16_t	lineNumber,
 
 	argReturn = fio_fiod_status_get(argHandle, argDh, &argStatus);
 	argErrno = errno;
-printf("funcFioFiodStatusGet: comm_enabled=%d, success_rx=%d, error_rx=%d\n",
-	argStatus.comm_enabled, argStatus.success_rx, argStatus.error_rx);
 	
 	if (pCF->arg[2])
 	{
