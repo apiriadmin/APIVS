@@ -221,6 +221,7 @@ typedef	struct namedConstant
 #define	NC_OWRONLY              "#O_WRONLY"
 #define	NC_ODIRECT              "#O_DIRECT"
 #define	NC_ONONBLOCK            "#O_NONBLOCK"
+#define	NC_OEXCL                "#O_EXCL"
 
 #define	NC_FIO_VERLIB           "#FIO_VERSION_LIBRARY"
 #define	NC_FIO_VERLKM           "#FIO_VERSION_LKM"
