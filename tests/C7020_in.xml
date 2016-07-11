@@ -6,7 +6,7 @@
      Filename: C7020_in.xml
     File Type: APIVSXML test script (XML format)
     Test Case: APIRI.TCS.7020
-  Description: Bell Activation and Application Termination
+  Description: FPUI Bell Activation and Application Termination
   
 APIR3.1.1.2[24]	The bell of the controller’s Front Panel shall be activated
                   only if a bell character, ^G (hex value 07), is sent from an
@@ -21,6 +21,7 @@ APIR3.1.2[134]	   When an application program exits or terminates for any reason
                   
  Date      Revision    Description
  2/22/16   1.0         initial release
+ 2/24/16   1.1         second release
 -->
 
 <Define var="$fpui_handle"  type="fpui_handle" />
@@ -35,12 +36,11 @@ APIR3.1.2[134]	   When an application program exits or terminates for any reason
 <Define var="$flags"        type="int" />
 <Define var="$regname"      type="char []" size="%16" />
 <Define var="$timeout"      type="int" />
-<Define var="$write_buf"    type="char []" size="%16" />
+<Define var="$write_buf"    type="char []" size="%32" />
 <Define var="$write_len"    type="int" />
 <Define var="$write_cnt"    type="ssize_t" />
 <Define var="$write_chr"    type="char" />
 <Define var="$panel"        type="int" />
-
 <Define var="$sleep_count"  type="int" />
 
 <Define var="$abort_mode"   type="boolean" />
@@ -240,7 +240,7 @@ APIR3.1.2[134]	   When an application program exits or terminates for any reason
 <!--
  test case(s)
 -->
-<TestCase name="Case_C7020" description="C7020: Bell Activation and Application Termination" >
+<TestCase name="Case_C7020" description="C7020: FPUI Bell Activation and Application Termination" >
    <!-- set abort_mode to FALSE to attempt 'invalid' API function operations;
         script will proceed (not abort) in these cases to allow validation
         of the (forced) error -->
