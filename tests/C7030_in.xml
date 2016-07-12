@@ -1,0 +1,1231 @@
+<?xml version="1.0" encoding="utf-8"?>
+<APIVSXML>
+<!--
+ ATC 5401 API Reference Implementation Project
+ 
+     Filename: C7030_in.xml
+    File Type: APIVSXML test script (XML format)
+    Test Case: APIRI.TCS.7030
+  Description: FPUI Display Graphics
+  
+APIR3.1.1.2[30]	The ATC Controller Standard, Section 7.1.4 (ATC 5201 has this
+                  in Section 6.1.4), describes a graphics interface to the Front
+                  Panel’s display. The API shall support the operation of the
+                  graphics commands on a window only if that window is in focus.
+
+APIR3.1.1.2[31]	If application programs use graphics on a window, the API shall
+                  not redisplay these graphics when a window is refreshed or goes
+                  out/in focus.
+ 
+ Date      Revision    Description
+ 2/22/16   1.0         initial release
+ 2/24/16   1.1         second release
+-->
+
+<Define var="$fpui_handle"  type="fpui_handle" />
+<Define var="$fpui_hdl_00"  type="fpui_handle" />
+<Define var="$fpui_hdl_01"  type="fpui_handle" />
+<Define var="$aux_handle"   type="fpui_aux_handle" />
+<Define var="$errno"        type="int" />
+<Define var="$returnCode"   type="int" />
+<Define var="$tab_clear"    type="int" />
+<Define var="$char_index"   type="int" />
+<Define var="$char_buf"     type="unsigned char []" size="%8" />
+<Define var="$auto_rpt"     type="boolean" />
+<Define var="$auto_scr"     type="boolean" />
+<Define var="$auto_wrap"    type="boolean" />
+<Define var="$backlight"    type="boolean" />
+<Define var="$blink"        type="boolean" />
+<Define var="$cursor"       type="boolean" />
+<Define var="$row"          type="int" />
+<Define var="$column"       type="int" />
+<Define var="$focus"        type="int" />
+<Define var="$key_code"     type="int" />
+<Define var="$key"          type="char" />
+<Define var="$key_str"      type="char []" size="%16" />
+<Define var="$led"          type="boolean" />
+<Define var="$rev_video"    type="boolean" />
+<Define var="$uline"        type="boolean" />
+<Define var="$w_attr"       type="int" />
+<Define var="$flags"        type="int" />
+<Define var="$regname"      type="char []" size="%16" />
+<Define var="$poll_data"    type="int" />
+<Define var="$read_cnt"     type="ssize_t" />
+<Define var="$read_buf"     type="char []" size="%16" />
+<Define var="$aux_sw"       type="int" />
+<Define var="$read_chr"     type="char" />
+<Define var="$reset_km"     type="int" />
+<Define var="$timeout"      type="int" />
+<Define var="$emergency"    type="boolean" />
+<Define var="$write_buf"    type="char []" size="%128" />
+<Define var="$write_len"    type="int" />
+<Define var="$write_cnt"    type="ssize_t" />
+<Define var="$write_chr"    type="char" />
+<Define var="$panel"        type="int" />
+<Define var="$panel_change" type="boolean" />
+
+<Define var="$abort_mode"   type="boolean" />
+<Define var="$failed"       type="boolean" />
+
+<!--
+ subroutines for setUp, teardown, error logging, FPM return
+-->
+<SetUp name="API_Init_Variables">
+   <Set var="$returnCode"  value="%-1"/>
+   <Set var="$errno"       value="%0"/>
+</SetUp>
+
+<Subroutine name="Error_Handler">
+   <If expression="$errno EQ %1" >
+      <Then> <Print>EPERM: Operation not permitted</Print> </Then> </If>
+   <If expression="$errno EQ %2" >
+      <Then> <Print>ENOENT: No such file or directory</Print> </Then> </If>
+   <If expression="$errno EQ %3" >
+      <Then> <Print>ESRCH: No such process</Print> </Then> </If>
+   <If expression="$errno EQ %4" >
+      <Then> <Print>EINTR: Interrupted system call</Print> </Then> </If>
+   <If expression="$errno EQ %5" >
+      <Then> <Print>EIO: I/O error</Print> </Then> </If>
+   <If expression="$errno EQ %6" >
+      <Then> <Print>ENXIO: No such device or address</Print> </Then> </If>
+   <If expression="$errno EQ %7" >
+      <Then> <Print>E2BIG: Argument list too long</Print> </Then> </If>
+   <If expression="$errno EQ %8" >
+      <Then> <Print>ENOEXEC: Exec format error</Print> </Then> </If>
+   <If expression="$errno EQ %9" >
+      <Then> <Print>EBADF: Bad file number</Print> </Then> </If>
+   <If expression="$errno EQ %10" >
+      <Then> <Print>ECHILD: No child processes</Print> </Then> </If>
+   <If expression="$errno EQ %11" >
+      <Then> <Print>EAGAIN: Try again</Print> </Then> </If>
+   <If expression="$errno EQ %12" >
+      <Then> <Print>ENOMEM: Out of memory</Print> </Then> </If>
+   <If expression="$errno EQ %13" >
+      <Then> <Print>EACCES: Permission denied</Print> </Then> </If>
+   <If expression="$errno EQ %14" >
+      <Then> <Print>EFAULT: Bad address</Print> </Then> </If>
+   <If expression="$errno EQ %15" >
+      <Then> <Print>ENOTBLK: Block device required</Print> </Then> </If>
+   <If expression="$errno EQ %16" >
+      <Then> <Print>EBUSY: Device or resource busy</Print> </Then> </If>
+   <If expression="$errno EQ %17" >
+      <Then> <Print>EEXIST: File exists</Print> </Then> </If>
+   <If expression="$errno EQ %18" >
+      <Then> <Print>EXDEV: Cross-device link</Print> </Then> </If>
+   <If expression="$errno EQ %19" >
+      <Then> <Print>ENODEV: No such device</Print> </Then> </If>
+   <If expression="$errno EQ %20" >
+      <Then> <Print>ENOTDIR: Not a directory</Print> </Then> </If>
+   <If expression="$errno EQ %21" >
+      <Then> <Print>EISDIR: Is a directory</Print> </Then> </If>
+   <If expression="$errno EQ %22" >
+      <Then> <Print>EINVAL: Invalid argument</Print> </Then> </If>
+   <If expression="$errno EQ %23" >
+      <Then> <Print>ENFILE: File table overflow</Print> </Then> </If>
+   <If expression="$errno EQ %24" >
+      <Then> <Print>EMFILE: Too many open files</Print> </Then> </If>
+   <If expression="$errno EQ %25" >
+      <Then> <Print>ENOTTY: Not a typewriter</Print> </Then> </If>
+   <If expression="$errno EQ %26" >
+      <Then> <Print>ETXTBSY: Text file busy</Print> </Then> </If>
+   <If expression="$errno EQ %27" >
+      <Then> <Print>EFBIG: File too large</Print> </Then> </If>
+   <If expression="$errno EQ %28" >
+      <Then> <Print>ENOSPC: No space left on device</Print> </Then> </If>
+   <If expression="$errno EQ %29" >
+      <Then> <Print>ESPIPE: Illegal seek</Print> </Then> </If>
+   <If expression="$errno EQ %30" >
+      <Then> <Print>EROFS: Read-only file system</Print> </Then> </If>
+   <If expression="$errno EQ %31" >
+      <Then> <Print>EMLINK: Too many links</Print> </Then> </If>
+   <If expression="$errno EQ %32" >
+      <Then> <Print>EPIPE: Broken pipe</Print> </Then> </If>
+   <If expression="$errno EQ %33" >
+      <Then> <Print>EDOM: Math argument out of domain of func</Print> </Then> </If>
+   <If expression="$errno EQ %34" >
+      <Then> <Print>ERANGE: Math result not representable</Print> </Then> </If>
+      
+   <Format var="$errno" />
+   <Set var="$failed" value="#TRUE"/>
+   <If expression="$abort_mode EQ #TRUE" >
+      <Then> <Abort status="FAIL" /> </Then>
+   <Else>
+      <Print>Function failed properly (forced)</Print>
+   </Else>
+   </If>
+</Subroutine>
+
+<Subroutine name="Success_Handler">
+   <If expression="$abort_mode EQ #FALSE" >
+      <Then>
+      <Print>Function succeeded but should have failed</Print>
+      <Abort status="FAIL" />
+      </Then>
+   </If>
+</Subroutine>
+
+<SignalHandler name="SigHandler" description="Signal handler for SIGWINCH">
+	<Set var="$panel_change" value="#TRUE"/>
+</SignalHandler>
+
+<!--
+ subroutines to call API functions and verify return status
+-->
+<Subroutine name="fpui_clear" description="Call fpui_clear()" >
+   <Function funcName="fpui_clear"
+             return="$returnCode"
+             errno="$errno"
+             p1="$fpui_handle" />
+   <If expression="$returnCode EQ %-1">
+      <Then>
+      <Print>Function fpui_clear() failed</Print>
+      <Call ref="Error_Handler" />
+      </Then>
+   <Else>
+      <Call ref="Success_Handler" />
+   </Else>
+   </If>
+</Subroutine>
+
+<Subroutine name="fpui_clear_tab" description="Call fpui_clear_tab()" >
+   <Function funcName="fpui_clear_tab"
+             return="$returnCode"
+             errno="$errno"
+             p1="$fpui_handle"
+			    p2="$tab_clear" />
+   <If expression="$returnCode EQ %-1">
+      <Then>
+      <Print >Function fpui_clear_tab() failed</Print>
+      <Call ref="Error_Handler" />
+      </Then>
+   <Else>
+      <Call ref="Success_Handler" />
+   </Else>
+   </If>
+</Subroutine>
+
+<Subroutine name="fpui_close" description="Call fpui_close()" >
+   <Function funcName="fpui_close"
+             return="$returnCode"
+             errno="$errno"
+             p1="$fpui_handle" />
+   <If expression="$returnCode EQ %-1">
+      <Then>
+      <Print>Function fpui_close() failed</Print>
+      <Call ref="Error_Handler" />
+      </Then>
+   <Else>
+      <Call ref="Success_Handler" />
+   </Else>
+   </If>
+</Subroutine>
+
+<Subroutine name="fpui_close_aux_switch" description="Call fpui_close_aux_switch()" >
+   <Function funcName="fpui_close_aux_switch" 
+             return="$returnCode"
+             errno="$errno"
+             p1="$aux_handle" />
+   <If expression="$returnCode EQ %-1">
+      <Then>
+      <Print>Function fpui_close_aux_switch() failed</Print>
+      <Call ref="Error_Handler" />
+      </Then>
+   <Else>
+      <Call ref="Success_Handler" />
+   </Else>
+   </If>
+</Subroutine>
+
+<Subroutine name="fpui_compose_special_char" description="Call fpui_compose_special_char()" >
+   <Function funcName="fpui_compose_special_char"
+             return="$returnCode"
+             errno="$errno"
+             p1="$fpui_handle"
+             p2="$char_index"
+             p3="$char_buf" />
+   <If expression="$returnCode EQ %-1">
+      <Then>
+      <Print>Function fpui_compose_special_char() failed</Print>
+      <Call ref="Error_Handler" />
+      </Then>
+   <Else>
+      <Call ref="Success_Handler" />
+   </Else>
+   </If>
+</Subroutine>
+
+<Subroutine name="fpui_del_keymap" description="Call fpui_del_keymap()" >
+   <Function funcName="fpui_del_keymap"
+             return="$returnCode"
+             errno="$errno"
+             p1="$fpui_handle"
+             p2="$key" />
+   <If expression="$returnCode EQ %-1">
+      <Then>
+      <Print>Function fpui_del_keymap() failed</Print>
+      <Call ref="Error_Handler" />
+      </Then>
+   <Else>
+      <Call ref="Success_Handler" />
+   </Else>
+   </If>
+</Subroutine>
+
+<Subroutine name="fpui_display_special_char" description="Call fpui_display_special_char()" >
+   <Function funcName="fpui_display_special_char"
+             return="$returnCode"
+             errno="$errno"
+             p1="$fpui_handle"
+             p2="$char_index" />
+   <If expression="$returnCode EQ %-1">
+      <Then>
+      <Print>Function fpui_display_special_char() failed</Print>
+      <Call ref="Error_Handler" />
+      </Then>
+   <Else>
+      <Call ref="Success_Handler" />
+   </Else>
+   </If>
+</Subroutine>
+
+<Subroutine name="fpui_get_auto_repeat" description="Call fpui_get_auto_repeat()" >
+   <Function funcName="fpui_get_auto_repeat"
+             return="$auto_rpt"
+             errno="$errno"
+             p1="$fpui_handle" />
+   <If expression="$auto_rpt EQ %-1">
+      <Then>
+      <Print>Function fpui_get_auto_repeat() failed</Print>
+      <Call ref="Error_Handler" />
+      </Then>
+   <Else>
+      <Format var="$auto_rpt" />
+      <Call ref="Success_Handler" />
+   </Else>
+   </If>
+</Subroutine>
+
+<Subroutine name="fpui_get_auto_scroll" description="Call fpui_get_auto_scroll()" >
+   <Function funcName="fpui_get_auto_scroll"
+             return="$auto_scr"
+             errno="$errno"
+             p1="$fpui_handle" />
+   <If expression="$auto_scr EQ %-1">
+      <Then>
+      <Print>Function fpui_get_auto_scroll() failed</Print>
+      <Call ref="Error_Handler" />
+      </Then>
+   <Else>
+      <Format var="$auto_scr" />
+      <Call ref="Success_Handler" />
+   </Else>
+   </If>
+</Subroutine>
+
+<Subroutine name="fpui_get_auto_wrap" description="Call fpui_get_auto_wrap()" >
+   <Function funcName="fpui_get_auto_wrap"
+             return="$auto_wrap"
+             errno="$errno"
+             p1="$fpui_handle" />
+   <If expression="$auto_wrap EQ %-1">
+      <Then>
+      <Print>Function fpui_get_auto_wrap() failed</Print>
+      <Call ref="Error_Handler" />
+      </Then>
+   <Else>
+      <Format var="$auto_wrap" />
+      <Call ref="Success_Handler" />
+   </Else>
+   </If>
+</Subroutine>
+
+<Subroutine name="fpui_get_backlight" description="Call fpui_get_backlight()" >
+   <Function funcName="fpui_get_backlight"
+             return="$backlight"
+             errno="$errno"
+             p1="$fpui_handle" />
+   <If expression="$backlight EQ %-1">
+      <Then>
+      <Print>Function fpui_get_backlight() failed</Print>
+      <Call ref="Error_Handler" />
+      </Then>
+   <Else>
+      <Format var="$backlight" />
+      <Call ref="Success_Handler" />
+   </Else>
+   </If>
+</Subroutine>
+
+<Subroutine name="fpui_get_character_blink" description="Call fpui_get_character_blink()" >
+   <Function funcName="fpui_get_character_blink"
+             return="$blink"
+             errno="$errno"
+             p1="$fpui_handle" />
+   <If expression="$blink EQ %-1">
+      <Then>
+      <Print>Function fpui_get_character_blink() failed</Print>
+      <Call ref="Error_Handler" />
+      </Then>
+   <Else>
+      <Format var="$blink" />
+      <Call ref="Success_Handler" />
+   </Else>
+   </If>
+</Subroutine>
+
+<Subroutine name="fpui_get_cursor" description="Call fpui_get_cursor()" >
+   <Function funcName="fpui_get_cursor"
+             return="$cursor"
+             errno="$errno"
+             p1="$fpui_handle" />
+   <If expression="$cursor EQ %-1">
+      <Then>
+      <Print>Function fpui_get_cursor() failed</Print>
+      <Call ref="Error_Handler" />
+      </Then>
+   <Else>
+      <Format var="$cursor" />
+      <Call ref="Success_Handler" />
+   </Else>
+   </If>
+</Subroutine>
+
+<Subroutine name="fpui_get_cursor_blink" description="Call fpui_get_cursor_blink()" >
+   <Function funcName="fpui_get_cursor_blink"
+             return="$blink"
+             errno="$errno"
+             p1="$fpui_handle" />
+   <If expression="$blink EQ %-1">
+      <Then>
+      <Print>Function fpui_get_cursor_blink() failed</Print>
+      <Call ref="Error_Handler" />
+      </Then>
+   <Else>
+      <Format var="$blink" />
+      <Call ref="Success_Handler" />
+   </Else>
+   </If>
+</Subroutine>
+
+<Subroutine name="fpui_get_cursor_pos" description="Call fpui_get_cursor_pos()" >
+   <Function funcName="fpui_get_cursor_pos"
+             return="$returnCode"
+             errno="$errno"
+             p1="$fpui_handle"
+             p2="$row"
+             p3="$column" />
+   <If expression="$returnCode EQ %-1">
+      <Then>
+      <Print>Function fpui_get_cursor_pos() failed</Print>
+      <Call ref="Error_Handler" />
+      </Then>
+   <Else>
+      <Format var="$row" />
+      <Format var="$column" />
+      <Call ref="Success_Handler" />
+   </Else>
+   </If>
+</Subroutine>
+
+<Subroutine name="fpui_get_focus" description="Call fpui_get_focus()" >
+   <Function funcName="fpui_get_focus"
+             return="$focus"
+             errno="$errno"
+             p1="$fpui_handle" />
+   <If expression="$focus EQ %-1">
+      <Then>
+      <Print>Function fpui_get_focus() failed</Print>
+      <Call ref="Error_Handler" />
+      </Then>
+   <Else>
+      <Format var="$focus" />
+      <Call ref="Success_Handler" />
+   </Else>
+   </If>
+</Subroutine>
+
+<Subroutine name="fpui_get_keymap" description="Call fpui_get_keymap()" >
+   <Function funcName="fpui_get_keymap"
+             return="$returnCode"
+             errno="$errno"
+             p1="$fpui_handle"
+             p2="$key_code"
+             p3="$key_str"
+             p4="!sizeof($key_str)" />
+   <If expression="$returnCode EQ %-1">
+      <Then>
+      <Print>Function fpui_get_keymap() failed</Print>
+      <Call ref="Error_Handler" />
+      </Then>
+   <Else>
+      <Format var="$key_str" />
+      <Call ref="Success_Handler" />
+   </Else>
+   </If>
+</Subroutine>
+
+<Subroutine name="fpui_get_reverse_video" description="Call fpui_get_reverse_video()" >
+   <Function funcName="fpui_get_reverse_video"
+             return="$rev_video"
+             errno="$errno"
+             p1="$fpui_handle" />
+   <If expression="$rev_video EQ %-1">
+      <Then>
+      <Print>Function fpui_get_reverse_video() failed</Print>
+      <Call ref="Error_Handler" />
+      </Then>
+   <Else>
+      <Format var="$rev_video" />
+      <Call ref="Success_Handler" />
+   </Else>
+   </If>
+</Subroutine>
+
+<Subroutine name="fpui_get_underline" description="Call fpui_get_underline()" >
+   <Function funcName="fpui_get_underline"
+             return="$uline"
+             errno="$errno"
+             p1="$fpui_handle" />
+   <If expression="$uline EQ %-1">
+      <Then>
+      <Print>Function fpui_get_underline() failed</Print>
+      <Call ref="Error_Handler" />
+      </Then>
+   <Else>
+      <Format var="$uline" />
+      <Call ref="Success_Handler" />
+   </Else>
+   </If>
+</Subroutine>
+
+<Subroutine name="fpui_get_window_attr" description="Call fpui_get_window_attr()" >
+   <Function funcName="fpui_get_window_attr"
+             return="$w_attr"
+             errno="$errno"
+             p1="$fpui_handle" />
+   <If expression="$w_attr EQ %-1">
+      <Then>
+      <Print>Function fpui_get_window_attr() failed</Print>
+      <Call ref="Error_Handler" />
+      </Then>
+   <Else>
+      <Format var="$w_attr" />
+      <Call ref="Success_Handler" />
+   </Else>
+   </If>
+</Subroutine>
+
+<Subroutine name="fpui_get_window_size" description="Call fpui_get_window_size()" >
+   <Function funcName="fpui_get_window_size"
+             return="$returnCode"
+             errno="$errno"
+             p1="$fpui_handle"
+             p2="$row"
+             p3="$column" />
+   <If expression="$returnCode EQ %-1">
+      <Then>
+      <Print>Function fpui_get_window_size() failed</Print>
+      <Call ref="Error_Handler" />
+      </Then>
+   <Else>
+      <Format var="$row" />
+      <Format var="$column" />
+      <Call ref="Success_Handler" />
+   </Else>
+   </If>
+</Subroutine>
+
+<Subroutine name="fpui_home" description="Call fpui_home()" >
+   <Function funcName="fpui_home"
+             return="$returnCode"
+             errno="$errno"
+             p1="$fpui_handle" />
+   <If expression="$returnCode EQ %-1">
+      <Then>
+      <Print>Function fpui_home() failed</Print>
+      <Call ref="Error_Handler" />
+      </Then>
+   <Else>
+      <Call ref="Success_Handler" />
+   </Else>
+   </If>
+</Subroutine>
+
+<Subroutine name="fpui_open" description="Call fpui_open()" >
+   <Function funcName="fpui_open"
+             return="$fpui_handle"
+             errno="$errno"
+             p1="$flags"
+             p2="$regname" />  <!-- $regname -->
+   <If expression="$fpui_handle EQ %-1">
+      <Then>
+      <Print>Function fpui_open() failed</Print>
+      <Call ref="Error_Handler" />
+      </Then>
+   <Else>
+      <Call ref="Success_Handler" />
+   </Else>
+   </If>
+</Subroutine>
+
+<Subroutine name="fpui_open_aux_switch" description="Call fpui_open_aux_switch()" >
+   <Function funcName="fpui_open_aux_switch"
+             return="$aux_handle"
+             errno="$errno" />
+   <If expression="$aux_handle EQ %-1">
+      <Then>
+      <Print>Function fpui_open_aux_switch() failed</Print>
+      <Call ref="Error_Handler" />
+      </Then>
+   <Else>
+      <Call ref="Success_Handler" />
+   </Else>
+   </If>
+</Subroutine>
+
+<Subroutine name="fpui_panel_present" description="Call fpui_panel_present()" >
+   <Function funcName="fpui_panel_present"
+             return="$panel"
+             errno="$errno"
+             p1="$fpui_handle" />
+   <If expression="$panel EQ %-1">
+      <Then>
+      <Print>Function fpui_panel_present() failed</Print>
+      <Call ref="Error_Handler" />
+      </Then>
+   <Else>
+      <Format var="$panel" />
+      <Call ref="Success_Handler" />
+   </Else>
+   </If>
+</Subroutine>
+
+<Subroutine name="fpui_poll" description="Call fpui_poll()" >
+   <Function funcName="fpui_poll"
+             return="$poll_data"
+             errno="$errno"
+             p1="$fpui_handle"
+             p2="$flags" />
+   <If expression="$poll_data EQ %-1">
+      <Then>
+      <Print>Function fpui_poll() failed</Print>
+      <Call ref="Error_Handler" />
+      </Then>
+   <Else>
+      <Format var="$poll_data" />
+      <Call ref="Success_Handler" />
+   </Else>
+   </If>
+</Subroutine>
+
+<Subroutine name="fpui_read" description="Call fpui_read()" >
+   <Function funcName="fpui_read"
+             return="$read_cnt"
+             errno="$errno"
+             p1="$fpui_handle"
+             p2="$read_buf"
+             p3="!sizeof($read_buf)" />
+   <If expression="$read_cnt EQ %-1">
+      <Then>
+      <Print>Function fpui_read() failed</Print>
+      <Call ref="Error_Handler" />
+      </Then>
+   <Else>
+      <Format var="$read_cnt" />
+      <Format var="$read_buf" />
+      <Call ref="Success_Handler" />
+   </Else>
+   </If>
+</Subroutine>
+
+<Subroutine name="fpui_read_aux_switch" description="Call fpui_read_aux_switch()" >
+   <Function funcName="fpui_read_aux_switch"
+             return="$aux_sw"
+             errno="$errno"
+             p1="$aux_handle" />
+   <If expression="$aux_sw EQ %-1">
+      <Then>
+         <If expression="$errno EQ %0">
+         <Then>
+         <Print>No AUX switch present</Print>
+         </Then>
+         <Else>
+         <Print>Function fpui_read_aux_switch() failed</Print>
+         <Call ref="Error_Handler" />
+         </Else>
+         </If>
+      </Then>
+   <Else>
+      <Format var="$aux_sw" />
+      <Call ref="Success_Handler" />
+   </Else>
+   </If>
+</Subroutine>
+
+<Subroutine name="fpui_read_char" description="Call fpui_read_char()" >
+   <Function funcName="fpui_read_char"
+             return="$read_chr"
+             errno="$errno"
+             p1="$fpui_handle" />
+   <If expression="$read_chr EQ @-1">
+      <Then>
+      <Print>Function fpui_read_char() failed</Print>
+      <Call ref="Error_Handler" />
+      </Then>
+   <Else>
+      <Format var="$read_chr" />
+      <Call ref="Success_Handler" />
+   </Else>
+   </If>
+</Subroutine>
+
+<Subroutine name="fpui_read_string" description="Call fpui_read_string()" >
+   <Function funcName="fpui_read_string"
+             return="$read_cnt"
+             errno="$errno"
+             p1="$fpui_handle"
+             p2="$read_buf"
+             p3="!sizeof($read_buf)" />
+   <If expression="$read_cnt EQ %-1">
+      <Then>
+      <Print>Function fpui_read_string() failed</Print>
+      <Call ref="Error_Handler" />
+      </Then>
+   <Else>
+      <Format var="$read_cnt" />
+      <Format var="$read_buf" />
+      <Call ref="Success_Handler" />
+   </Else>
+   </If>
+</Subroutine>
+
+<Subroutine name="fpui_refresh" description="Call fpui_refresh()" >
+   <Function funcName="fpui_refresh"
+             return="$returnCode"
+             errno="$errno"
+             p1="$fpui_handle" />
+   <If expression="$returnCode EQ %-1">
+      <Then>
+      <Print>Function fpui_refresh() failed</Print>
+      <Call ref="Error_Handler" />
+      </Then>
+   <Else>
+      <Call ref="Success_Handler" />
+   </Else>
+   </If>
+</Subroutine>
+
+<Subroutine name="fpui_reset_all_attributes" description="Call fpui_reset_all_attributes()" >
+   <Function funcName="fpui_reset_all_attributes"
+             return="$returnCode"
+             errno="$errno"
+             p1="$fpui_handle" />
+   <If expression="$returnCode EQ %-1">
+      <Then>
+      <Print>Function fpui_reset_all_attributes() failed</Print>
+      <Call ref="Error_Handler" />
+      </Then>
+   <Else>
+      <Call ref="Success_Handler" />
+   </Else>
+   </If>
+</Subroutine>
+
+<Subroutine name="fpui_reset_keymap" description="Call fpui_reset_keymap()" >
+   <Function funcName="fpui_reset_keymap"
+             return="$returnCode"
+             errno="$errno"
+             p1="$fpui_handle"
+             p2="$reset_km" />
+   <If expression="$returnCode EQ %-1">
+      <Then>
+      <Print>Function fpui_reset_keymap() failed</Print>
+      <Call ref="Error_Handler" />
+      </Then>
+   <Else>
+      <Call ref="Success_Handler" />
+   </Else>
+   </If>
+</Subroutine>
+
+<Subroutine name="fpui_set_auto_repeat" description="Call fpui_set_auto_repeat()" >
+   <Function funcName="fpui_set_auto_repeat"
+             return="$returnCode"
+             errno="$errno"
+             p1="$fpui_handle"
+             p2="$auto_rpt" />
+   <If expression="$returnCode EQ %-1">
+      <Then>
+      <Print>Function fpui_set_auto_repeat() failed</Print>
+      <Call ref="Error_Handler" />
+      </Then>
+   <Else>
+      <Call ref="Success_Handler" />
+   </Else>
+   </If>
+</Subroutine>
+
+<Subroutine name="fpui_set_auto_scroll" description="Call fpui_set_auto_scroll()" >
+   <Function funcName="fpui_set_auto_scroll"
+             return="$returnCode"
+             errno="$errno"
+             p1="$fpui_handle"
+             p2="$auto_scr" />
+   <If expression="$returnCode EQ %-1">
+      <Then>
+      <Print>Function fpui_set_auto_scroll() failed</Print>
+      <Call ref="Error_Handler" />
+      </Then>
+   <Else>
+      <Call ref="Success_Handler" />
+   </Else>
+   </If>
+</Subroutine>
+
+<Subroutine name="fpui_set_auto_wrap" description="Call fpui_set_auto_wrap()" >
+   <Function funcName="fpui_set_auto_wrap"
+             return="$returnCode"
+             errno="$errno"
+             p1="$fpui_handle"
+             p2="$auto_wrap" />
+   <If expression="$returnCode EQ %-1">
+      <Then>
+      <Print>Function fpui_set_auto_wrap() failed</Print>
+      <Call ref="Error_Handler" />
+      </Then>
+   <Else>
+      <Call ref="Success_Handler" />
+   </Else>
+   </If>
+</Subroutine>
+
+<Subroutine name="fpui_set_backlight" description="Call fpui_set_backlight()" >
+   <Function funcName="fpui_set_backlight"
+             return="$returnCode"
+             errno="$errno"
+             p1="$fpui_handle"
+             p2="$backlight" />
+   <If expression="$returnCode EQ %-1">
+      <Then>
+      <Print>Function fpui_set_backlight() failed</Print>
+      <Call ref="Error_Handler" />
+      </Then>
+   <Else>
+      <Call ref="Success_Handler" />
+   </Else>
+   </If>
+</Subroutine>
+
+<Subroutine name="fpui_set_backlight_timeout" description="Call fpui_set_backlight_timeout()" >
+   <Function funcName="fpui_set_backlight_timeout"
+             return="$returnCode"
+             errno="$errno"
+             p1="$fpui_handle"
+             p2="$timeout" />
+   <If expression="$returnCode EQ %-1">
+      <Then>
+      <Print>Function fpui_set_backlight_timeout() failed</Print>
+      <Call ref="Error_Handler" />
+      </Then>
+   <Else>
+      <Call ref="Success_Handler" />
+   </Else>
+   </If>
+</Subroutine>
+
+<Subroutine name="fpui_set_character_blink" description="Call fpui_set_character_blink()" >
+   <Function funcName="fpui_set_character_blink"
+             return="$returnCode"
+             errno="$errno"
+             p1="$fpui_handle"
+             p2="$blink" />
+   <If expression="$returnCode EQ %-1">
+      <Then>
+      <Print>Function fpui_set_character_blink() failed</Print>
+      <Call ref="Error_Handler" />
+      </Then>
+   <Else>
+      <Call ref="Success_Handler" />
+   </Else>
+   </If>
+</Subroutine>
+
+<Subroutine name="fpui_set_cursor" description="Call fpui_set_cursor()" >
+   <Function funcName="fpui_set_cursor"
+             return="$returnCode"
+             errno="$errno"
+             p1="$fpui_handle"
+             p2="$cursor" />
+   <If expression="$returnCode EQ %-1">
+      <Then>
+      <Print>Function fpui_set_cursor() failed</Print>
+      <Call ref="Error_Handler" />
+      </Then>
+   <Else>
+      <Call ref="Success_Handler" />
+   </Else>
+   </If>
+</Subroutine>
+
+<Subroutine name="fpui_set_cursor_blink" description="Call fpui_set_cursor_blink()" >
+   <Function funcName="fpui_set_cursor_blink"
+             return="$returnCode"
+             errno="$errno"
+             p1="$fpui_handle"
+             p2="$blink" />
+   <If expression="$returnCode EQ %-1">
+      <Then>
+      <Print>Function fpui_set_cursor_blink() failed</Print>
+      <Call ref="Error_Handler" />
+      </Then>
+   <Else>
+      <Call ref="Success_Handler" />
+   </Else>
+   </If>
+</Subroutine>
+
+<Subroutine name="fpui_set_cursor_pos" description="Call fpui_set_cursor_pos()" >
+   <Function funcName="fpui_set_cursor_pos"
+             return="$returnCode"
+             errno="$errno"
+             p1="$fpui_handle"
+             p2="$row"
+             p3="$column" />
+   <If expression="$returnCode EQ %-1">
+      <Then>
+      <Print>Function fpui_set_cursor_pos() failed</Print>
+      <Call ref="Error_Handler" />
+      </Then>
+   <Else>
+      <Call ref="Success_Handler" />
+   </Else>
+   </If>
+</Subroutine>
+
+<Subroutine name="fpui_set_emergency" description="Call fpui_set_emergency()" >
+   <Function funcName="fpui_set_emergency"
+             return="$returnCode"
+             errno="$errno"
+             p1="$fpui_handle"
+             p2="$emergency" />
+   <If expression="$returnCode EQ %-1">
+      <Then>
+      <Print>Function fpui_set_emergency() failed</Print>
+      <Call ref="Error_Handler" />
+      </Then>
+   <Else>
+      <Call ref="Success_Handler" />
+   </Else>
+   </If>
+</Subroutine>
+
+<Subroutine name="fpui_set_keymap" description="Call fpui_set_keymap()" >
+   <Function funcName="fpui_set_keymap"
+             return="$returnCode"
+             errno="$errno"
+             p1="$fpui_handle"
+             p2="$key"
+             p3="$key_str" />
+   <If expression="$returnCode EQ %-1">
+      <Then>
+      <Print>Function fpui_set_keymap() failed</Print>
+      <Call ref="Error_Handler" />
+      </Then>
+   <Else>
+      <Call ref="Success_Handler" />
+   </Else>
+   </If>
+</Subroutine>
+
+<Subroutine name="fpui_set_reverse_video" description="Call fpui_set_reverse_video()" >
+   <Function funcName="fpui_set_reverse_video"
+             return="$returnCode"
+             errno="$errno"
+             p1="$fpui_handle"
+             p2="$rev_video" />
+   <If expression="$returnCode EQ %-1">
+      <Then>
+      <Print>Function fpui_set_reverse_video() failed</Print>
+      <Call ref="Error_Handler" />
+      </Then>
+   <Else>
+      <Call ref="Success_Handler" />
+   </Else>
+   </If>
+</Subroutine>
+
+<Subroutine name="fpui_set_tab" description="Call fpui_set_tab()" >
+   <Function funcName="fpui_set_tab"
+             return="$returnCode"
+             errno="$errno"
+             p1="$fpui_handle" />
+   <If expression="$returnCode EQ %-1">
+      <Then>
+      <Print>Function fpui_set_tab() failed</Print>
+      <Call ref="Error_Handler" />
+      </Then>
+   <Else>
+      <Call ref="Success_Handler" />
+   </Else>
+   </If>
+</Subroutine>
+
+<Subroutine name="fpui_set_underline" description="Call fpui_set_underline()" >
+   <Function funcName="fpui_set_underline"
+             return="$returnCode"
+             errno="$errno"
+             p1="$fpui_handle"
+             p2="$uline" />
+   <If expression="$returnCode EQ %-1">
+      <Then>
+      <Print>Function fpui_set_underline() failed</Print>
+      <Call ref="Error_Handler" />
+      </Then>
+   <Else>
+      <Call ref="Success_Handler" />
+   </Else>
+   </If>
+</Subroutine>
+
+<Subroutine name="fpui_set_window_attr" description="Call fpui_set_window_attr()" >
+   <Function funcName="fpui_set_window_attr"
+             return="$returnCode"
+             errno="$errno"
+             p1="$fpui_handle"
+             p2="$w_attr" />
+   <If expression="$returnCode EQ %-1">
+      <Then>
+      <Print>Function fpui_set_window_attr() failed</Print>
+      <Call ref="Error_Handler" />
+      </Then>
+   <Else>
+      <Call ref="Success_Handler" />
+   </Else>
+   </If>
+</Subroutine>
+
+<Subroutine name="fpui_write" description="Call fpui_write()" >
+   <Function funcName="fpui_write"
+             return="$write_cnt"
+             errno="$errno"
+             p1="$fpui_handle"
+             p2="$write_buf"
+             p3="$write_len" />
+   <If expression="$write_cnt EQ %-1">
+      <Then>
+      <Print>Function fpui_write() failed</Print>
+      <Call ref="Error_Handler" />
+      </Then>
+   <Else>
+      <Format var="$write_len" />
+      <Format var="$write_buf" />
+      <Format var="$write_cnt" />
+      <Call ref="Success_Handler" />
+   </Else>
+   </If>
+</Subroutine>
+
+<Subroutine name="fpui_write_at" description="Call fpui_write_at()" >
+   <Function funcName="fpui_write_at"
+             return="$write_cnt"
+             errno="$errno"
+             p1="$fpui_handle"
+             p2="$write_buf"
+             p3="$write_len"
+             p4="$row"
+             p5="$column" />
+   <If expression="$write_cnt EQ %-1">
+      <Then>
+      <Print>Function fpui_write_at() failed</Print>
+      <Call ref="Error_Handler" />
+      </Then>
+   <Else>
+      <Format var="$write_len" />
+      <Format var="$write_buf" />
+      <Format var="$write_cnt" />
+      <Call ref="Success_Handler" />
+   </Else>
+   </If>
+</Subroutine>
+
+<Subroutine name="fpui_write_char" description="Call fpui_write_char()" >
+   <Function funcName="fpui_write_char"
+             return="$write_cnt"
+             errno="$errno"
+             p1="$fpui_handle"
+             p2="$write_chr" />
+   <If expression="$write_cnt EQ %-1">
+      <Then>
+      <Print>Function fpui_write_char() failed</Print>
+      <Call ref="Error_Handler" />
+      </Then>
+   <Else>
+      <Format var="$write_chr" />
+      <Format var="$write_cnt" />
+      <Call ref="Success_Handler" />
+   </Else>
+   </If>
+</Subroutine>
+
+<Subroutine name="fpui_write_char_at" description="Call fpui_write_char_at()" >
+   <Function funcName="fpui_write_char_at"
+             return="$write_cnt"
+             errno="$errno"
+             p1="$fpui_handle"
+             p2="$write_chr"
+             p3="$row"
+             p4="$column" />
+   <If expression="$write_cnt EQ %-1">
+      <Then>
+      <Print>Function fpui_write_char_at() failed</Print>
+      <Call ref="Error_Handler" />
+      </Then>
+   <Else>
+      <Format var="$write_chr" />
+      <Format var="$write_cnt" />
+      <Call ref="Success_Handler" />
+   </Else>
+   </If>
+</Subroutine>
+
+<Subroutine name="fpui_write_string" description="Call fpui_write_string()" >
+   <Function funcName="fpui_write_string"
+             return="$write_cnt"
+             errno="$errno"
+             p1="$fpui_handle"
+             p2="$write_buf" />
+   <If expression="$write_cnt EQ %-1">
+      <Then>
+      <Print>Function fpui_write_string() failed</Print>
+      <Call ref="Error_Handler" />
+      </Then>
+   <Else>
+      <Format var="$write_buf" />
+      <Format var="$write_cnt" />
+      <Call ref="Success_Handler" />
+   </Else>
+   </If>
+</Subroutine>
+
+<Subroutine name="fpui_write_string_at" description="Call fpui_write_string_at()" >
+   <Function funcName="fpui_write_string_at"
+             return="$write_cnt"
+             errno="$errno"
+             p1="$fpui_handle"
+             p2="$write_buf"
+             p3="$row"
+             p4="$column" />
+   <If expression="$write_cnt EQ %-1">
+      <Then>
+      <Print>Function fpui_write_string_at() failed</Print>
+      <Call ref="Error_Handler" />
+      </Then>
+   <Else>
+      <Format var="$write_buf" />
+      <Format var="$write_cnt" />
+      <Call ref="Success_Handler" />
+   </Else>
+   </If>
+</Subroutine>
+
+<!--
+ test case(s)
+-->
+<TestCase name="Case_C7030" description="C7030: FPUI Display Graphics" >
+   <!-- set abort_mode to FALSE to attempt 'invalid' API function operations;
+        script will proceed (not abort) in these cases to allow validation
+        of the (forced) error -->
+   <!-- when abort_mode is TRUE, script operates normally (abort on error) -->
+   <Set var="$abort_mode" value="#TRUE"/>
+   <Set var="$failed"     value="#FALSE"/>
+
+   <!-- create app (RAW mode) -->
+   <Set var="$flags"     value="#O_RDWR"/>
+   <Set var="$flags"     value="#O_DIRECT" operation="add"/>
+   <Set var="$regname"   value="@C7030_00"/>
+   <Call ref="fpui_open" setUp="API_Init_Variables"/>
+   
+   <!-- app does NOT have focus (FPM): send 'raw' graphic command to the display -->
+   <Set var="$write_buf" file="@C7030_enable_graphic_underlay.txt"/> 
+   <Set var="$write_len" value="%4"/>
+   <Call ref="fpui_write" setUp="API_Init_Variables"/>
+
+   <!-- put the app in focus, wait for confirmation -->
+   <FPUIInput file="@Cxxxx_key0.txt" description="Provide keypress [0] input"/>
+   <Set var="$focus" value="%0"/>
+   <While expression="$focus NE %1">
+      <Sleep time="%1"/>
+      <Call ref="fpui_get_focus" setUp="API_Init_Variables"/>
+   </While>
+
+   <!-- confirm that the display data was ignored (since the app was not in focus) -->
+   <Dump dump="VD" file="@C7030_vd_blank.txt"/>
+   <If expression="!VDCompare(@C7030_vd_blank.txt) EQ #FALSE">
+      <Then>
+      <Print>Raw VD graphic display incorrect (non-focus)</Print>
+      <Dump dump="VD" force="#TRUE" file="@C7030_vd_blank_err.txt"/>
+      <Abort status="FAIL"/>
+      </Then>
+   </If>
+
+   <!-- send raw data to the display (again) -->
+   <Set var="$write_buf" file="@C7030_enable_graphic_underlay.txt"/> 
+   <Set var="$write_len" value="%4"/>
+   <Call ref="fpui_write" setUp="API_Init_Variables"/>
+
+   <!-- confirm that the data was displayed (since the app is now in focus) -->
+   <Dump dump="VD" file="@C7030_vd_raw_graphic.txt"/>
+   <If expression="!VDCompare(@C7030_vd_raw_graphic.txt) EQ #FALSE">
+      <Then>
+      <Print>Raw VD graphic display incorrect (focus)</Print>
+      <Dump dump="VD" force="#TRUE" file="@C7030_vd_raw_graphic_err.txt"/>
+      <Abort status="FAIL"/>
+      </Then>
+   </If>
+
+   <!-- attempt to read and verify a 'raw' keystroke -->
+   <!-- [YES] key: raw keycode is 0x1B 0x4F 0x53 or (27)(79)(81)-->
+   <FPUIInput file="@Cxxxx_keyYES.txt" description="Provide keypress [YES] input"/>
+   <Sleep time="%1"/>
+   <Set var="$key" value="%27"/>   
+   <Call ref="fpui_read_char" setUp="API_Init_Variables"/>
+   <If expression="$read_chr NE $key">
+      <Then>
+      <Print>Raw keycode data incorrect (1)</Print>
+      <Format var="$read_chr"/>
+      <Abort status="FAIL"/>
+      </Then>
+   </If>
+   <Set var="$key" value="%79"/>   
+   <Call ref="fpui_read_char" setUp="API_Init_Variables"/>
+   <If expression="$read_chr NE $key">
+      <Then>
+      <Print>Raw keycode data incorrect (2)</Print>
+      <Format var="$read_chr"/>
+      <Format var="$key"/>
+      <Abort status="FAIL"/>
+      </Then>
+   </If>
+   <Set var="$key" value="%81"/>   
+   <Call ref="fpui_read_char" setUp="API_Init_Variables"/>
+   <If expression="$read_chr NE $key">
+      <Then>
+      <Print>Raw keycode data incorrect (3)</Print>
+      <Format var="$read_chr"/>
+      <Abort status="FAIL"/>
+      </Then>
+   </If>
+
+   <!-- close app -->
+   <Call ref="fpui_close" setUp="API_Init_Variables"/>
+</TestCase>
+
+<!--
+ test suite(s)
+-->
+<TestSuite name="All_Test_Cases" description="Run All Test Cases" >
+  <TestCaseRef ref="Case_C7030" />
+</TestSuite>
+
+</APIVSXML>
+
