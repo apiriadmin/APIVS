@@ -1158,11 +1158,23 @@ APIR3.1.1.2[31]	If application programs use graphics on a window, the API shall
       <Call ref="fpui_get_focus" setUp="API_Init_Variables"/>
    </While>
 
-   <!-- confirm that the display data was ignored (since the app was not in focus) -->
+   <!-- confirm that the graphics data is not redisplayed when the app is
+        brought into focus (APIR3.1.1.2[31]) -->
    <Dump dump="VD" file="@C7030_vd_blank.txt"/>
    <If expression="!VDCompare(@C7030_vd_blank.txt) EQ #FALSE">
       <Then>
       <Print>Raw VD graphic display incorrect (non-focus)</Print>
+      <Dump dump="VD" force="#TRUE" file="@C7030_vd_blank_err.txt"/>
+      <Abort status="FAIL"/>
+      </Then>
+   </If>
+
+   <!-- confirm that the graphics data is not redisplayed when the app is
+        refreshed (APIR3.1.1.2[31]) -->
+   <Call ref="fpui_refresh" setUp="API_Init_Variables" />
+   <If expression="!VDCompare(@C7030_vd_blank.txt) EQ #FALSE">
+      <Then>
+      <Print>Raw VD graphic display incorrect (after refresh)</Print>
       <Dump dump="VD" force="#TRUE" file="@C7030_vd_blank_err.txt"/>
       <Abort status="FAIL"/>
       </Then>
@@ -1173,45 +1185,13 @@ APIR3.1.1.2[31]	If application programs use graphics on a window, the API shall
    <Set var="$write_len" value="%4"/>
    <Call ref="fpui_write" setUp="API_Init_Variables"/>
 
-   <!-- confirm that the data was displayed (since the app is now in focus) -->
+   <!-- confirm that the graphics data was displayed (since the app is now in focus)
+        APIR3.1.1.2[30] -->
    <Dump dump="VD" file="@C7030_vd_raw_graphic.txt"/>
    <If expression="!VDCompare(@C7030_vd_raw_graphic.txt) EQ #FALSE">
       <Then>
       <Print>Raw VD graphic display incorrect (focus)</Print>
       <Dump dump="VD" force="#TRUE" file="@C7030_vd_raw_graphic_err.txt"/>
-      <Abort status="FAIL"/>
-      </Then>
-   </If>
-
-   <!-- attempt to read and verify a 'raw' keystroke -->
-   <!-- [YES] key: raw keycode is 0x1B 0x4F 0x53 or (27)(79)(81)-->
-   <FPUIInput file="@Cxxxx_keyYES.txt" description="Provide keypress [YES] input"/>
-   <Sleep time="%1"/>
-   <Set var="$key" value="%27"/>   
-   <Call ref="fpui_read_char" setUp="API_Init_Variables"/>
-   <If expression="$read_chr NE $key">
-      <Then>
-      <Print>Raw keycode data incorrect (1)</Print>
-      <Format var="$read_chr"/>
-      <Abort status="FAIL"/>
-      </Then>
-   </If>
-   <Set var="$key" value="%79"/>   
-   <Call ref="fpui_read_char" setUp="API_Init_Variables"/>
-   <If expression="$read_chr NE $key">
-      <Then>
-      <Print>Raw keycode data incorrect (2)</Print>
-      <Format var="$read_chr"/>
-      <Format var="$key"/>
-      <Abort status="FAIL"/>
-      </Then>
-   </If>
-   <Set var="$key" value="%81"/>   
-   <Call ref="fpui_read_char" setUp="API_Init_Variables"/>
-   <If expression="$read_chr NE $key">
-      <Then>
-      <Print>Raw keycode data incorrect (3)</Print>
-      <Format var="$read_chr"/>
       <Abort status="FAIL"/>
       </Then>
    </If>
