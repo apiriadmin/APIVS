@@ -141,7 +141,7 @@ uint8_t specialChars[NUMBER_OF_SPEC_CHARS][BYTES_PER_SPEC_CHAR] =   // 8 chars(r
       { 0,0,0,0, 0,0,0,0}, {0,0,0,0, 0,0,0,0}, {0,0,0,0, 0,0,0,0}, {0,0,0,0,0,0,0,0}
 };
 
-  
+uint8_t graphicModeFlags = 0;  
 
 int16_t numRows = DEFAULT_DISPLAY_ROWS;
 int16_t numCols = DEFAULT_DISPLAY_COLS;
