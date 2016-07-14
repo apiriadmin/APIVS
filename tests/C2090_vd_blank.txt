@@ -1,6 +1,6 @@
 #
 # -- Virtual Display and Global Variable Dump --
-# Date: 20160518 15:07:20 -     
+# Date: 20160711 20:37:36 -     
 #
 # Display Rows: 
 #0       1         2         3         4         
@@ -79,3 +79,5 @@
 #
 # No Special Characters defined 
 #
+# Graphic Mode Flags: 
+0x00
