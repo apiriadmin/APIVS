@@ -7,11 +7,29 @@
     File Type: APIVSXML test script (XML format)
     Test Case: APIVS.TCS.1350
   Description: FIO Library Composite Testing
+       TC XML: begins on Line 1254
   
    This test case validates that each FIO function operates correctly under
    typical operating conditions with other API functions using at least one
    composite test (APIVS SRS Section 3.22.5).  
+        
+ Test Case Narrative
  
+   FIO 332 testing: register with the FIO API 
+   query a 332-type FIO on SP5 
+   register a 332-type FIO on SP5 
+   confirm that no communications are occuring yet 
+   attempt to register an incompatible device on SP5 (NEMA DR BIU)
+   setup FIO332 SDLC response messages 
+   enable comm 
+   validate command messages 
+   reset frame count status 
+   check comm status 
+   disable comm and verify 
+   deregister device and confirm no connection 
+   (call to fio_fiod_status_get should fail) 
+   disconnect from FIO API 
+
  Date      Revision    Description
  2/22/16   1.0         initial release
 -->

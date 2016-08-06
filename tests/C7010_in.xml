@@ -7,7 +7,25 @@
     File Type: APIVSXML test script (XML format)
     Test Case: APIRI.TCS.7010
   Description: FPUI Display Presence and Size
-  
+       TC XML: begins on Line 323
+       
+ Test Case Narrative
+ 
+   open an FPUI connection 
+   write regname to VD 
+   wait up to five (5) seconds to detect the front panel 
+   get the window size 
+   set 'emergency' (request focus) 
+   wait to get focus 
+   enable signal handler on panel changes 
+   send BELL character 
+   allow one second for the user to disable the FP 
+   wait up to five (5) seconds to detect the change 
+   wait up to 60 seconds for FP reconnect 
+   disconnect -
+
+ Requirements Tested
+       
 APIR3.1.1[5]	If no physical display exists, the API shall operate as if
                it has a display with a size of 8 lines x 40 characters.
 

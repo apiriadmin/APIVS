@@ -7,6 +7,59 @@
     File Type: APIVSXML test script (XML format)
     Test Case: APIRI.TCS.2020
   Description: FPUI Front Panel Manager
+       TC XML: begins on Line 1236
+       
+ Test Case Narrative
+ 
+   check default FPM screen (APIR3.1.1.1[1], APIR3.1.1.1[4],
+        APIR3.1.1.1[6], APIR3.1.1.1[15]) 
+   setUp 16 'apps' and their VD contents  
+   verify FPM screen with 16 'app' names listed (APIR3.1.1.1[2], APIR3.1.1.1[3],
+         APIR3.1.1.1[5]) 
+   scroll down three rows to see last six 'apps' (APIR3.1.1.1[19]) 
+   verify second (scrolled) FPM screen with 16 'apps' 
+   scroll back up three rows to see original apps display (APIR3.1.1.1[19]) 
+   return to FPM (APIR3.1.1.1[10])
+   set 'app' (0) as default window and verify VD (APIR3.1.1.1[7], APIR3.1.1.1[9]) 
+   set FPM as default window and verify VD (APIR3.1.1.1[8], APIR3.1.1.1[11]) 
+   select 'app' (0) and verify proper VD (APIR3.1.1.1[13]) 
+   attempt to return to FPM but delay completion of {**} sequence
+        for more than 1.0 seconds (APIR3.1.1.1[12]) 
+   attempt to return to FPM but delay completion of {**},<ESC> sequence
+        for more than 1.0 seconds (APIR3.1.1.1[12]) 
+   return to FPM (APIR3.1.1.1[10])
+   select 'app' (1) and verify proper VD 
+   return to FPM 
+   select 'app' (2) and verify proper VD 
+   return to FPM 
+   select 'app' (3) and verify proper VD 
+   return to FPM 
+   select 'app' (4) and verify proper VD 
+   return to FPM 
+   select 'app' (5) and verify proper VD 
+   return to FPM 
+   select 'app' (6) and verify proper VD 
+   return to FPM 
+   select 'app' (7) and verify proper VD 
+   return to FPM 
+   select 'app' (8) and verify proper VD 
+   return to FPM 
+   select 'app' (9) and verify proper VD 
+   return to FPM 
+   select 'app' (10) and verify proper VD 
+   return to FPM 
+   select 'app' (11) and verify proper VD 
+   return to FPM 
+   select 'app' (12) and verify proper VD 
+   return to FPM 
+   select 'app' (13) and verify proper VD 
+   return to FPM 
+   select 'app' (14) and verify proper VD 
+   return to FPM 
+   select 'app' (15) and verify proper VD 
+   select 'app' (0) directly from 'app' (15) and verify VD (APIR3.1.1.1[20]) 
+
+ Requirements Tested
   
 APIR3.1.1.1[1]	The API shall provide a window selection screen called the
                Front Panel Manager Window from which Operational Users may

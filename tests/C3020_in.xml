@@ -7,7 +7,58 @@
     File Type: APIVSXML test script (XML format)
     Test Case: APIRI.TCS.3020
   Description: FIO Inputs and Outputs
+       TC XML: begins on Line 1326
+       
+ Test Case Narrative
  
+   register two 'apps' with the FIO API 
+   register a 332-type FIO on SP5 each app  
+   setup SDLC response messages 
+   filtered inputs response frame (bits 1,3,13,15 set)   
+   raw inputs response frame (bits 1,3,13,15 set)   
+   schedule the raw inputs request frame 52 
+   start comm 
+   output reservation handling 
+   unreserve all outputs (App 1) 
+   unreserve all outputs again, should be no error 
+   reserve select outputs 
+   reserve select outputs again, should be no error 
+   verify our output reservations 
+   (bits 0,2,12,14 set) 
+   attempt to reserve select outputs IN CONFLICT (App 2) 
+   (bits 0,8,10 set) 
+   since we need this to fail, change abort_mode to FALSE 
+   change abort_mode back to normal 
+   verify non-conflicting output points in reservation also failed (APIR3.1.2[35]) 
+   now register select outputs no conflict (App 2) 
+   (bits 4,6,8,10 set)    
+   set outputs on continuous (App 1) 
+   verify outputs set correctly in frame 55 
+   read raw inputs and verify (App 1) 
+   (bits 1,3,13,15 set) 
+   read filtered inputs and verify (App 1) 
+   (bits 1,3,13,15 set) 
+   read outputs and verify (App 1) 
+   (bits 0,2,12,14 set) 
+   read raw inputs and verify (App 2) 
+   (bits 1,3,13,15 set) 
+   read filtered inputs and verify (App 2) 
+   (bits 1,3,13,15 set) 
+   read outputs and verify (App 2) 
+   (bits 0,2,12,14 set) 
+   set outputs on continuous (App 2) 
+   (bits 4,6,8,10 set)    
+   verify outputs set correctly in frame 55 
+   read outputs and verify (App 2) 
+   (bits 0,2,4,6,8,10,12,14 all set now) 
+   disable FIO app 1 
+   confirm that app 1 output points are off and app 2
+        output points remain on (APIR3.1.2[28])
+   disable FIO app 2 
+   deregister both apps 
+
+ Requirements Tested
+       
 APIR3.1.2[28]	When a Field I/O Device is disabled, any output points which
                have been reserved by that application program shall be set to
                Off.

@@ -8,6 +8,7 @@
     Test Case: APIVS.TCS.1430
   Description: TOD Library C Function Error Checking
                TOD Library C Function Argument Boundary Checking
+       TC XML: begins on Line 398
   
    This test case validates that each TOD function returns the correct error
    codes for the error conditions defined in Section 4.1 of the ATC 5401
@@ -24,6 +25,15 @@
          function as expected, but is not intended to identify or capture
          every possible case.
         
+ Test Case Narrative
+ 
+   allow validation of forced errors 
+   set time source value for request to highest enum plus one 
+   set signal number for request to invalid signal (SIGRTMAX+1) 
+   pass invalid handle to cancel 
+   set signal number for request to invalid signal (SIGRTMAX+1) 
+   pass invalid handle to cancel 
+
  Date      Revision    Description
  2/22/16   1.0         initial release
 -->

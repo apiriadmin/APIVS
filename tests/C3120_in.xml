@@ -7,7 +7,32 @@
     File Type: APIVSXML test script (XML format)
     Test Case: APIRI.TCS.3120
   Description: FIO Asynchronous Notification
+       TC XML: begins on Line 1248
+       
+ Test Case Narrative
  
+   register with the FIO API 
+   create an FIO332 
+   setup FIO332 SDLC response messages 
+   enable signal handler 
+   register for async notification (single) 
+   identify by frame number and registered fiod (APIR3.1.2[124], APIR3.1.2[125]) 
+   set the frame rate for command 49 module status to FIO_HZ_1 
+   enable the FIO332 
+   check for response frame 
+   verify all fields of $notify_info (APIR3.1.2[126]) 
+   check for response frame again (signal should not occur in single mode) 
+   Repeat the notification for a frame with no response set (error notice) 
+   register for async notification (single) frame 181 
+   check for response notification 
+   verify the status field of $notify_info (error notice) 
+   register for async notification (continuous) (APIR3.1.2[127]) 
+   check for response frame 
+   check for response frame again (continuous) 
+   deregister and exit 
+
+ Requirements Tested
+       
 APIR3.1.2[124]	The API shall provide a method to notify an application program
                when a command frame is acknowledged (response frame received
                by the API) or when an error occurs.

@@ -7,7 +7,22 @@
     File Type: APIVSXML test script (XML format)
     Test Case: APIRI.TCS.2080
   Description: FPUI Asynchronous Notification and Focus
+       TC XML: begins on Line 1154
+       
+ Test Case Narrative
+ 
+   enable signal handler on panel changes 
+   setUp two FPUI spplications 
+   put the first app in focus, wait for confirmation of focus (APIR3.1.1.2[33]) 
+   confirm async notification of first app 'in focus' (APIR3.1.1.2[32]) 
+   return to FPM 
+   confirm async notification of first app 'lost focus' (APIR3.1.1.2[32]) 
+   put the second app in focus, wait for confirmation of focus (APIR3.1.1.2[33]) 
+   confirm async notification of second app 'in focus' (APIR3.1.1.2[32]) 
+   close both apps 
 
+ Requirements Tested
+  
 APIR3.1.1.2[32]	The API shall provide an asynchronous notification to alert
                   programs when their associated windows go in and out of focus.
 

@@ -7,11 +7,52 @@
     File Type: APIVSXML test script (XML format)
     Test Case: APIVS.TCS.1160
   Description: Front Panel Manager Window Testing
+       TC XML: begins on Line 1191
   
    This test case validates that the Front Panel Manager Window operates per
    the requirements established in Section 3.1.1.1 of the ATC 5401 Standard
    (APIVS SRS Section 3.21.6).
-   
+        
+ Test Case Narrative
+ 
+   check default FPM screen 
+   setUp 16 'apps' and their VD contents  
+   verify FPM screen with 16 'apps' 
+   scroll down three rows to see last six 'apps' 
+   verify second (scrolled) FPM screen with 16 'apps' 
+   return to FPM 
+   select 'app' (0) and verify proper VD 
+   return to FPM 
+   select 'app' (1) and verify proper VD 
+   return to FPM 
+   select 'app' (2) and verify proper VD 
+   return to FPM 
+   select 'app' (3) and verify proper VD 
+   return to FPM 
+   select 'app' (4) and verify proper VD 
+   return to FPM 
+   select 'app' (5) and verify proper VD 
+   return to FPM 
+   select 'app' (6) and verify proper VD 
+   return to FPM 
+   select 'app' (7) and verify proper VD 
+   return to FPM 
+   select 'app' (8) and verify proper VD 
+   return to FPM 
+   select 'app' (9) and verify proper VD 
+   return to FPM 
+   select 'app' (10) and verify proper VD 
+   return to FPM 
+   select 'app' (11) and verify proper VD 
+   return to FPM 
+   select 'app' (12) and verify proper VD 
+   return to FPM 
+   select 'app' (13) and verify proper VD 
+   return to FPM 
+   select 'app' (14) and verify proper VD 
+   return to FPM 
+   select 'app' (15) and verify proper VD 
+
  Date      Revision    Description
  2/22/16   1.0         initial release
  2/24/16   1.1         second release

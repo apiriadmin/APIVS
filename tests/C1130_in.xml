@@ -8,6 +8,7 @@
     Test Case: APIVS.TCS.1130
   Description: FPUI Library C Function Error Checking
                FPUI Library C Function Argument Boundary Checking
+       TC XML: begins on Line 1158
   
    This test case validates that each FPUI function returns the correct error
    codes for the error conditions defined in Section 4.1 of the ATC 5401
@@ -23,6 +24,14 @@
          reasonable argument bounds checking and return status handling
          function as expected, but is not intended to identify or capture
          every possible case.
+        
+ Test Case Narrative
+ 
+   test function calls with no fpui_open call (invalid file handle) 
+    (most function calls should fail) 
+   test aux switch functions with no fpui_open_aux_switch() call 
+   now test select function calls with invalid arguments 
+    (all function calls should fail) 
 
  Date      Revision    Description
  2/22/16   1.0         initial release

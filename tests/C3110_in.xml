@@ -7,7 +7,55 @@
     File Type: APIVSXML test script (XML format)
     Test Case: APIRI.TCS.3110
   Description: FIO Module Status
+       TC XML: begins on Line 1268
+       
+ Test Case Narrative
  
+   register with the FIO API 
+   create an FIO332 
+   setup FIO332 SDLC response messages 
+   setup Type 177 Response Frame (no status bits set) 
+   set the frame rate for command 49 module status to FIO_HZ_ONCE, disable others 
+   enable the FIO332 
+   verify first frame 49 after enable has reset of module status bits (APIR3.1.2[122]) 
+   generate a second module status command frame 
+   set the frame rate for command 49 module status to FIO_HZ_ONCE 
+   verify that the following frame 49 is normal (no reset bits) 
+   get input filters: confirm defaults are 5 samples 
+   Repeat for each of hardware reset, comm loss and watchdog reset status bits  
+   change lead filter to 3, trailing filter to 3 
+   verify new values 
+   enable transition reporting for input 0 
+   verify test input transition point set 
+   Set the type 177 module status response frame to indicate hardware reset 
+   verify that the input filter settings are now reset to defaults (APIR3.1.2[123]) 
+   get input filters: confirm defaults are 5 samples 
+   verify that the input transition reporting is now reset to defaults (APIR3.1.2[123]) 
+   verify next frame 49 has reset of hardware reset status bit (APIR3.1.2[123]) 
+   setup Type 177 Response Frame (no status bits set) 
+   change lead filter to 3, trailing filter to 3 
+   verify new values 
+   enable transition reporting for input 0 
+   verify test input transition point set 
+   Set the type 177 module status response frame to indicate comm loss 
+   verify that the input filter settings are now reset to defaults (APIR3.1.2[123]) 
+   get input filters: confirm defaults are 5 samples 
+   verify that the input transition reporting is now reset to defaults (APIR3.1.2[123]) 
+   verify next frame 49 has reset of corresponding module status bits (APIR3.1.2[123]) 
+   setup Type 177 Response Frame (no status bits set) 
+   change lead filter to 3, trailing filter to 3 
+   verify new values 
+   enable transition reporting for input 0 
+   verify test input transition point set 
+   Set the type 177 module status response frame to indicate watchdog reset 
+   verify that the input filter settings are now reset to defaults (APIR3.1.2[123]) 
+   get input filters: confirm defaults are 5 samples 
+   verify that the input transition reporting is now reset to defaults (APIR3.1.2[123]) 
+   verify next frame 49 has reset of corresponding module status bits (APIR3.1.2[123]) 
+   deregister and exit 
+
+ Requirements Tested
+       
 APIR3.1.2[122]	The API shall reset all Module Status bits using the Request
                Module Status frame when a FIO332, FIOTS1, FIOTS2 or SIU device
                is first Enabled (as defined in Item “g”).

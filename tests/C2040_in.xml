@@ -7,6 +7,27 @@
     File Type: APIVSXML test script (XML format)
     Test Case: APIRI.TCS.2040
   Description: FPUI Reading and Writing Data
+       TC XML: begins on Line 1187
+       
+ Test Case Narrative
+ 
+   open an FPUI connection 
+   put the app in focus, wait for confirmation 
+   write to the VD using all write methods 
+   (APIR3.1.1.2[15]) 
+   (APIR3.1.1.2[16]) 
+   (APIR3.1.1.2[11]) 
+   (APIR3.1.1.2[12]) 
+   (APIR3.1.1.2[13]) 
+   (APIR3.1.1.2[14]) 
+   re-position the cursor and confirm (APIR3.1.1.2[17], APIR3.1.1.2[18]) 
+    verify VD content 
+   read and validate keystrokes using all read methods 
+   (APIR3.1.1.2[9]) 
+   (APIR3.1.1.2[10]) 
+   close connection 
+
+ Requirements Tested
   
 APIR3.1.1.2[9]	The API shall provide a function that is used to determine if
                there is data in the input buffer of a window.

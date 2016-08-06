@@ -7,7 +7,21 @@
     File Type: APIVSXML test script (XML format)
     Test Case: APIRI.TCS.3100
   Description: FIO CMU Configuration
+       TC XML: begins on Line 1230
+       
+ Test Case Narrative
  
+   register an app and an FIOCMU 
+   setup FIOCMU SDLC response messages 
+   enable the FIOCMU 
+   send Type 65 Command Frame (Get CMU Configuration) (APIR3.1.2[121]) 
+   confirm transmitted command frame 
+   verify last response frame 193 size 
+   verify last frame raw data    
+   deregister and exit 
+
+ Requirements Tested
+       
 APIR3.1.2[121]	The API shall provide a method for an application program to
                send the Get CMU Configuration frame to a registered FIOCMU
                device.

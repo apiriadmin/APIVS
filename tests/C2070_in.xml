@@ -7,7 +7,18 @@
     File Type: APIVSXML test script (XML format)
     Test Case: APIRI.TCS.2070
   Description: FPUI Key Mapping
+       TC XML: begins on Line 1138
+       
+ Test Case Narrative
+ 
+   setup an FPUI spplication 
+   put the app in focus, wait for confirmation 
+   generate each key press, confirm individual keycode read for each (APIR3.1.1.2[28]) 
+   mapped individual key codes from Table 1 of ATC5401 (APIR3.1.1.2[29]) 
+   close app 
 
+ Requirements Tested
+  
 APIR3.1.1.2[28]	Application programs shall be able to interpret all ATC
                   controller keys as individual key codes.
 

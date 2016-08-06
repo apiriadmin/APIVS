@@ -7,7 +7,55 @@
     File Type: APIVSXML test script (XML format)
     Test Case: APIRI.TCS.2010
   Description: FPUI Text UI Virtual Displays
-  
+       TC XML: begins on Line 1228
+       
+ Test Case Narrative
+ 
+   check default FPM screen
+   setup 16 'apps' and their VD contents 
+   select 'app' (0) and verify proper VD
+   return to FPM
+   select 'app' (1) and verify proper VD
+   return to FPM
+   select 'app' (2) and verify proper VD
+   return to FPM
+   select 'app' (3) and verify proper VD
+   return to FPM
+   select 'app' (4) and verify proper VD
+   return to FPM
+   select 'app' (5) and verify proper VD
+   return to FPM
+   select 'app' (6) and verify proper VD
+   return to FPM
+   select 'app' (7) and verify proper VD
+   return to FPM
+   select 'app' (8) and verify proper VD
+   return to FPM
+   select 'app' (9) and verify proper VD
+   return to FPM
+   select 'app' (10) and verify proper VD
+   return to FPM
+   select 'app' (11) and verify proper VD
+   return to FPM
+   select 'app' (12) and verify proper VD
+   return to FPM
+   select 'app' (13) and verify proper VD
+   return to FPM
+   select 'app' (14) and verify proper VD
+   return to FPM
+   select 'app' (15) and verify proper VD
+   input a keypress and read on 'app' (15)
+   get the window size
+   turn on backlight
+   turn off backlight
+   refresh and clear screen and confirm
+   refresh and clear screen for 'app' (1) and confirm
+   return to FPM
+   select 'app' (1) and verify proper VD
+   close 'app' (1) and confirm that it's closed
+
+ Requirements Tested
+       
 APIR3.1.1[1]	The API shall provide a text-based user interface capability
                to allow application programs running concurrently on an ATC
                controller unit to share the controller’s Front Panel display.

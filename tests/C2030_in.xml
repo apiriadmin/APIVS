@@ -7,7 +7,52 @@
     File Type: APIVSXML test script (XML format)
     Test Case: APIRI.TCS.2030
   Description: FPUI Character Set and Screen Attributes
+       TC XML: begins on Line 1208
+       
+ Test Case Narrative
  
+   setup two FPUI spplications 
+   put the first app in focus, wait for confirmation 
+    verify VD attributes of first app match defaults (APIR3.1.1[12]) 
+   verify screen attributes match defaults (0x60000) (APIR3.1.1[12], APIR3.1.1.2[27]) 
+    set display for auto-wrap and confirm (APIR3.1.1.2[7], APIR3.1.1.2[8], APIR3.1.1.2[27])
+    set display for auto-scroll and confirm (APIR3.1.1.2[7], APIR3.1.1.2[8], APIR3.1.1.2[27])
+    set display for auto-repeat and confirm (APIR3.1.1.2[7], APIR3.1.1.2[8], APIR3.1.1.2[27])
+   turn on backlight for 120 seconds (APIR3.1.1.2[7], APIR3.1.1.2[8], APIR3.1.1.2[27])
+   verify test attributes: auto_wrap, auto_scroll, auto_repeat,
+        backlight, backlight timeout 120s (0xf00c0000) 
+    write full character set at 1,1 
+   set the cursor (blinking and visible at 5,1) 
+   (APIR3.1.1.2[7], APIR3.1.1.2[8], APIR3.1.1.2[27]) 
+   (APIR3.1.1.2[7], APIR3.1.1.2[8], APIR3.1.1.2[27]) 
+   set and confirm various text attributes (APIR3.1.1.2[7], APIR3.1.1.2[8], APIR3.1.1.2[27]) 
+   (APIR3.1.1.2[7], APIR3.1.1.2[8], APIR3.1.1.2[27]) 
+   (APIR3.1.1.2[7], APIR3.1.1.2[8], APIR3.1.1.2[27]) 
+    write full character set with attributes at 5,1 
+    verify correct VD contents  
+   return to FPM 
+   put the second app in focus, wait for confirmation 
+    verify attributes match defaults (distinct from first window)
+         (APIR3.1.1[10], APIR3.1.1[11]) 
+    verify VD attributes of second app match defaults 
+   return to FPM 
+   put the first app in focus, wait for confirmation 
+    reset character attributes  (APIR3.1.1.2[27]) 
+    write full character set at 5,1 (APIR3.1.1.2[9]) 
+    verify correct VD contents  
+   reset to screen defaults (0x00060000) 
+   verify screen attributes now match defaults 
+   return to FPM 
+   put the second app in focus, wait for confirmation 
+   have first app (non-focus) reserve AUX switch (APIR3.1.1.2[4], APIR3.1.1.2[5])) 
+   set the switch to ON, read and confirm (APIR3.1.1.2[19]) 
+   set the switch to OFF, read and confirm (APIR3.1.1.2[19]) 
+   have second app attempt to reserve AUX switch (should FAIL) (APIR3.1.1.2[4]) 
+   release AUX switch reservation 
+   close both apps 
+
+ Requirements Tested
+  
 APIR3.1.1[9]	The API shall support the display character set as defined in the ATC Controller
                Standard, Section 7.1.4 (ATC 5201 has this in Section 6.1.4).
 

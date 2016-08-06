@@ -6,8 +6,23 @@
      Filename: C7020_in.xml
     File Type: APIVSXML test script (XML format)
     Test Case: APIRI.TCS.7020
-  Description: FPUI Bell Activation and Application Termination
-  
+  Description: Bell Activation and Application Termination
+       TC XML: begins on Line 258
+       
+ Test Case Narrative
+ 
+   setup App #1 
+   turn on backlight for 120 seconds 
+   write regname and bell state to VD 
+   setup App #2  
+   turn on backlight for 120 seconds 
+   write regname and bell state to VD 
+   loop for 120 seconds 
+      send BELL character to display for App #2
+   terminate without closing either app's FPUI handle (abnormal) 
+
+ Requirements Tested
+       
 APIR3.1.1.2[24]	The bell of the controller’s Front Panel shall be activated
                   only if a bell character, ^G (hex value 07), is sent from an
                   application program which has a window that has focus.
