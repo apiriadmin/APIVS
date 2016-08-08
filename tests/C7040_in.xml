@@ -7,7 +7,22 @@
     File Type: APIVSXML test script (XML format)
     Test Case: APIRI.TCS.7040
   Description: Bell Activation and Application Termination
-  
+       TC XML: begins on Line 277
+       
+ Test Case Narrative
+ 
+   setup App #1 
+   write regname to VD 
+   setup App #2  
+   write regname to VD 
+   set 'emergency' (request focus) 
+   setup App #3  
+   write regname to VD 
+   set 'emergency' (request focus) 
+   sleep for 120 seconds 
+
+ Requirements Tested
+       
 APIR3.1.1.2[34]	The API shall provide a method to allow application programs
                   to indicate that a window desires focus from the Operational User.
 

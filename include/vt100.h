@@ -113,7 +113,8 @@
 #define COMPARE_CURSOR       5
 #define COMPARE_SPEC_SIZES   6
 #define COMPARE_SPEC_BITMAPS 7
-#define COMPARE_COMPLETE     8
+#define COMPARE_GRAPHIC_MODE 8
+#define COMPARE_COMPLETE     9
 
 //   ESC Sequence Action Codes
 #define CURSOR_UP            1
@@ -143,6 +144,14 @@
 #define MIN_SPEC_CHAR_COLS   5     // each Special Char can have from 5 - 8 columns of 8-bit pixels 
 #define MAX_SPEC_CHAR_COLS   8     //  (and each column is one of the BYTES_PER_SPECIAL CHARACTER )
 #define BYTES_PER_SPEC_CHAR  8     // max number of 8-bit binary bit-map bytes per Special Character
+
+// Graphic Mode Constants
+#define GRAPHIC_UNDERLAY_1   0x01
+#define GRAPHIC_UNDERLAY_2   0x02
+#define GRAPHIC_OVERLAY_1    0x04
+#define GRAPHIC_OVERLAY_2    0x08
+#define GRAPHIC_CURSOR_U     0x10
+#define GRAPHIC_CURSOR_O     0x20
 
 //   Set & Clear Attributes Action Codes - not all are used for ITE VSE 
 //   ITE also has used other special <ESC> sequences for some of the same actions
@@ -302,6 +311,7 @@ extern int16_t numRows;
 extern int16_t numCols;
 extern int16_t specialCharColumns[NUMBER_OF_SPEC_CHARS];
 extern uint8_t specialChars[NUMBER_OF_SPEC_CHARS][BYTES_PER_SPEC_CHAR];
+extern uint8_t graphicModeFlags;
 
 extern char *fileNamePtr;           // store the passed File Name Pointer for access by all 
 

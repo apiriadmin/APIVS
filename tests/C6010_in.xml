@@ -7,7 +7,17 @@
     File Type: APIVSXML test script (XML format)
     Test Case: APIRI.TCS.6010
   Description: FPUI System Configuration Window
+       TC XML: begins on Line 1180
+       
+ Test Case Narrative
  
+   open System Configuration Window 
+   get window size, verify same as physical size (8x40) (APIR3.2.1[2]) 
+   verify attributes match defaults (0x60000) (APIR3.2.1[13]) 
+   close window 
+
+ Requirements Tested
+       
 APIR3.2.1[2]   The display size of the ATC Configuration Window shall be consistent with
                the windows of the Front Panel Manager (see Section 3.1.1).
 

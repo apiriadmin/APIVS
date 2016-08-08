@@ -7,7 +7,34 @@
     File Type: APIVSXML test script (XML format)
     Test Case: APIRI.TCS.3130
   Description: FIO Dark Channel Mapping
+       TC XML: begins on Line 1258
+       
+ Test Case Narrative
  
+   register two apps and an FIOCMU each app 
+   enable the FIOCMU (app 1) 
+   confirm that the current (default) Dark Mask is FIO_CMU_DC_MASK1 (APIR3.1.2[130]) 
+   set the Dark Mask to FIO_CMU_DC_MASK3 and confirm (APIR3.1.2[128])
+   confirm proper Type 67 Command Frame (DM3) 
+   enable the FIOCMU (app 2) 
+   second app: set the Dark Mask to FIO_CMU_DC_MASK2 
+   verify that most recent setting is being used (APIR3.1.2[129]) 
+   confirm proper Type 67 Command Frame (DM2) 
+   disable and deregister FIOCMU both apps 
+   register FIOMMU each app 
+   enable the FIOMMU (app 1) 
+   confirm that the current (default) Load Switch Flash bit is FIO_MMU_FLASH_BIT_OFF (APIR3.1.2[133]) 
+   first app: set the bit to FIO_MMU_FLASH_BIT_ON and confirm (APIR3.1.2[131]) 
+   confirm proper Type 0 Command Frame (LSF1) 
+   enable the FIOMMU (app 2) 
+   second app: set the bit to FIO_MMU_FLASH_BIT_OFF 
+   verify that most recent setting is being used (APIR3.1.2[132]) 
+   confirm proper Type 0 Command Frame (LSF0) 
+   disable and deregister FIOMMU both apps 
+   deregister both apps 
+
+ Requirements Tested
+       
 APIR3.1.2[128]	The API shall provide a method to set and get the Dark Channel
                Map selection for a registered FIOCMU device.
 

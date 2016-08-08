@@ -7,7 +7,35 @@
     File Type: APIVSXML test script (XML format)
     Test Case: APIRI.TCS.3090
   Description: FIO Health Monitor
+       TC XML: begins on Line 1288
+       
+ Test Case Narrative
  
+   register two 'apps' with the FIO API 
+   register a 332-type FIO on SP5 each app  
+   setup FIO332 SDLC response messages 
+   start comm 
+   register each app with the Health Monitor (APIR3.1.2[110], APIR3.1.2[111], APIR3.1.2[112])) 
+   call heartbeat function and check responses (APIR3.1.2[109]) 
+   let App 1 time out 
+   heartbeat App 2 (to confirm it doesn't affect App 1) 
+   confirm that App 1 has timed out 
+   heartbeat function returns fault condition, does NOT reset fault (APIR3.1.2[119], APIR3.1.2[120]))
+   confirm that we no longer have access to our FIO device (APIR3.1.2[113]) 
+   confirm that we cannot just reenable our FIO device (APIR3.1.2[118]) 
+   (function call should fail) 
+   let App 2 also time out 
+   confirm that App 2 has timed out 
+   heartbeat function should NOT restore health 
+   reset APP1 fault condition and confirm it (APIR3.1.2[115]) 
+   confirm that we have access to our FIO device again (APIR3.1.2[117]) 
+   confirm that App2 fault condition persists (APIR3.1.2[116]) 
+   deregister (HM) App1 (APIR3.1.2[114]) 
+   confirm App1 has Health Monitor disabled 
+   deregister (HM) App2 and close both apps 
+
+ Requirements Tested
+       
 APIR3.1.2[109]	The API shall provide an API Health Monitor Function which
                registered application programs use to indicate to the API
                that they are operational.

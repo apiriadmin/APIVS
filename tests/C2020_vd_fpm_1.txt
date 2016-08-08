@@ -1,6 +1,6 @@
 #
 # -- Virtual Display and Global Variable Dump --
-# Date: 20160511 15:13:55 -     
+# Date: 20160711 20:20:11 -     
 #
 # Display Rows: 
 #0       1         2         3         4         
@@ -79,3 +79,5 @@ SELECT WINDOW [0-F]  SET DEFAULT *[0-F]
 #
 # No Special Characters defined 
 #
+# Graphic Mode Flags: 
+0x00

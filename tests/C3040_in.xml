@@ -7,7 +7,56 @@
     File Type: APIVSXML test script (XML format)
     Test Case: APIRI.TCS.3040
   Description: FIO Filtered Inputs and Transition Buffering
+       TC XML: begins on Line 1325
+       
+ Test Case Narrative
  
+   register two 'apps' with the FIO API 
+   register a 332-type FIO on SP5 each app  
+   setup SDLC response messages (including transition buffering) 
+   schedule the raw inputs request frame 52 
+   enable FIO332 APP 1 
+   enable FIO332 APP 2 
+   get input filters: confirm defaults are 5 samples (APIR3.1.2[59]) 
+   APP 1 change lead filter to 3, trailing filter to 3 (APIR3.1.2[56]) 
+   verify new values 
+   APP 2 change lead filter to 2, trailing filter to 4 
+   verify shortest values of App 1 and App 2 are used (APIR3.1.2[57]) 
+   verify values used are returned by set filter operation (APIR3.1.2[58]) 
+   transition buffer inputs (App 1) 
+   confirm monitoring is disabled by default for all inputs (APIR3.1.2[64]) 
+   disable all input transitions monitoring 
+   disable again, should be no error (APIR3.1.2[66]) 
+   enable select input transition monitoring (App 1) (APIR3.1.2[63]) 
+   verify test input transition point set 
+   enable again, should be no error (APIR3.1.2[65]) 
+   enable same input transition point (App 2) 
+   verify test input transition point set 
+   create a transition entry 
+   schedule the transition buffer request frame 54 
+   read transition entry (App 1) (APIR3.1.2[60]) 
+   create a second, different transition entry 
+   schedule the transition buffer request frame 54 
+   confirm that we can read the same first entry (App 2) independent
+        of newer transition frames (APIR3.1.2[67]) and unaffected by the
+        earlier transition entry read by App 1 (APIR3.1.2[68]) 
+   read second transition entry (App 2) 
+   enable input transitions (inputs 0,1,2,3,4) (App 2) 
+   generate a response buffer with 255 further transition entries
+        and Field I/O Device overrun indication 
+   schedule the transition buffer request frame 54 
+   verify that all 255 transitions are available (App 2) (APIR3.1.2[61]) 
+   verify that the FIOD overrun status is returned (APIR3.1.2[69]) 
+   generate transition buffer response frames with > 1024 entries 
+   schedule the transition buffer request frame 54 
+   verify that the API retains a FIFO of 1024 entries (APIR3.1.2[62]) 
+   verify that the API overrun status is returned (APIR3.1.2[70]) 
+   disable fiod (App2) 
+   disable fiod (App1) 
+   close both apps 
+
+ Requirements Tested
+       
 APIR3.1.2[56]	The API shall provide functions which allow application programs
                to set and get the leading and trailing edge filter values on a
                per input basis for all Field I/O Devices that support

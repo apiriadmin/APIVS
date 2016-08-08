@@ -7,7 +7,19 @@
     File Type: APIVSXML test script (XML format)
     Test Case: APIRI.TCS.2050
   Description: FPUI Special Characters
+       TC XML: begins on Line 1138
+       
+ Test Case Narrative
+ 
+   setup an FPUI spplication 
+   put the app in focus, wait for confirmation 
+   set the cursor at 1,1 
+   compose and display eight (8) special characters (APIR3.1.1.2[20], APIR3.1.1.2[21])
+   verify special character display 
+   close app 
 
+ Requirements Tested
+  
 APIR3.1.1.2[20]	The API shall provide a function to compose special characters
                   as described by the ATC Controller Standard, Section 7.1.4
                   (ATC 5201 has this in Section 6.1.4).

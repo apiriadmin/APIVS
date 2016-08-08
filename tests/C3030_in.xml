@@ -7,7 +7,55 @@
     File Type: APIVSXML test script (XML format)
     Test Case: APIRI.TCS.3030
   Description: FIO Channel Mapping
+       TC XML: begins on Line 1307
+       
+ Test Case Narrative
  
+   register two 'apps' with the FIO API 
+   setup SDLC response messages 
+   (for this script the default schedule is OK) 
+   register a FIOOUT6SIU1 on SP5 each app 
+   enable OUT6SIU1 app 1 
+   enable OUT6SIU1 app 2 
+   register a FIOCMU on SP5 each app 
+   enable CMU app 1 
+   enable CMU app 2 
+   Output reservation handling 
+   reserve select outputs (App 1) 
+   reserve select outputs (App 2) 
+   Channel reservation handling 
+   unreserve all channels (App 1) 
+   unreserve all channels again, should be no error 
+   reserve select channels 
+   reserve select channels again, should be no error 
+   verify our channel reservations 
+   (bits 0,2,12,14 set) 
+   register select channels IN CONFLICT (App 2) 
+   (bits 0,8,10 set) 
+   since we need this to fail, change abort_mode to FALSE 
+   change abort_mode back to normal 
+   verify non-conflicting channels in reservation also failed (APIR3.1.2[50]) 
+   now register select channels no conflict (App 2) 
+   verify channel reservationss (App 2) 
+   (bits 4,6,8,10 set) 
+   Setup test channel mappings app 1 
+   map output 0 to channel 0 red 
+   map output 2 to channel 0 green 
+   set outputs on continuous (App 1) 
+   Setup test channel mappings app 2 
+   map output 4 to channel 4 yellow 
+   map output 6 to channel 6 red 
+   set outputs on continuous (App 2) 
+   verify outputs set correctly in frame 55 
+   verify channels set correctly in frame 67 (APIR3.1.2[45]) 
+   clear output reservations (App 1) 
+   confirm that app 1 channel mappings are also gone (APIR3.1.2[55]) 
+   clear channel reservations (App 2) 
+   confirm that app 2 channel mappings are also gone (APIR3.1.2[55]) 
+   close both apps 
+
+ Requirements Tested
+       
 APIR3.1.2[44]	The API shall provide a method for application programs to
                map/unmap reserved output points to reserved channels and
                colors on a registered FIOMMU or FIOCMU device.

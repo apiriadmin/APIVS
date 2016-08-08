@@ -7,6 +7,184 @@
     File Type: APIVSXML test script (XML format)
     Test Case: APIRI.TCS.3050
   Description: FIO Frame Frequency
+       TC XML: begins on Line 1457
+       
+ Test Case Narrative
+ 
+   register App 1 with the FIO API 
+   register a FIOCMU on SP5 (App 1) 
+   setup FIOCMU SDLC response messages 
+   enable comm (FIOCMU) 
+   register a  FIOOUT14SIU1 on SP5 (App 1) 
+   setup FIO SIU* SDLC response messages 
+   enable comm (FIOOUT14SIU1) 
+   confirm default frame settings and frame counts (APIR3.1.2[71]) 
+   test frames (FIOOUT14SIU1) 
+   reset frame count status 
+   start test period 
+   get device communications status 
+   command frame 49 
+   command frame 51 
+   command frame 52 
+   command frame 53 
+   command frame 54 
+   command frame 55 
+   command frame 60 
+   test frames (FIOCMU) 
+   reset frame count status 
+   start test period 
+   get device communications status 
+   command frame 61 
+   command frame 62 
+   command frame 65 
+   command frame 66 (broadcast frame not included in counts) 
+   command frame 67 
+   disable FIOCMU comm (App 1)
+   deregister FIOCMU device 
+   select FIOOUT14SIU1 device (App 1) 
+   disable default scheduled frames we are not testing 
+   set scheduled frame frequencies to FIO_HZ_0 and confirm (APIR3.1.2[74]) 
+   register App 2 with the FIO API 
+   register a FIOOUT14SIU1 on SP5 (App 2) 
+   enable comm (FIOOUT14SIU1) (App 2) 
+   try to test CF49 frame rate at 5Hz (App 2) 
+   (should still be at 10Hz and have ~100 successful messages) (APIR3.1.2[75]) 
+   test CF49 frame rate at 5Hz (App 1)
+   (should be at 5HZ now and have ~50 successful messages) 
+   close App 2 
+   switch to App 1 
+   Test frame 49 frequency rates 1, 2, 5, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100 
+   set CF49 frame rate to 1Hz (App 1)
+   (should have ~10 successful messages) 
+   set CF49 frame rate to 2Hz (App 1)
+   (should have ~20 successful messages) 
+   set CF49 frame rate to 5Hz (App 1)
+   (should have ~50 successful messages) 
+   set CF49 frame rate to 10Hz (App 1)
+   (should have ~100 successful messages) 
+   set CF49 frame rate to 20Hz (App 1)
+   (should have ~200 successful messages) 
+   set CF49 frame rate to 30Hz (App 1)
+   (should have ~300 successful messages) 
+   set CF49 frame rate to 40Hz (App 1)
+   (should have ~400 successful messages) 
+   set CF49 frame rate to 50Hz (App 1)
+   (should have ~500 successful messages) 
+   set CF49 frame rate to 60Hz (App 1)
+   (should have ~600 successful messages) 
+   set CF49 frame rate to 70Hz (App 1)
+   (should have ~700 successful messages) 
+   set CF49 frame rate to 80Hz (App 1)
+   (should have ~800 successful messages) 
+   set CF49 frame rate to 90Hz (App 1)
+   (should have ~900 successful messages) 
+   test CF49 frame rate at 100Hz (App 1)
+   (should have ~1000 successful messages) 
+   disable frame 49 
+   Schedule one-time non-default frame 60 (FIO_HZ_ONCE) (APIR3.1.2[76])
+   (should have exactly 1 successful message) 
+   confirm transmitted command frame 
+   disable FIOOUT14SIU1 (App 1) 
+   deregister FIOOUT14SIU1 device 
+   register a FIOMMU on SP5 
+   setup FIOMMU SDLC response messages 
+   enable comm (MMU) 
+   register a FIODR1 on SP5 
+   setup FIODR1 SDLC response messages 
+   enable comm DR1 
+   register a FIODR2 on SP5 
+   setup FIODR2 SDLC response messages 
+   enable comm DR2 
+   register a FIODR3 on SP5 
+   setup FIODR3 SDLC response messages 
+   enable comm DR3 
+   register a FIODR4 on SP5 
+   setup FIODR4 SDLC response messages 
+   enable comm DR4 
+   register a FIOTF1 on SP5 
+   setup FIOTF1 SDLC response messages 
+   enable comm TF1 
+   register a FIOTF2 on SP5 
+   setup FIOTF2 SDLC response messages 
+   enable comm TF2 
+   register a FIOTF3 on SP5 
+   setup FIOTF3 SDLC response messages 
+   enable comm TF3 
+   register a FIOTF4 on SP5 
+   setup FIOTF4 SDLC response messages 
+   enable comm TF4 
+   confirm default frame settings and frame counts (APIR3.1.2[72]) 
+   test frames (FIOMMU) 
+   reset frame count status 
+   start test period 
+   get device communications status 
+   command frame 0 
+   command frame 1 
+   command frame 3 
+   command frame 9 (broadcast frame not included in counts) 
+   test frames (FIOTF1) 
+   reset frame count status 
+   start test period 
+   get device communications status 
+   command frame 10 
+   test frames (FIOTF2) 
+   reset frame count status 
+   start test period 
+   get device communications status 
+   command frame 11 
+   test frames (FIOTF3) 
+   reset frame count status 
+   start test period 
+   get device communications status 
+   command frame 12 
+   test frames (FIOTF4) 
+   reset frame count status 
+   start test period 
+   get device communications status 
+   command frame 13 
+   command frame 18 (broadcast frame not included in counts) 
+   test frames (FIODR1) 
+   reset frame count status 
+   start test period 
+   get device communications status 
+   command frame 20 
+   test frames (FIODR2) 
+   reset frame count status 
+   start test period 
+   get device communications status 
+   command frame 21 
+   test frames (FIODR3) 
+   reset frame count status 
+   start test period 
+   get device communications status 
+   command frame 22 
+   test frames (FIODR4) 
+   reset frame count status 
+   start test period 
+   get device communications status 
+   command frame 23 
+   disable FIOMMU comm 
+   deregister device 
+   disable FIODR1 comm 
+   deregister device 
+   disable FIODR2 comm 
+   deregister device 
+   disable FIODR3 comm 
+   deregister device 
+   disable FIODR4 comm 
+   deregister device 
+   disable FIOTF1 comm 
+   deregister device 
+   disable FIOTF2 comm 
+   deregister device 
+   disable FIOTF3 comm 
+   deregister device 
+   disable FIOTF4 comm 
+   deregister device 
+   close App 1 
+
+ Requirements Tested
+       
  
 APIR3.1.2[71]	The ATC Controller Standard, Section 8, specifies the frames for
                communication with Field I/O Devices for Model 332 Cabinets,

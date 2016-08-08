@@ -7,6 +7,7 @@
     File Type: APIVSXML test script (XML format)
     Test Case: APIVS.TCS.1420
   Description: TOD Library C Function Conforming Arguments
+       TC XML: begins on Line 393
   
    This test case validates that each TOD function has the correct function
    arguments as defined in Section 4.1 of the ATC 5401 Standard
@@ -24,6 +25,10 @@
          This function currently validates that the correct function arguments
          to each API function do NOT generate an error.
         
+ Test Case Narrative
+ 
+   call all TOD functions
+
  Date      Revision    Description
  2/22/16   1.0         initial release
 -->

@@ -7,7 +7,71 @@
     File Type: APIVSXML test script (XML format)
     Test Case: APIRI.TCS.3080
   Description: FIO Device Status
+       TC XML: begins on Line 1300
+       
+ Test Case Narrative
  
+   register with the FIO API 
+   register a FIOMMU on SP5 
+   setup FIOMMU SDLC response messages 
+   start comm 
+   wait 10s 
+   get comm status (APIR3.1.2[102]) 
+   (should have ~210 successful messages) 
+   verify communications enabled/disabled (APIR3.1.2[105](i))   
+   verify cumulative successful count for all frames (APIR3.1.2[105](ii))
+   verify cumulative error count for all frames (APIR3.1.2[105](iii))   
+   verify per frame status (APIR3.1.2[105](iv)) 
+   command frame 0 information 
+   verify current scheduled frequency 
+   verify cumulative successful response count 
+   verify cumulative error 
+   verify number of errors in last 10 frames 
+   verify last frame sequence number 
+   verify last response frame 128 size 
+   verify last frame raw data    
+   command frame 1 information 
+   verify current scheduled frequency 
+   verify cumulative successful response count 
+   verify cumulative error 
+   verify number of errors in last 10 frames 
+   verify last frame sequence number 
+   verify last response frame 129 size 
+   verify last frame raw data    
+   command frame 3 information 
+   verify current scheduled frequency 
+   verify cumulative successful response count 
+   verify cumulative error 
+   verify number of errors in last 10 frames 
+   verify last frame sequence number 
+   verify last response frame 131 size 
+   verify last frame raw data    
+   reset comm status (APIR3.1.2[107]) 
+   confirm reset status 
+   modify FIOMMU frame 0 response to include excessive delay (increase service time delay) 
+   these responses should be seen as errors by the API (APIR3.1.2[108])
+   CF0: service 500us, response 442us, command 1031us, total=1973us
+   wait 10s 
+   get frame 0 comm status 
+   (should have ~100 frame 0 error messages) 
+   modify FIOMMU frame 1 response to include excessive delay (increase service time delay) 
+   these responses should be seen as errors by the API (APIR3.1.2[108])
+   CF1: service 500us, response 1074us, command 360us, total=1934us 
+   reset comm status 
+   wait 10s 
+   get frame 1 comm status 
+   (should have ~100 frame 1 error messages) 
+   modify FIOMMU frame 3 response to include excessive delay (increase service time delay) 
+   these responses should be seen as errors by the API (APIR3.1.2[108])
+   CF3: service 500us, response 1705us, command 360us, total=2565us 
+   reset comm status 
+   wait 10s 
+   get frame 3 comm status 
+   (should have ~10 frame 3 error messages) 
+   close app 
+
+ Requirements Tested
+       
 APIR3.1.2[102]	The API shall provide functions which allow application programs
                to obtain status information of a registered Field I/O Device.
 

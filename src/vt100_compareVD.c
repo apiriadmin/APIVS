@@ -126,7 +126,7 @@ char errorBuffer[100] = {
 	//     8.  Compare Completed OKAY!
 	//
 	//pthread_mutex_lock(&vDisplay.mutex);
-	usleep(100000);
+	usleep(11000);
 	while ( compareStage < COMPARE_COMPLETE  )
 	{
 		    // read a line at a time to compare with the VD
@@ -354,10 +354,10 @@ char errorBuffer[100] = {
 							sprintf(errorBuffer,"ERR_11: VD SpecChar %d differs in # of cols.  VD: %d ; file value: %d", 
 									i+1, specialCharColumns[i], valueSC );
 						
-	#if DEBUG_ON & DEBUG_SPECIAL
+#if DEBUG_ON & DEBUG_SPECIAL
 							printf("\n vt100_compareVD: %s ", errorBuffer);
 							printf("\n     lineBuffer is: %s", lineBuffer);
-	#endif
+#endif
 	
 							vt100_set_errorText(errorBuffer);
 							break;
@@ -383,7 +383,7 @@ char errorBuffer[100] = {
 							compareStage = COMPARE_SPEC_BITMAPS;
 						}
 						else {
-							compareStage = COMPARE_COMPLETE;
+							compareStage = COMPARE_GRAPHIC_MODE;
 						}
 							
 					}
@@ -446,12 +446,23 @@ char errorBuffer[100] = {
 					numSpecChars--;
 					if( numSpecChars <= 0 )
 					{
-						compareStage = COMPARE_COMPLETE;
-						break;
+						compareStage = COMPARE_GRAPHIC_MODE;
 					}
 				}
 			}
-			
+			else if (compareStage == COMPARE_GRAPHIC_MODE) {
+				sscanf(lineBuffer, "%x", &fileParmValue);
+				if( graphicModeFlags != fileParmValue ) {
+					vt100_set_errorCode(ERR_11_VD_MATCH_ERR);
+					sprintf(errorBuffer,"ERR_11: VD Graphic Mode differs: VD: %02x ; file value: %02x:", 
+						(int) graphicModeFlags, (int) fileParmValue);
+						vt100_set_errorText(errorBuffer);
+						compareResult = 1;        // mismatch in parameter compare 
+						break;
+				} else {
+					compareStage = COMPARE_COMPLETE;
+				}
+			}
 		}   // endif - compareStage > COMPARE_CURSOR  
 	
 	}   // end - while ( 1) 

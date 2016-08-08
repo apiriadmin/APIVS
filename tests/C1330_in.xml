@@ -8,6 +8,7 @@
     Test Case: APIVS.TCS.1330
   Description: FIO Library C Function Error Checking
                FIO Library C Function Argument Boundary Checking
+       TC XML: begins on Line 1255
 
    This test case validates that each FIO function returns the correct error
    codes for the error conditions defined in Section 4.1 of the ATC 5401
@@ -23,6 +24,13 @@
          with invalid arguments, and demonstrates that reasonable argument
          bounds checking and return status handling function as expected,
          but is not intended to identify or capture every possible case.
+        
+ Test Case Narrative
+ 
+   test all function calls with no fio_register call 
+    (most function calls should fail) 
+   now test select function calls with invalid arguments 
+    (all function calls should fail) 
 
  Date      Revision    Description
  2/22/16   1.0         initial release

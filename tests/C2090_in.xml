@@ -7,7 +7,24 @@
     File Type: APIVSXML test script (XML format)
     Test Case: APIRI.TCS.2090
   Description: FPUI Raw Data Handling
+       TC XML: begins on Line 1160
+       
+ Test Case Narrative
+ 
+   create app (RAW mode) (APIR3.1.1.2[45]) 
+   app does NOT have focus (FPM): send 'raw' data to the display (APIR3.1.1.2[45]) 
+   put the app in focus, wait for confirmation 
+   confirm that the display data was ignored (since the app was not in focus)
+        (APIR3.1.1.2[47]) 
+   send raw data to the display (again) 
+   confirm that the data was displayed (since the app is now in focus)
+        (APIR3.1.1.2[46]) 
+   attempt to read and verify a 'raw' keystroke (APIR3.1.1.2[48], APIR3.1.1.2[49]) 
+   [YES] key: raw keycode is 0x1B 0x4F 0x51 or (27)(79)(81)
+   close app 
 
+ Requirements Tested
+  
 APIR3.1.1.2[45]	The API shall provide a function to send raw output data
                   to the display.
 

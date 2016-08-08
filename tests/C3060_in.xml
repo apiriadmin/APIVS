@@ -7,7 +7,43 @@
     File Type: APIVSXML test script (XML format)
     Test Case: APIRI.TCS.3060
   Description: FIO Failed State and Fault Monitoring
+       TC XML: begins on Line 1306
+       
+ Test Case Narrative
  
+   register two 'apps' with the FIO API 
+   register a FIOCMU on SP5 each app  
+   get the Failed State Action (FSA) this FIOCMU  
+   check the default value (APIR3.1.2[79])
+   set the FSA to Non-Latched and confirm the change (APIR3.1.2[77], APIR3.1.2[81]) 
+   set the FSA to Latched (App 2) and confirm the change (APIR3.1.2[80]) 
+   set the FSA to None (both apps) and confirm the change (APIR3.1.2[78], APIR3.1.2[82]) 
+   deregister the FIOCMU both apps 
+   register an FIOTS1 on SP5 each app  
+   get the Fault Monitor (FM) state this FIOTS1  
+   check the default value (ON) (APIR3.1.2[87]) 
+   Attempt to reserve the fault monitor output point (App 1) (APIR3.1.2[84])
+   since we need this to fail, change abort_mode to FALSE 
+   change abort_mode back to normal 
+   set the FM to OFF (App 1) and confirm the change (APIR3.1.2[83], APIR3.1.2[85])  
+   set the FM back to ON (App 1)  
+   set the FM to OFF (App 2) and confirm the change  
+   set the FM back to ON (App 2)  
+   check that it is actually back ON now (APIR3.1.2[86])  
+   get the Voltage Monitor (VM) state this FIOTS1  
+   check the default value (ON) (APIR3.1.2[92]) 
+   Attempt to reserve the voltage monitor output point (App 1) (APIR3.1.2[89])
+   since we need this to fail, change abort_mode to FALSE 
+   change abort_mode back to normal 
+   set the VM to OFF (App 1) and confirm the change (APIR3.1.2[88], APIR3.1.2[90]  
+   set the VM back to ON (App 1)  
+   set the VM to OFF (App 2) and confirm the change  
+   set the VM back to ON (App 2)  
+   check that it is actually back ON now (APIR3.1.2[91])  
+   close both apps 
+
+ Requirements Tested
+       
 APIR3.1.2[77]	The API shall provide a method to set/get the Failed State 
                Action of a FIOCMU Field I/O Device.
 

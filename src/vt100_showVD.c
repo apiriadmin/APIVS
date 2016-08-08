@@ -353,6 +353,11 @@ char *p_tabStops     = NULL;			       //   "
 		
 		fprintf(pFile,"\n\n");
 	}
+	
+	// Graphic Mode Flags
+	fprintf(pFile,"\n#===========================================================\n");
+	fprintf(pFile, "\nGraphic Mode Flags:\n");
+	fprintf(pFile, "0x%02x\n\n", graphicModeFlags );
 
 	return;
 	

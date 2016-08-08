@@ -7,7 +7,44 @@
     File Type: APIVSXML test script (XML format)
     Test Case: APIRI.TCS.3070
   Description: FIO Watchdog Outputs
+       TC XML: begins on Line 1285
+       
+ Test Case Narrative
  
+   register two 'apps' with the FIO API 
+   register a 332-type FIO on SP5 each app  
+   setup SDLC response messages 
+   let App 1 register and set the watchdog point (APIR3.1.2[93], APIR3.1.2[96])
+   confirm it 
+   verify that we can't reserve the watchdog output (APIR3.1.2[95]) 
+   change abort_mode back to normal 
+   verify that it's too late for App 2 to set the point (APIR3.1.2[94]) 
+   change abort_mode back to normal 
+   let App 2 confirm the point's location 
+   start comm APP 2 
+   start comm APP 1 
+   heartbeat from App 1 and confirm the output did not toggle (APIR3.1.2[97])  
+   heartbeat from App 2 and confirm the output did toggle (APIR3.1.2[98], APIR3.1.2[99])  
+   change rate of outputs command frame 55 to FIO_HZ_ONCE 
+   verify watchdog output last sent is set on 
+   heartbeat from App 2 
+   verify watchdog output has not toggled in next outputs command frame 
+   heartbeat from App 1 
+   verify that a new watchdog triggered condition has been generated
+        and the output state has toggled to cleared state in next outputs
+        command frame (APIR3.1.2[100]) 
+   generate two further toggle requests before the next outputs command
+        frame is sent 
+   heartbeat from App 1 
+   heartbeat from App 2 
+   heartbeat from App 1 
+   heartbeat from App 2 
+   verify that the watchdog output state has toggled only once and is
+        set on in the next outputs command frame (APIR3.1.2[101]) 
+   deregister and close both apps 
+
+ Requirements Tested
+       
 APIR3.1.2[93]	The API shall provide a method which allows application
                programs to assign the output point used for the Watchdog
                output of any registered Field I/O Device.

@@ -7,7 +7,217 @@
     File Type: APIVSXML test script (XML format)
     Test Case: APIRI.TCS.3010
   Description: General FIO Operations
+       TC XML: begins on Line 1538
+       
+ Test Case Narrative
  
+   #################################################################
+   FIO 332 testing: register with the FIO API
+        (APIR3.1.2[5], APIR3.1.2[6], APIR3.1.2[13], APIR3.1.2[14]) 
+   register a 332-type FIO on SP5 (APIR3.1.2[17]) 
+   confirm that no communications are occuring yet
+        (APIR3.1.2[15], APIR3.1.2[19]) 
+   attempt to register an incompatible device on SP5 (NEMA DR1 BIU)
+        (APIR3.1.2[12], APIR3.1.2[18]) 
+   setup FIO332 SDLC response messages 
+   enable comm (APIR3.1.2[25]) 
+   validate command messages 
+   reset frame count status 
+   check comm status (APIR3.1.2[26]) 
+   disable comm and verify (APIR3.1.2[25], APIR3.1.2[27]) 
+   deregister device and confirm no connection (APIR3.1.2[16], APIR3.1.2[17]) 
+   (call to fio_fiod_status_get should fail) 
+   
+   #################################################################
+   FIO NEMA TS1 testing: register with the FIO API
+        (APIR3.1.2[5], APIR3.1.2[6], APIR3.1.2[13]) 
+   register a  FIOTS1 on SP5 
+   setup FIOTS1 SDLC response messages 
+   enable comm 
+   validate command messages 
+   reset frame count status 
+   check comm status 
+   disable comm and verify 
+   deregister device and confirm no connection 
+   (call to fio_fiod_status_get should fail) 
+   
+   #################################################################
+   FIO NEMA TS2 testing: register with the FIO API
+        (APIR3.1.2[5], APIR3.1.2[6], APIR3.1.2[10], APIR3.1.2[13]) 
+   register a  FIOTS2 on SP5 
+   setup FIOTS2 SDLC response messages 
+   enable comm (TS2) 
+   validate command messages (TS2) 
+   check comm status (TS2) 
+   disable FIOTS2 comm 
+   deregister device and confirm no connection 
+   (call to fio_fiod_status_get should fail) 
+   register a FIOMMU on SP5 
+   setup FIOMMU SDLC response messages 
+   enable comm (MMU) 
+   register a FIODR1 on SP5 (APIR3.1.2[18]) 
+   setup FIODR1 SDLC response messages 
+   enable comm DR1 
+   register a FIODR2 on SP5 
+   setup FIODR2 SDLC response messages 
+   enable comm DR2 
+   register a FIODR3 on SP5 
+   setup FIODR3 SDLC response messages 
+   enable comm DR3 
+   register a FIODR4 on SP5 
+   setup FIODR4 SDLC response messages 
+   enable comm DR4 
+   register a FIOTF1 on SP5 
+   setup FIOTF1 SDLC response messages 
+   enable comm TF1 
+   check comm status (MMU) 
+   check comm status (DR1) 
+   check comm status (DR2) 
+   check comm status (DR3) 
+   check comm status (DR4) 
+   check comm status (TF1) 
+   disable FIOMMU comm 
+   deregister device and confirm no connection 
+   (call to fio_fiod_status_get should fail) 
+   disable FIODR1 comm 
+   deregister device and confirm no connection 
+   (call to fio_fiod_status_get should fail) 
+   disable FIODR2 comm 
+   deregister device and confirm no connection 
+   (call to fio_fiod_status_get should fail) 
+   disable FIODR3 comm 
+   deregister device and confirm no connection 
+   (call to fio_fiod_status_get should fail) 
+   disable FIODR4 comm 
+   deregister device and confirm no connection 
+   (call to fio_fiod_status_get should fail) 
+   disable FIOTF1 comm 
+   deregister device and confirm no connection 
+   (call to fio_fiod_status_get should fail) 
+
+   #################################################################
+   FIO ITS test: 2 14-Pack Output SIU, register with the FIO API
+        (APIR3.1.2[5], APIR3.1.2[6], APIR3.1.2[13], APIR3.1.2[11]) 
+   register a FIOCMU on SP5 
+   setup FIOCMU SDLC response messages 
+   enable comm (CMU) 
+   setup FIO SIU* SDLC response messages 
+   register a FIOINSIU1 on SP5 
+   enable comm INSIU1 
+   register a FIOINSIU2 on SP5 
+   enable comm INSIU2 
+   register a FIOINSIU3 on SP5 
+   enable comm INSIU3 
+   register a FIOINSIU4 on SP5 
+   enable comm INSIU4 
+   register a FIOINSIU5 on SP5 
+   enable comm INSIU5 
+   register a  FIOOUT14SIU1 on SP5 
+   enable comm OUT14SIU1 
+   register a  FIOOUT14SIU2 on SP5 
+   enable comm OUT14SIU2 
+   check comm status (CMU) 
+   check comm status (INSIU1) 
+   check comm status (INSIU2) 
+   check comm status (INSIU3) 
+   check comm status (INSIU4) 
+   check comm status (INSIU5) 
+   check comm status (OUT14SIU1) 
+   check comm status (OUT14SIU2) 
+   disable FIOCMU comm 
+   deregister device and confirm no connection 
+   (call to fio_fiod_status_get should fail) 
+   disable FIOINSIU1 comm 
+   deregister device and confirm no connection 
+   (call to fio_fiod_status_get should fail) 
+   disable FIOINSIU2 comm 
+   deregister device and confirm no connection 
+   (call to fio_fiod_status_get should fail) 
+   disable FIOINSIU3 comm 
+   deregister device and confirm no connection 
+   (call to fio_fiod_status_get should fail) 
+   disable FIOINSIU4 comm 
+   deregister device and confirm no connection 
+   (call to fio_fiod_status_get should fail) 
+   disable FIOINSIU5 comm 
+   deregister device and confirm no connection 
+   (call to fio_fiod_status_get should fail) 
+   disable FIOOUT14SIU1 comm 
+   deregister device and confirm no connection 
+   (call to fio_fiod_status_get should fail) 
+   disable FIOOUT14SIU2 comm 
+   deregister device and confirm no connection 
+   (call to fio_fiod_status_get should fail) 
+
+   #################################################################
+   FIO ITS test: 4 6-Pack Output SIU, register with the FIO API 
+        (APIR3.1.2[5], APIR3.1.2[6], APIR3.1.2[13], APIR3.1.2[11]) 
+   register a FIOCMU on SP5 
+   setup FIOCMU SDLC response messages 
+   enable comm (CMU) 
+   setup FIO SIU* SDLC response messages 
+   register a FIOINSIU1 on SP5 
+   enable comm INSIU1 
+   register a FIOINSIU2 on SP5 
+   enable comm INSIU2 
+   register a FIOINSIU3 on SP5 
+   enable comm INSIU3 
+   register a FIOINSIU4 on SP5 
+   enable comm INSIU4 
+   register a FIOINSIU5 on SP5 
+   enable comm INSIU5 
+   register a  FIOOUT6SIU1 on SP5 
+   enable comm OUT6SIU1 
+   register a  FIOOUT6SIU2 on SP5 
+   enable comm OUT6SIU2 
+   register a  FIOOUT6SIU3 on SP5 
+   enable comm OUT6SIU3 
+   register a  FIOOUT6SIU4 on SP5 
+   enable comm OUT6SIU4 
+   check comm status (CMU) 
+   check comm status (INSIU1) 
+   check comm status (INSIU2) 
+   check comm status (INSIU3) 
+   check comm status (INSIU4) 
+   check comm status (INSIU5) 
+   check comm status (OUT6SIU1) 
+   check comm status (OUT6SIU2) 
+   check comm status (OUT6SIU3) 
+   check comm status (OUT6SIU4) 
+   disable FIOCMU comm 
+   deregister device and confirm no connection 
+   (call to fio_fiod_status_get should fail) 
+   disable FIOINSIU1 comm 
+   deregister device and confirm no connection 
+   (call to fio_fiod_status_get should fail) 
+   disable FIOINSIU2 comm 
+   deregister device and confirm no connection 
+   (call to fio_fiod_status_get should fail) 
+   disable FIOINSIU3 comm 
+   deregister device and confirm no connection 
+   (call to fio_fiod_status_get should fail) 
+   disable FIOINSIU4 comm 
+   deregister device and confirm no connection 
+   (call to fio_fiod_status_get should fail) 
+   disable FIOINSIU5 comm 
+   deregister device and confirm no connection 
+   (call to fio_fiod_status_get should fail) 
+   disable FIOOUT6SIU1 comm 
+   deregister device and confirm no connection 
+   (call to fio_fiod_status_get should fail) 
+   disable FIOOUT6SIU2 comm 
+   deregister device and confirm no connection 
+   (call to fio_fiod_status_get should fail) 
+   disable FIOOUT6SIU3 comm 
+   deregister device and confirm no connection 
+   (call to fio_fiod_status_get should fail) 
+   disable FIOOUT6SIU4 comm 
+   deregister device and confirm no connection 
+   (call to fio_fiod_status_get should fail) 
+   disconnect from FIO API 
+
+ Requirements Tested
+  
 APIR3.1.2[5]	The API shall support all cabinet architectures and associated
                Field I/O Device types as listed in the ATC Controller Standard
                Section 8.

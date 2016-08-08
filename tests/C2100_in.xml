@@ -7,7 +7,16 @@
     File Type: APIVSXML test script (XML format)
     Test Case: APIRI.TCS.2100
   Description: API Version Information (All Libraries)
+       TC XML: begins on Line 239
+       
+ Test Case Narrative
  
+   get FPUI versions (APIR3.2[1]) 
+   get FIO versions (APIR3.2[1]) 
+   get TOD version (APIR3.2[1]) 
+
+ Requirements Tested
+  
 APIR3.2[1]	The API shall provide a method to determine the version number(s)
             of the API.
 

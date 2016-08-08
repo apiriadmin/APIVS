@@ -704,6 +704,47 @@ char *pRowAttribs = NULL;
 		seqCode = REST_CURSOR_POS;
 		
 		break;
+	
+	case 'G':        // <ESC> G sequence - Graphics Mode Commands
+		ESC_sequence[1] = 'G';
+
+		nextChar = getNextChar(fd, pBuffPtr);
+		ESC_sequence[2] = nextChar;
+		switch (nextChar) {
+			case 'U':
+				nextChar = getNextChar(fd, pBuffPtr);
+				if (nextChar == '0')
+					graphicModeFlags &= ~(GRAPHIC_UNDERLAY_1 | GRAPHIC_UNDERLAY_2);
+				else if (nextChar == '1')
+					graphicModeFlags |= GRAPHIC_UNDERLAY_1;
+				else if (nextChar == '2')
+					graphicModeFlags |= GRAPHIC_UNDERLAY_2;
+				ESC_sequence[3] = nextChar;
+				break;
+			case 'O':
+				nextChar = getNextChar(fd, pBuffPtr);
+				if (nextChar == '0')
+					graphicModeFlags &= ~(GRAPHIC_OVERLAY_1 | GRAPHIC_OVERLAY_2);
+				else if (nextChar == '1')
+					graphicModeFlags |= GRAPHIC_OVERLAY_1;
+				else if (nextChar == '2')
+					graphicModeFlags |= GRAPHIC_OVERLAY_2;
+				ESC_sequence[3] = nextChar;
+				break;
+			case 'C':
+				nextChar = getNextChar(fd, pBuffPtr);
+				if (nextChar == '0')
+					graphicModeFlags &= ~(GRAPHIC_CURSOR_U | GRAPHIC_CURSOR_O);
+				else if (nextChar == 'U')
+					graphicModeFlags |= GRAPHIC_CURSOR_U;
+				else if (nextChar == 'O')
+					graphicModeFlags |= GRAPHIC_CURSOR_O;
+				ESC_sequence[3] = nextChar;
+				break;
+			default:
+				break;
+		}
+		break;
 		
 	default:
 		//  unknown or not-handled ESC sequence 

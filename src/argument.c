@@ -2859,7 +2859,6 @@ argSetVar(uint16_t ln,
 				unsigned int size;
 				unsigned int index = 0;
 
-printf("argSetVar(): VAR_FINF\n");
 				if (pFile != NULL) {
 					if ((operation == OP_ADD) || (operation == OP_SUB))
 					{
@@ -2986,7 +2985,6 @@ printf("argSetVar(): VAR_FINF\n");
 				unsigned int size;
 				unsigned int index = 0;
 
-printf("argSetVar(): VAR_FFSCHD\n");
 				if (pFile != NULL) {
 					if ((operation == OP_ADD) || (operation == OP_SUB))
 					{
@@ -3168,7 +3166,6 @@ printf("argSetVar(): VAR_FFSCHD\n");
 				unsigned int size;
 				unsigned int index = 0;
 
-printf("argSetVar(): VAR_FTBUF\n");
 				if (pFile != NULL) {
 					if ((operation == OP_ADD) || (operation == OP_SUB))
 					{

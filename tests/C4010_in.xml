@@ -7,7 +7,29 @@
     File Type: APIVSXML test script (XML format)
     Test Case: APIVS.TCS.4010
   Description: TOD Time Handling Functions
+       TC XML: begins on Line 423
+       
+ Test Case Narrative
  
+   get and save the current time source 
+   set time source to LINESYNC and confirm 
+   get (and save) the current date/time parameters 
+   turn DST off 
+   confirm DST adjustment is zero (0) 
+   set date/time back to DST-active date window (June 1, 2015) 
+   sleep for five (5) seconds) 
+   get the current date/time and confirm ~5s advance 
+   turn DST on 
+   confirm DST adjustment is now 3600 (one hour) 
+   set time source to CRYSTAL and confirm 
+   reset time source back to original 
+   install handler and request tick signal for signal SIGIO (29) 
+   request onchange signal for signal SIGIO (29) 
+   restore original date/time 
+   restore original DST rule 
+
+ Requirements Tested
+       
 APIR3.2.2[10]	The API shall provide a function(s) to set and get the system
                time including the date, time, time zone, and DST information.
 
