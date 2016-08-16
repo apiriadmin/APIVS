@@ -1610,10 +1610,6 @@ APIR3.1.1.2[26]	The API shall allow application programs to illuminate or
       </Then>
    </If>
    
-   <!-- set backlight timeout -->
-   <Set var="$timeout" value="%120"/>
-   <Call ref="fpui_set_backlight_timeout" setUp="API_Init_Variables"/>
-
    <!-- turn on backlight (APIR3.1.1.2[26])-->
    <Set var="$backlight" value="#TRUE"/>
    <Call ref="fpui_set_backlight" setUp="API_Init_Variables" />

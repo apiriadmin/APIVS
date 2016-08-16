@@ -1355,7 +1355,7 @@ APIR3.1.2[127]	The notification shall be able to be set for a one time
    <Call ref="fio_fiod_frame_schedule_set" setUp="API_Init_Variables"/>
 
    <!-- check for response notification -->
-   <Sleep time="%1"/>
+   <Sleep time="%2"/>
    <If expression="$FIO_async EQ %0">
       <Then>
       <Print >No async notification (frame 181) </Print>

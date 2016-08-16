@@ -1379,7 +1379,7 @@
    <Set var="$frame_number" value="%177"/>
    <Set var="$notify_freq"  value="#FIO_NOTIFY_ONCE"/>
    <Call ref="fio_fiod_frame_notify_register"   setUp="API_Init_Variables" />
-   <Sleep time="%1"/>
+   <Sleep time="%2"/>
    <If expression="$FIO_asyncsig EQ #FALSE">
       <Then>
       <Print >No async notification (frame 177) </Print>

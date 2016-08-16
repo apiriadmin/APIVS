@@ -1367,22 +1367,22 @@ APIR3.1.2[55]	Relinquishing a reserved output point or channel shall clear
    <Call ref="fio_fiod_outputs_reservation_set" setUp="API_Init_Variables" /> 
 
    <!-- Channel reservation handling -->
-   <!-- unreserve all channels (App 1) -->
+   <!-- unreserve all channels (App 1) (APIR3.1.2[47]) -->
    <Set var="$fio_handle"  value="$fio_handle_1"/>
    <Set var="$fiod_handle" value="$fiod_hCMU_1"/>
    <Set var="$chan_res" file="@C3030_channels_null.txt"/>
    <Call ref="fio_fiod_channel_reservation_set" setUp="API_Init_Variables" /> 
-   <!-- unreserve all channels again, should be no error -->
+   <!-- unreserve all channels again, should be no error (APIR3.1.2[49]) -->
    <Set var="$chan_res" file="@C3030_channels_null.txt"/>
    <Call ref="fio_fiod_channel_reservation_set" setUp="API_Init_Variables" /> 
    <!-- reserve select channels -->
    <Set var="$chan_res" file="@C3030_channels_a.txt"/>
    <Call ref="fio_fiod_channel_reservation_set" setUp="API_Init_Variables" /> 
-   <!-- reserve select channels again, should be no error -->
+   <!-- reserve select channels again, should be no error (APIR3.1.2[48]) -->
    <Set var="$chan_res" file="@C3030_channels_a.txt"/>
    <Call ref="fio_fiod_channel_reservation_set" setUp="API_Init_Variables" /> 
 
-   <!-- verify our channel reservations -->
+   <!-- verify our channel reservations (APIR3.1.2[54]) -->
    <!-- (bits 0,2,12,14 set) -->
    <Call ref="fio_fiod_channel_reservation_get" setUp="API_Init_Variables" />
    <Format var="$chan_res"/>
@@ -1411,7 +1411,7 @@ APIR3.1.2[55]	Relinquishing a reserved output point or channel shall clear
       </Then>
    </If>
 
-   <!-- register select channels IN CONFLICT (App 2) -->
+   <!-- register select channels IN CONFLICT (App 2) (APIR3.1.2[52], APIR3.1.2[53]) -->
    <!-- (bits 0,8,10 set) -->
    <!-- since we need this to fail, change abort_mode to FALSE -->
    <Set var="$fio_handle"  value="$fio_handle_2"/>
@@ -1455,7 +1455,7 @@ APIR3.1.2[55]	Relinquishing a reserved output point or channel shall clear
    <Set var="$chan_res" file="@C3030_channels_c.txt"/>
    <Call ref="fio_fiod_channel_reservation_set" setUp="API_Init_Variables" /> 
 
-   <!-- verify channel reservationss (App 2) -->
+   <!-- verify channel reservationss (App 2) (APIR3.1.2[51])-->
    <!-- (bits 4,6,8,10 set) -->
    <Call ref="fio_fiod_channel_reservation_get" setUp="API_Init_Variables" />
    <Format var="$chan_res"/>
@@ -1484,7 +1484,7 @@ APIR3.1.2[55]	Relinquishing a reserved output point or channel shall clear
       </Then>
    </If>
 
-   <!-- Setup test channel mappings app 1 -->
+   <!-- Setup test channel mappings app 1 (APIR3.1.2[44]) -->
    <Set var="$fio_handle"  value="$fio_handle_1"/>
    <Set var="$fiod_handle" value="$fiod_hCMU_1"/>
    <!-- map output 0 to channel 0 red -->
@@ -1552,7 +1552,7 @@ APIR3.1.2[55]	Relinquishing a reserved output point or channel shall clear
 
    <Sleep time="%2"/>
 
-   <!-- verify outputs set correctly in frame 55 -->
+   <!-- verify outputs set correctly in frame 55 (APIR3.1.2[46])-->
    <If expression="!CMDMSGCompare(@C3020_cmd55b.txt,%55) EQ #FALSE">
       <Then>
       <Format var="$ls_plus"/>
