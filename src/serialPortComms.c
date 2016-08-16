@@ -24,11 +24,6 @@
  * \file serialPortComms.c
  * This file contains the routines to handle comms over the serial port
  *
- * � Copyright 2010 ITE
- *   All rights reserved.  Copying or other reproduction of this program
- *   except for archival purposes is prohibited without the prior written
- *   consent of ITE.
- *
  * \brief template
  *
  * \author Patrick Acer
@@ -59,7 +54,7 @@
 /**
  * Local Defines
  */
-
+struct termios old_attr;
 //=============================================================================
 /**
  * \brief       int openSerialPort(portName)
@@ -75,13 +70,22 @@
 int
 openSerialPort(char *portName)
 {
-int fd = 0;
+	int fd = 0;
+	struct termios port_attr;
 
-	fd = open(portName , O_RDWR ) ; //     | O_NOCTTY);
-	
-	return(fd);
-	
-	
+	if ((fd = open(portName, O_RDWR)) >= 0) {
+		tcgetattr(fd, &old_attr);
+		port_attr.c_cflag = B38400|CS8|CLOCAL|CREAD;
+		port_attr.c_iflag = IGNBRK|IGNPAR;
+		port_attr.c_oflag = OPOST|ONLCR;
+		port_attr.c_lflag = 0;
+		port_attr.c_cc[VTIME] = 0;
+		port_attr.c_cc[VMIN] = 1;
+		tcflush(fd,TCIFLUSH);
+		tcsetattr(fd,TCSANOW,&port_attr);
+	}
+
+	return(fd);	
 }
 
 //=============================================================================
@@ -124,7 +128,7 @@ char buf[20];    // leave a little extra space for future - maybe <Esc> sequence
 char
 writeSerialPort(int fd, char *buffer, int count)
 {
-int res = 0;
+	int res = 0;
 
 	if ((res = write(fd, buffer, count)) < 0)
 		;    //  indicate EOF or error 
@@ -148,12 +152,10 @@ int res = 0;
 int
 closeSerialPort(int fd)
 {
-int res = 0;
+	int res = 0;
 
+	tcsetattr(fd, TCSANOW, &old_attr);
 	res = close(fd);
 	
-	
 	return(res);
-	
-	
 }

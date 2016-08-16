@@ -23,11 +23,6 @@
 /*****************************************************************************
  * \file emfio_responses.c
  * 
- * (c) Copyright 2010 ITE
- *   All rights reserved.  Copying or other reproduction of this program
- *   except for archival purposes is prohibited without the prior written
- *   consent of ITE.
- *
  * \brief This file contains the functions that manipulate the command responses.
  * 
  * \date   12/22/2010
@@ -272,7 +267,6 @@ emfio_compareCommand(int command, const unsigned char * buffer, uint32_t bufSize
 	}
 	pthread_mutex_lock(&pCommand->mutex);
 	{
-printf("\nemfio_compareCommand %d, bufsize %d, cmdsize %d\n", command, bufSize, pCommand->lastCommandSize);
 		// Make sure that we received a command first.
 		if (pCommand->commandReceived == 0)
 		{

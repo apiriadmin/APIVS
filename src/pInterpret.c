@@ -26,11 +26,6 @@
  * This file contains the definition of functions for interpreting the APIVSXML
  * pCode
  *
- * © Copyright 2010 ITE
- *   All rights reserved.  Copying or other reproduction of this program
- *   except for archival purposes is prohibited without the prior written
- *   consent of ITE.
- *
  * \brief pInterpret XML processing
  *
  * \author Thomas E. Gauger

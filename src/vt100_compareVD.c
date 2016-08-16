@@ -25,11 +25,6 @@
  * 
  *   Compares a Virtual Display text & attributes with a given filename's copy 
  *
- * � Copyright 2010 ITE
- *   All rights reserved.  Copying or other reproduction of this program
- *   except for archival purposes is prohibited without the prior written
- *   consent of ITE.
- *
  * \brief  vt100_compareVD() 
  * 
  * \date   11/01/2010 
@@ -310,7 +305,7 @@ char errorBuffer[100] = {
 
 					vt100_set_errorText(errorBuffer);
 
-#if DEBUGON 
+#if DEBUG_ON 
 					printf("\n vt100_compareVD: get ErrorText returns: %s \n", vt100_get_errorText() );
 #endif
 					
@@ -456,9 +451,12 @@ char errorBuffer[100] = {
 					vt100_set_errorCode(ERR_11_VD_MATCH_ERR);
 					sprintf(errorBuffer,"ERR_11: VD Graphic Mode differs: VD: %02x ; file value: %02x:", 
 						(int) graphicModeFlags, (int) fileParmValue);
-						vt100_set_errorText(errorBuffer);
-						compareResult = 1;        // mismatch in parameter compare 
-						break;
+					vt100_set_errorText(errorBuffer);
+					compareResult = 1;        // mismatch in parameter compare 
+#if DEBUG_ON 
+					printf("\n vt100_compareVD: get ErrorText returns: %s \n", vt100_get_errorText() );
+#endif
+					break;
 				} else {
 					compareStage = COMPARE_COMPLETE;
 				}

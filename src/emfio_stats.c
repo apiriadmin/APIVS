@@ -23,11 +23,6 @@
 /*****************************************************************************
  * \file emfio_stats.c
  * 
- * (c) Copyright 2010 ITE
- *   All rights reserved.  Copying or other reproduction of this program
- *   except for archival purposes is prohibited without the prior written
- *   consent of ITE.
- *
  * \brief This file contains the functions that manipulate the command statistics.
  * 
  * \date   12/22/2010

@@ -24,11 +24,6 @@
  * \file vt100.h
  * This file defines the structures and constants for the vt100 emulator lib
  *
- * � Copyright 2010 ITE
- *   All rights reserved.  Copying or other reproduction of this program
- *   except for archival purposes is prohibited without the prior written
- *   consent of ITE.
- *
  * \brief include file
  *
  * \author Patrick Acer

@@ -26,11 +26,6 @@
  * NOTE:  This routine must be exactly synchronized with vt100_dumpVD()
  *          and vt100_fromDumpToVD()
  *
- * � Copyright 2010 ITE
- *   All rights reserved.  Copying or other reproduction of this program
- *   except for archival purposes is prohibited without the prior written
- *   consent of ITE.
- *
  * \brief vt100_showVD(char * commentText) 
  *
  * \author Patrick Acer
