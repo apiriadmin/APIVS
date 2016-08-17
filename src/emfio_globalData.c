@@ -23,11 +23,6 @@
 /*****************************************************************************
  * \file emfio_globalData.c
  * 
- * (c) Copyright 2010 ITE
- *   All rights reserved.  Copying or other reproduction of this program
- *   except for archival purposes is prohibited without the prior written
- *   consent of ITE.
- *
  * \brief This file contains declarations of the global data used by the FIO
  *        emulator.
  *

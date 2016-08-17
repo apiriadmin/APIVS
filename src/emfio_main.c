@@ -23,11 +23,6 @@
 /*****************************************************************************
  * \file main.c
  *
- * (c) Copyright 2010 ITE
- *   All rights reserved.  Copying or other reproduction of this program
- *   except for archival purposes is prohibited without the prior written
- *   consent of ITE.
- *
  * \brief This file contains a main function used to drive the FIO emulator library.
  *
  * \date   12/22/2010

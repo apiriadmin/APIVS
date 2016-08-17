@@ -26,11 +26,6 @@
  * This file contains routines and data for handling characters input either 
  *  from the FPUI or from a given file of characters.
  *
- * � Copyright 2010 ITE
- *   All rights reserved.  Copying or other reproduction of this program
- *   except for archival purposes is prohibited without the prior written
- *   consent of ITE.
- *
  * \brief  getNextChar(), processEndLineChar(), processInChar(), processTabChar()
  *         get_ESC_sequence(), process_ESC_sequence() 
  * 

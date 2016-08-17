@@ -23,11 +23,6 @@
 /*****************************************************************************
  * \file emfio_setupCommands.h
  *
- * (c) Copyright 2010 ITE
- *   All rights reserved.  Copying or other reproduction of this program
- *   except for archival purposes is prohibited without the prior written
- *   consent of ITE.
- *
  * \brief This file declares the functions that setup and teardown the command structures.
  *
  * \date   12/22/2010

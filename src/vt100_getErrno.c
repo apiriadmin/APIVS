@@ -24,11 +24,6 @@
  * \file template.c
  * This file contains the definition of the \c #template
  *
- * � Copyright 2010 ITE
- *   All rights reserved.  Copying or other reproduction of this program
- *   except for archival purposes is prohibited without the prior written
- *   consent of ITE.
- *
  * \brief template
  *
  * \date   11/01/2010 

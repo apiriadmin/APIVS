@@ -26,11 +26,6 @@
  * This file contains routines and data for handling the vt100 Virtual Display 
  * emulation and comparison tasks/features.
  *
- * � Copyright 2010 ITE
- *   All rights reserved.  Copying or other reproduction of this program
- *   except for archival purposes is prohibited without the prior written
- *   consent of ITE.
- *
  * \brief  vt100_start(), vt100_thread(), vt100_end() 
  * 
  * \date   11/01/2010 

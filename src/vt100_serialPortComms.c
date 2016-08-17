@@ -25,11 +25,6 @@
  * This file contains the routines to handle comms over the serial port
  *  and also a routine to locate the working serial port name /dev/tty??
  *
- * � Copyright 2010 ITE
- *   All rights reserved.  Copying or other reproduction of this program
- *   except for archival purposes is prohibited without the prior written
- *   consent of ITE.
- *
  * \brief template
  *
  * \author Patrick Acer

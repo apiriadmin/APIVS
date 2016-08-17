@@ -25,11 +25,6 @@
  * 
  * This file contains the global Data used by the vt100 routines
  *
- * � Copyright 2010 ITE
- *   All rights reserved.  Copying or other reproduction of this program
- *   except for archival purposes is prohibited without the prior written
- *   consent of ITE.
- *
  * \brief 
  * 
  * \date   11/01/2010 

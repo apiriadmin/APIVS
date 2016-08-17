@@ -25,11 +25,6 @@
  *
  * This file contains the definition of the \c #The input XML Processor
  *
- * © Copyright 2010 ITE
- *   All rights reserved.  Copying or other reproduction of this program
- *   except for archival purposes is prohibited without the prior written
- *   consent of ITE.
- *
  * \brief input XML Processor
  *
  * \author Thomas E. Gauger

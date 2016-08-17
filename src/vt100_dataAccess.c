@@ -26,11 +26,6 @@
  * This file contains the routines that access the global data variables except
  *  for the VIRTUAL DISPLAY structure.
  *
- * � Copyright 2010 ITE
- *   All rights reserved.  Copying or other reproduction of this program
- *   except for archival purposes is prohibited without the prior written
- *   consent of ITE.
- *
  * \brief   vt100 data access routines - set & get for autoWrap, autoScroll
  *          autoRepeat and backLight global variables 
  *
