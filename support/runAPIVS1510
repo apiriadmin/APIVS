@@ -1,0 +1,49 @@
+#!/bin/sh
+
+# ATC 5401 API Reference Implementation Project 
+# 
+#     Filename: runAPIVS1510
+#    File Type: Linux shell script
+#    Test Case: APIVS.TCS.1510
+#  Description: start ATCAPI in configuration for test case
+#               
+# Date      Revision    Description
+# 8/16/16   1.0         initial release
+
+# start sync loopback driver; fio driver; add symbolic links
+rmmod fiodriver
+insmod /media/sda1/APIVS/bin/virtual-loopback-sync.ko
+insmod /media/sda1/APIVS/bin/fiodriver.ko apivs=1
+ln -s /dev/vlsync0 /dev/sp3s_loopback_a
+ln -s /dev/vlsync1 /dev/sp3s_loopback_b
+ln -s /dev/vlsync2 /dev/sp5s_loopback_a
+ln -s /dev/vlsync3 /dev/sp5s_loopback_b
+ln -s /dev/vlsync4 /dev/sp8s_loopback_a
+ln -s /dev/vlsync5 /dev/sp8s_loopback_b
+
+reset_modules() {
+#  start the API Front Panel Manager
+   killall MasterSelection
+   killall FrontPanelManager
+   killall atc_sc
+   rmmod front_panel
+   modprobe front_panel
+   FrontPanelManager /dev/sp6 1>/dev/null 2>&1 &
+   MasterSelection 1>/dev/null 2>&1 &
+   atc_sc 1>/dev/null 2>&1 &
+#  start fio driver
+   rmmod fiodriver
+   insmod /media/sda1/APIVS/bin/fiodriver.ko apivs=1
+}
+
+misc_test_C1510() {
+   reset_modules
+   for i in $(seq 1 16);
+   do
+      sleep 1
+      atcapi-test 1>/dev/null 2>&1 &
+   done
+}
+
+misc_test_C1510
+wait
