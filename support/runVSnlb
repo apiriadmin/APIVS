@@ -1,0 +1,81 @@
+#!/bin/sh
+
+# ATC 5401 API Reference Implementation Project 
+# 
+#     Filename: runVSnlb
+#    File Type: Linux shell script
+#    Test Case: APIRI.TCS.7010-7040
+#  Description: run VSE from USB at startup on specific test case
+#               (NON-loopback)
+#               
+# Date      Revision    Description
+# 2/24/16   1.0         initial release
+
+# start the API Front Panel Manager (NON-loopback mode)
+killall atc_sc
+killall MasterSelection
+killall FrontPanelManager
+rmmod front_panel
+sleep 1
+modprobe front_panel
+FrontPanelManager /dev/sp6 &
+MasterSelection &
+atc_sc &
+sleep 2
+
+# initialize test counters
+pass_count=0
+fail_count=0
+
+# set the conformance level this run (1,2,3)
+LEVEL=3
+
+# delete old log files? (FALSE will append if exists)
+DELETE_LOGS=TRUE
+
+# run specified test case
+# (only one of the following cases should be run at a time)
+
+#if [ "$DELETE_LOGS" == TRUE ]; then rm C7010_log.xml; fi
+#vse -L $LEVEL -c ./VS_config_2.txt -i C7010_in.xml -o C7010_log.xml
+
+#if [ "$DELETE_LOGS" == TRUE ]; then rm C7020_log.xml; fi
+#vse -L $LEVEL -c ./VS_config_2.txt -i C7020_in.xml -o C7020_log.xml
+
+#if [ "$DELETE_LOGS" == TRUE ]; then rm C7030_log.xml; fi
+#vse -L $LEVEL -c ./VS_config_2.txt -i C7030_in.xml -o C7030_log.xml
+
+if [ "$DELETE_LOGS" == TRUE ]; then rm C7040_log.xml; fi
+vse -L $LEVEL -c ./VS_config_2.txt -i C7040_in.xml -o C7040_log.xml
+   
+# display script completion status on panel
+kill $(pidof FrontPanelManager)
+sleep 1
+printf "\x1B[H\x1B[2J" >/dev/sp6
+printf "ATC 5401 API Validation Suite v1.0" >/dev/sp6
+
+if [ "$?" == "0" ]; then
+   pass_count=$((pass_count + 1))
+else
+   fail_count=$((fail_count + 1)); fi
+      
+printf "\x1B[8;1f" >/dev/sp6
+printf "Test cases passed:%d failed:%d" "$pass_count" "$fail_count" >/dev/sp6
+
+printf "\033[<5h" >/dev/sp6
+printf "\007" >/dev/sp6
+sleep 1
+printf "\007" >/dev/sp6
+sleep 1
+printf "\007" >/dev/sp6
+printf "\x1B[3;1f" >/dev/sp6
+printf "Session complete.                \n" >/dev/sp6
+printf "Please remove USB drive and reboot.\n" >/dev/sp6
+
+wait_forever() {
+   while :
+   do
+      sleep 10
+   done
+   }
+
