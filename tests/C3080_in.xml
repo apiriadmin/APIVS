@@ -120,7 +120,9 @@ APIR3.1.2[108]	A response frame shall only be considered successful if it is
 <Define var="$seq_number"     type="unsigned int" />
 <Define var="$read_buffer"    type="unsigned char []" size="%128" />
 <Define var="$bytes_read"     type="int" />
-<Define var="$frame_sched"    type="FIO_FRAME_SCHD" size="%3" />
+<Define var="$frame_schds"    type="FIO_FRAME_SCHD" size="%6"/>
+<Define var="$frame_schd_cnt" type="int"/>
+<Define var="$frame_schd"     type="FIO_FRAME_SCHD" size="%1" />
 <Define var="$frame_size"     type="int" />
 <Define var="$write_buffer"   type="unsigned char []" size="%128" />
 <Define var="$write_count"    type="unsigned int" />
@@ -619,16 +621,15 @@ APIR3.1.2[108]	A response frame shall only be considered successful if it is
              errno="$errno"
              p1="$fio_handle"
              p2="$fiod_handle"
-			    p3="$fio_view"
-             p4="$frame_sched"
-             p5="!sizeof($frame_sched)" />
+             p3="$fio_view"
+             p4="$frame_schds"
+             p5="$frame_schd_cnt" />
    <If expression="$returnCode EQ %-1">
       <Then>
       <Print>Function fio_fiod_frame_schedule_get() failed</Print>
       <Call ref="Error_Handler" />
       </Then>
    <Else>
-      <Format var="$frame_sched" />
       <Call ref="Success_Handler" />
    </Else>
    </If>
@@ -640,8 +641,8 @@ APIR3.1.2[108]	A response frame shall only be considered successful if it is
              errno="$errno"
              p1="$fio_handle"
              p2="$fiod_handle"
-             p3="$frame_sched"
-             p4="!sizeof($frame_sched)" />
+             p3="$frame_schds"
+             p4="$frame_schd_cnt" />
    <If expression="$returnCode EQ %-1">
       <Then>
       <Print>Function fio_fiod_frame_schedule_set() failed</Print>
@@ -1567,7 +1568,15 @@ APIR3.1.2[108]	A response frame shall only be considered successful if it is
       </Then>
    </If>
 
-
+   <!-- set frame frequencies to FIO_HZ_0 to prevent frame arrival between following two function calls -->
+   <Set var="$frame_schds" index="%0" member="req_frame" value="%0"/>
+   <Set var="$frame_schds" index="%0" member="frequency" value="#FIO_HZ_0"/>
+   <Set var="$frame_schds" index="%1" member="req_frame" value="%1"/>
+   <Set var="$frame_schds" index="%1" member="frequency" value="#FIO_HZ_0"/>
+   <Set var="$frame_schd_cnt" value="%2"/>
+   <Call ref="fio_fiod_frame_schedule_set" setUp="API_Init_Variables"/>
+   <Sleep time="%2"/>
+           
    <!-- reset comm status (APIR3.1.2[107]) -->
    <Call ref="fio_fiod_status_reset" setUp="API_Init_Variables"/>
    <!-- confirm reset status -->
@@ -1584,6 +1593,16 @@ APIR3.1.2[108]	A response frame shall only be considered successful if it is
       <Abort status="FAIL"/>
       </Then>
    </If>
+
+   <!-- restore frame frequencies to defaults for following tests -->
+   <Set var="$frame_schds" index="%0" member="req_frame" value="%0"/>
+   <Set var="$frame_schds" index="%0" member="frequency" value="#FIO_HZ_10"/>
+   <Set var="$frame_schds" index="%1" member="req_frame" value="%1"/>
+   <Set var="$frame_schds" index="%1" member="frequency" value="#FIO_HZ_10"/>
+
+   <Set var="$frame_schd_cnt" value="%2"/>
+   <Call ref="fio_fiod_frame_schedule_set" setUp="API_Init_Variables"/>
+   <Sleep time="%2"/>
 
    <!-- modify FIOMMU frame 0 response to include excessive delay (increase service time delay) -->
    <!-- these responses should be seen as errors by the API (APIR3.1.2[108])-->
