@@ -165,17 +165,17 @@ char errorBuffer[100] = {
 			{   // this row did not compare 
 				vt100_set_errorCode(ERR_11_VD_MATCH_ERR);
 				if(compareStage == COMPARE_TEXT){
-				   sprintf(errorBuffer,"ERR_11: VD Text differs: row # %d: %s ", row, 
-						   pRowText);
+				   sprintf(errorBuffer,"ERR_11: VD Text differs: row # %d: %.*s ", row, 
+						   numCols, pRowText);
 				}
 				else {
-				   sprintf(errorBuffer,"ERR_11: VD Attrib differs: row # %d: %s ", row, 
-						   pRowAttribs);
+				   sprintf(errorBuffer,"ERR_11: VD Attrib differs: row # %d: %.*s ", row, 
+						   numCols, pRowAttribs);
 				}
 #if DEBUG_ON
 				printf("\n %s \n", errorBuffer);
 #endif
-				vt100_set_errorText(errorBuffer);
+				//vt100_set_errorText(errorBuffer);
 				break;
 			}
 			
@@ -220,9 +220,9 @@ char errorBuffer[100] = {
 					{
 						
 						vt100_set_errorCode(ERR_11_VD_MATCH_ERR);
-						sprintf(errorBuffer,"ERR_11: VD TabStops Differ at col %d: %s ", col, 
-									tabStops);
-						vt100_set_errorText(errorBuffer);
+						sprintf(errorBuffer,"ERR_11: VD TabStops Differ at col %d: %.*s ", col, 
+									numCols, tabStops);
+						//vt100_set_errorText(errorBuffer);
 						compareResult = 1;     // mismatch 
 						break;
 					}
@@ -263,7 +263,7 @@ char errorBuffer[100] = {
 						printf("\n PARAM miscompare on %s : errorBuffer: %s \n", pOtherParms->pUI_name,
 								       errorBuffer);
 #endif
-						vt100_set_errorText(errorBuffer);
+						//vt100_set_errorText(errorBuffer);
 						
 						compareResult = 1;        // mismatch in parameter compare 
 						break;
@@ -303,7 +303,7 @@ char errorBuffer[100] = {
 					printf("\n     lineBuffer is: %s", lineBuffer);
 #endif
 
-					vt100_set_errorText(errorBuffer);
+					//vt100_set_errorText(errorBuffer);
 
 #if DEBUG_ON 
 					printf("\n vt100_compareVD: get ErrorText returns: %s \n", vt100_get_errorText() );
@@ -354,7 +354,7 @@ char errorBuffer[100] = {
 							printf("\n     lineBuffer is: %s", lineBuffer);
 #endif
 	
-							vt100_set_errorText(errorBuffer);
+							//vt100_set_errorText(errorBuffer);
 							break;
 						}
 						else
@@ -420,7 +420,7 @@ char errorBuffer[100] = {
 						printf("\n :::::::::::::::::::::::::::::::::::::::::::");
 #endif
 
-						vt100_set_errorText(errorBuffer);
+						//vt100_set_errorText(errorBuffer);
 						break;
 					
 					}
@@ -451,7 +451,7 @@ char errorBuffer[100] = {
 					vt100_set_errorCode(ERR_11_VD_MATCH_ERR);
 					sprintf(errorBuffer,"ERR_11: VD Graphic Mode differs: VD: %02x ; file value: %02x:", 
 						(int) graphicModeFlags, (int) fileParmValue);
-					vt100_set_errorText(errorBuffer);
+					//vt100_set_errorText(errorBuffer);
 					compareResult = 1;        // mismatch in parameter compare 
 #if DEBUG_ON 
 					printf("\n vt100_compareVD: get ErrorText returns: %s \n", vt100_get_errorText() );
@@ -473,7 +473,7 @@ char errorBuffer[100] = {
 			vt100_set_errorCode(ERR_12_COMPARE_FILE);
 			sprintf(errorBuffer,"ERR_12: compare file '%s' problem - premature termination of compares.  File may be incomplete.",
 					     pFileName);
-			vt100_set_errorText(errorBuffer);
+			//vt100_set_errorText(errorBuffer);
 			compareResult = 1;        // mismatch in parameter compare 
 		}
 	}
