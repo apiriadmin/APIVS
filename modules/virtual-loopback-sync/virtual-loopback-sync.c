@@ -30,6 +30,7 @@
 #include <linux/kernel.h>
 #include <linux/errno.h>
 #include <linux/init.h>
+#include <linux/device.h>
 #include <linux/module.h>
 #include <linux/cdev.h>
 #include <linux/fs.h>
@@ -266,11 +267,11 @@ static void *vs_sdlc_kernel_open( int channel )
 	pr_debug("%s(%d)vs_sdlc_kernel_open() called\n",__FILE__,__LINE__);
 
 	/* look up which uart_port instance from passed channel */
-	if (channel == ATC_SP3S)
+	if (channel == ATC_LKM_SP3S)
 		port = &vlport[0];
-	else if (channel == ATC_SP5S)
+	else if (channel == ATC_LKM_SP5S)
 		port = &vlport[2];
-	else if (channel == ATC_SP8S)
+	else if (channel == ATC_LKM_SP8S)
 		port = &vlport[4];
 	else
 		return ERR_PTR(-ENODEV);
@@ -321,7 +322,7 @@ static int vs_sdlc_kernel_read( void *context, void *buf, size_t count)
 	if (count > rbuf->count)
 		count = rbuf->count;
 	memcpy(buf, rbuf->buf, count);
-
+pr_debug("vs_sdlc_kernel_read: %d bytes: %02x\n", count, rbuf->buf[0]);
 	/* return HDLC buffer to free list unless the free list */
 	/* count has exceeded the default value, in which case the */
 	/* buffer is freed back to the OS to conserve memory */
@@ -329,6 +330,11 @@ static int vs_sdlc_kernel_read( void *context, void *buf, size_t count)
 		kfree(rbuf);
 	else
 		n_hdlc_buf_put(&n_hdlc->rx_free_buf_list,rbuf);
+
+	// Wake up paired_port write wait queue
+        if (port->paired_port && IS_OPEN(port->paired_port))
+                /* wake up sleeping writers */
+                wake_up_interruptible(&port->paired_port->write_wait);
 
 	return count;
 }
@@ -340,7 +346,7 @@ static size_t vs_sdlc_kernel_write(void *context, const void *buf, size_t count)
         struct vl_sync_port *paired_port = NULL;
 	struct n_hdlc *n_hdlc = NULL;
 	struct n_hdlc_buf *tbuf;
-	unsigned long flags;
+	//unsigned long flags;
 
 	/* Validate the pointers */
 	if(!port || !IS_OPEN(port))
@@ -364,21 +370,23 @@ static size_t vs_sdlc_kernel_write(void *context, const void *buf, size_t count)
 
 
         // Lock paired_port
-	spin_lock_irqsave(&paired_port->ctrl_lock, flags);
+	//spin_lock_irqsave(&paired_port->ctrl_lock, flags);
 
 	/* Allocate transmit buffer */
 	if (!(tbuf = n_hdlc_buf_get(&n_hdlc->rx_free_buf_list))) {
+		//spin_unlock_irqrestore(&paired_port->ctrl_lock, flags);
 		return -EAGAIN;
 	}
 
 	/* Copy the user's buffer */
 	memcpy(tbuf->buf, buf, count);
 
+pr_debug("vs_sdlc_kernel_write: %d bytes: %02x\n", count, tbuf->buf[0]);
 	/* Send the data */
 	tbuf->count = count;
-	n_hdlc_buf_put(&n_hdlc->tx_buf_list,tbuf);
+	n_hdlc_buf_put(&n_hdlc->rx_buf_list,tbuf);
 
-	spin_unlock_irqrestore(&paired_port->ctrl_lock, flags);
+	//spin_unlock_irqrestore(&paired_port->ctrl_lock, flags);
 
         /* Wake up any blocked reads on paired port and perform async signalling */
         wake_up_interruptible (&paired_port->read_wait);
@@ -544,7 +552,7 @@ static ssize_t vl_sync_read(struct file *filp, char __user *buf, size_t count, l
 	else
 		n_hdlc_buf_put(&n_hdlc->rx_free_buf_list,rbuf);
 
-// Wake up paired_port write wait queue
+	// Wake up paired_port write wait queue
         if (port->paired_port && IS_OPEN(port->paired_port))
                 /* wake up sleeping writers */
                 wake_up_interruptible(&port->paired_port->write_wait);
@@ -710,6 +718,7 @@ err_exit:
 static int vl_sync_do_ioctl(struct vl_sync_port *port, unsigned int cmd, unsigned long arg)
 {
 	struct n_hdlc *n_hdlc = port->n_hdlc;
+        struct vl_sync_port *paired_port = port->paired_port;
 	void *argp = (void *)arg;
 	unsigned long flags;
 	atc_spxs_config_t tmp_config;
@@ -741,10 +750,18 @@ static int vl_sync_do_ioctl(struct vl_sync_port *port, unsigned int cmd, unsigne
 
 	case TIOCOUTQ:
 		/* get size of next output frame in queue */
-		spin_lock_irqsave(&n_hdlc->tx_buf_list.spinlock,flags);
-		if (n_hdlc->tx_buf_list.head)
-			count = n_hdlc->tx_buf_list.head->count;
-		spin_unlock_irqrestore(&n_hdlc->tx_buf_list.spinlock,flags);
+		if (!paired_port || !IS_OPEN(port))
+			return -EINVAL;
+
+		n_hdlc = paired_port->n_hdlc;
+        
+		if ((!n_hdlc) || (n_hdlc->magic != HDLC_MAGIC))
+			return -EIO;
+
+		spin_lock_irqsave(&n_hdlc->rx_buf_list.spinlock,flags);
+		if (n_hdlc->rx_buf_list.head)
+			count = n_hdlc->rx_buf_list.head->count;
+		spin_unlock_irqrestore(&n_hdlc->rx_buf_list.spinlock,flags);
 		ret = put_user(count, (int __user *)arg);
 		break;
 
