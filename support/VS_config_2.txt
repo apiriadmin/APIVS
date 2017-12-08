@@ -1,0 +1,28 @@
+
+# ATC 5401 API Reference Implementation Project
+# 
+#     Filename: VS_config_2.txt
+#    File Type: VSE configuration file
+#    Test Case: many
+#  Description: default VSE config file for NON-loopback mode
+#               
+# Date      Revision    Description
+# 2/24/16   1.0         initial release
+
+XMLInputFilePath        = ./
+XMLOutputFilePath       = ./
+SetFilePath             = ./
+
+ScreenHeight            = 8
+ScreenWidth             = 40
+
+FPUICompareFilePath     = ./
+FPUIInputFilePath       = ./
+FPUIDumpFilePath        = ./
+FPUILoopbackDevice      = NULL
+
+FIOCompareFilePath      = ./
+FIOResponseFilePath     = ./
+FIODumpFilePath         = ./
+FIOLoopbackDevice       = NULL
+

@@ -4,11 +4,11 @@
 # 
 #     Filename: startup
 #    File Type: Linux shell script
-#    Test Case: n/a
-#  Description: 
+#    Test Case: many
+#  Description: ATC-compliant startup script
 #               
 # Date      Revision    Description
-# 10/21/15   1.0         initial release
+# 2/24/16   1.0         initial release
 
 wait_forever() {
 	while :
@@ -40,9 +40,18 @@ read -s -t 1 -n 100 keypress </dev/sp6 1>/dev/sp6 2>&1
 printf "\x1B[H\x1B[2J" >/dev/sp6
 printf "ATC 5401 API Validation Suite v1.0" >/dev/sp6
 
-# cursor to 2,1; prompt to start
+# cursor to 2,1; prompt to run in loopback mode
 printf "\x1B[2;1f" >/dev/sp6
-printf "Begin Test [YES]/[NO]?" >/dev/sp6
+printf "Loopback Mode [YES]/[NO]?" >/dev/sp6
+
+# read keypress
+read -s -n 3 loopback </dev/sp6 1>/dev/sp6 2>&1
+if [ $loopback == $'\x1bOQ' ]; then RunLoopback=YES; fi
+if [ $loopback == $'\x1bOR' ]; then RunLoopback=NO; fi
+
+# cursor to 2,1; prompt to begin test
+printf "\x1B[2;1f" >/dev/sp6
+printf "Begin Test [YES]/[NO]?   " >/dev/sp6
 
 # read keypress
 read -s -n 3 keypress </dev/sp6 1>/dev/sp6 2>&1
@@ -63,10 +72,17 @@ export LD_LIBRARY_PATH=/usr/lib:/media/sda1/APIVS/lib
 printf "\x1B[2;1f" >/dev/sp6
 printf "Running test session.         " >/dev/sp6
 cd /media/sda1/run
+if [ "$RunLoopback" == "YES" ]
+then
 source /media/sda1/runAPIVS
+else
+source /media/sda1/runVSnlb
+fi
 sleep 2
 
 # finish
+if [ "$RunLoopback" == "YES" ]
+then
 printf "\007" >/dev/sp6
 sleep 1
 printf "\007" >/dev/sp6
@@ -76,3 +92,4 @@ printf "\x1B[3;1f" >/dev/sp6
 printf "Session complete.                \n" >/dev/sp6
 printf "Please remove USB drive and reboot.\n" >/dev/sp6
 wait_forever
+fi
